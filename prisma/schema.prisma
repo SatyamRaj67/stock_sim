@@ -1,17 +1,192 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
     provider = "prisma-client-js"
 }
 
 datasource db {
     provider = "postgresql"
-    // NOTE: When using mysql or sqlserver, uncomment the @db.Text annotations in model Account below
-    // Further reading:
-    // https://next-auth.js.org/adapters/prisma#create-the-prisma-schema
-    // https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#string
     url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+    USER
+    ADMIN
+    SUPER_ADMIN
+}
+
+model User {
+    id                    String                 @id @default(cuid())
+    email                 String                 @unique
+    name                  String?
+    password              String?
+    role                  UserRole               @default(USER)
+    image                 String?
+    emailVerified         DateTime?
+    accounts              Account[]
+    isTwoFactorEnabled    Boolean                @default(false)
+    TwoFactorConfirmation TwoFactorConfirmation?
+
+    balance        Decimal @default(10000.00) @db.Decimal(12, 2)
+    totalProfit    Decimal @default(0.00) @db.Decimal(12, 2)
+    portfolioValue Decimal @default(0.00) @db.Decimal(12, 2)
+
+    portfolio    Portfolio?
+    transactions Transaction[]
+    watchlist    Watchlist?
+
+    createdAt     DateTime @default(now())
+    updatedAt     DateTime @updatedAt
+    createdStocks Stock[]  @relation("Stock_createdBy")
+
+    sessions Session[]
+    posts    Post[]
+}
+
+model Portfolio {
+    id        String   @id @default(cuid())
+    userId    String   @unique
+    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // Relations
+    positions Position[]
+
+    @@index([userId])
+}
+
+model Position {
+    id              String   @id @default(cuid())
+    portfolioId     String
+    stockId         String
+    quantity        Int
+    averageBuyPrice Decimal  @db.Decimal(12, 2)
+    currentValue    Decimal  @db.Decimal(12, 2)
+    profitLoss      Decimal  @db.Decimal(12, 2)
+    createdAt       DateTime @default(now())
+    updatedAt       DateTime @updatedAt
+
+    // Relations
+    portfolio Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+    stock     Stock     @relation(fields: [stockId], references: [id])
+
+    @@unique([portfolioId, stockId])
+    @@index([portfolioId])
+    @@index([stockId])
+}
+
+model Stock {
+    id                  String   @id @default(cuid())
+    symbol              String   @unique
+    name                String
+    description         String?
+    logoUrl             String?
+    sector              String?
+    currentPrice        Decimal  @db.Decimal(12, 2)
+    openPrice           Decimal? @db.Decimal(12, 2)
+    highPrice           Decimal? @db.Decimal(12, 2)
+    lowPrice            Decimal? @db.Decimal(12, 2)
+    previousClose       Decimal? @db.Decimal(12, 2)
+    volume              Int      @default(0)
+    marketCap           Decimal? @db.Decimal(16, 2)
+    isActive            Boolean  @default(true)
+    isFrozen            Boolean  @default(false)
+    priceChangeDisabled Boolean  @default(false)
+    priceCap            Decimal? @db.Decimal(12, 2)
+    createdById         String // User who created this stock
+    createdAt           DateTime @default(now())
+    updatedAt           DateTime @updatedAt
+
+    // Volatility and jump settings
+    volatility        Decimal @default(0.02) @db.Decimal(5, 4) // 0.0001 to 0.9999
+    jumpProbability   Decimal @default(0.01) @db.Decimal(5, 4) // 0.0001 to 0.9999
+    maxJumpMultiplier Decimal @default(1.10) @db.Decimal(5, 4) // 1.0001 to 2.0000
+
+    // Relations
+    createdBy      User            @relation("Stock_createdBy", fields: [createdById], references: [id])
+    positions      Position[]
+    transactions   Transaction[]
+    priceHistory   PriceHistory[]
+    watchlistItems WatchlistItem[]
+
+    @@index([symbol])
+    @@index([createdById])
+    @@index([isActive])
+}
+
+model PriceHistory {
+    id             String   @id @default(cuid())
+    stockId        String
+    price          Decimal  @db.Decimal(12, 2)
+    volume         Int
+    timestamp      DateTime @default(now())
+    wasJump        Boolean  @default(false)
+    jumpPercentage Decimal? @db.Decimal(6, 2) // If it was a jump, record the percentage
+
+    // Relations
+    stock Stock @relation(fields: [stockId], references: [id], onDelete: Cascade)
+
+    @@index([stockId])
+    @@index([timestamp])
+}
+
+model Transaction {
+    id          String            @id @default(cuid())
+    userId      String
+    stockId     String
+    type        TransactionType
+    status      TransactionStatus @default(COMPLETED)
+    quantity    Int
+    price       Decimal           @db.Decimal(12, 2)
+    totalAmount Decimal           @db.Decimal(12, 2)
+    timestamp   DateTime          @default(now())
+    createdAt   DateTime          @default(now())
+
+    // Relations
+    user  User  @relation(fields: [userId], references: [id])
+    stock Stock @relation(fields: [stockId], references: [id])
+
+    @@index([userId])
+    @@index([stockId])
+    @@index([timestamp])
+}
+
+enum TransactionStatus {
+    PENDING
+    COMPLETED
+    FAILED
+}
+
+enum TransactionType {
+    BUY
+    SELL
+}
+
+model Watchlist {
+    id        String   @id @default(cuid())
+    userId    String   @unique
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // Relations
+    user  User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+    items WatchlistItem[]
+
+    @@index([userId])
+}
+
+model WatchlistItem {
+    id          String   @id @default(cuid())
+    watchlistId String
+    stockId     String
+    addedAt     DateTime @default(now())
+
+    // Relations
+    watchlist Watchlist @relation(fields: [watchlistId], references: [id], onDelete: Cascade)
+    stock     Stock     @relation(fields: [stockId], references: [id])
+
+    @@unique([watchlistId, stockId])
+    @@index([watchlistId])
+    @@index([stockId])
 }
 
 model Post {
@@ -54,21 +229,40 @@ model Session {
     user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model User {
-    id            String    @id @default(cuid())
-    name          String?
-    email         String?   @unique
-    emailVerified DateTime?
-    image         String?
-    accounts      Account[]
-    sessions      Session[]
-    posts         Post[]
-}
-
 model VerificationToken {
-    identifier String
+    id         String   @id @default(cuid())
+    identifier String?
+    email      String
     token      String   @unique
     expires    DateTime
 
     @@unique([identifier, token])
+    @@unique([email, token])
+}
+
+model PasswordResetToken {
+    id      String   @id @default(cuid())
+    email   String
+    token   String   @unique
+    expires DateTime
+
+    @@unique([email, token])
+}
+
+model TwoFactorToken {
+    id      String   @id @default(cuid())
+    email   String
+    token   String   @unique
+    expires DateTime
+
+    @@unique([email, token])
+}
+
+model TwoFactorConfirmation {
+    id String @id @default(cuid())
+
+    userId String
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@unique([userId])
 }
