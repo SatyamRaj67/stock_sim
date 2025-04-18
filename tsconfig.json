@@ -38,6 +38,6 @@
     "**/*.cjs",
     "**/*.js",
     ".next/types/**/*.ts"
-  ],
+, "app/auth/new-password"  ],
   "exclude": ["node_modules"]
 }

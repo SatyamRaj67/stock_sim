@@ -1,8 +1,4 @@
-import { getAccountByUserId } from "@/data/account";
-import { getTwoFactorConfirmationByUserId } from "@/data/two-factor-confirmation";
-import { getUserByEmail, getUserById } from "@/data/user";
-
-import { PrismaAdapter } from "@auth/prisma-adapter";
+import { getUserByEmail} from "@/data/user";
 
 import type { UserRole } from "@prisma/client";
 import bcrypt from "bcryptjs";
@@ -14,8 +10,6 @@ import GitHub from "next-auth/providers/github";
 import Google from "next-auth/providers/google";
 
 import { LoginSchema } from "schemas";
-
-import { db } from "server/db";
 
 export type ExtendedUser = DefaultSession["user"] & {
   role: UserRole;

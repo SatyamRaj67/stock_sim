@@ -19,8 +19,8 @@ import {
 import { LogoutButton } from "@/components/auth/logout-button";
 
 import Image from "next/image";
-import type { ExtendedUser } from "@/server/auth/config";
 import { TbCreditCard, TbDotsVertical, TbLogout, TbNotification, TbUserCircle } from "react-icons/tb";
+import type { ExtendedUser } from "@/server/auth/config";
 
 export function NavUser({ user }: {user?: ExtendedUser}) {
   const { isMobile } = useSidebar();
