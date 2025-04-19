@@ -9,8 +9,6 @@ import { AdminDialog } from "@/components/settings/admin-dialog";
 import { SettingsForm } from "@/components/settings/settings-form";
 
 const SettingsPage = () => {
-  const user = useCurrentUser();
-
   // Easter egg states
   const clickCountRef = useRef(0);
   const [referralDialogOpen, setReferralDialogOpen] = useState(false);
@@ -22,7 +20,7 @@ const SettingsPage = () => {
     if (clickCountRef.current >= 5) {
       // Show dialog after 5 clicks
       setReferralDialogOpen(true);
-      clickCountRef.current = 0; // Reset counter
+      clickCountRef.current = 0;
     }
   };
 
@@ -58,7 +56,6 @@ const SettingsPage = () => {
       <AdminDialog
         open={adminDialogOpen}
         onOpenChange={setAdminDialogOpen}
-        currentUser={user}
       />
     </div>
   );

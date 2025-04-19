@@ -22,6 +22,8 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { FormError } from "@/components/layout/form-error";
 import { FormSuccess } from "@/components/layout/form-success";
+import type { User } from "next-auth";
+import { api } from "@/trpc/react";
 
 export const SettingsForm = () => {
   const { update } = useSession();
@@ -31,6 +33,10 @@ export const SettingsForm = () => {
 
   const user = useSession().data?.user;
 
+  const userQuery = api.user.getById.useQuery(user?.id as string, {
+    enabled: !!user?.id,
+  });
+
   const form = useForm<z.infer<typeof SettingsSchema>>({
     resolver: zodResolver(SettingsSchema),
     defaultValues: {
@@ -38,7 +44,6 @@ export const SettingsForm = () => {
       newPassword: undefined,
       name: user?.name || undefined,
       email: user?.email || undefined,
-      role: user?.role || undefined,
       isTwoFactorEnabled: user?.isTwoFactorEnabled || undefined,
     },
   });
@@ -62,6 +67,15 @@ export const SettingsForm = () => {
         });
     });
   };
+
+  // Display loading or error state for the query
+  if (userQuery.isLoading) {
+    return <p>Loading user data...</p>;
+  }
+
+  if (userQuery.error) {
+    return <p>Error loading user data: {userQuery.error.message}</p>;
+  }
 
   return (
     <Form {...form}>
@@ -165,6 +179,24 @@ export const SettingsForm = () => {
               )}
             />
           )}
+          {/* Display Role (Disabled) */}
+          <FormItem>
+            <FormLabel>Role</FormLabel>
+            <FormControl>
+              <Input
+                value={userQuery.data?.role ?? "N/A"} // Display role from query data
+                disabled // Make it non-editable
+              />
+            </FormControl>
+          </FormItem>
+
+          {/* Display Balance (Disabled) */}
+          <FormItem>
+            <FormLabel>Balance</FormLabel>
+            <FormControl>
+              <Input value={userQuery.data?.balance.toString() || ""} disabled />
+            </FormControl>
+          </FormItem>
         </div>
         <FormError message={error} />
         <FormSuccess message={success} />

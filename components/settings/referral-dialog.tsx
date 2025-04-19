@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { env } from "@/env";
 
 // Schema for the referral form
 const referralSchema = z.object({
@@ -46,7 +47,7 @@ export function ReferralDialog({
   });
 
   const onSubmit = (values: z.infer<typeof referralSchema>) => {
-    if (values.code === process.env.NEXT_PUBLIC_SECRET_KEY) {
+    if (values.code === env.NEXT_PUBLIC_SECRET_KEY) {
       onSuccess();
     } else {
       form.setError("code", {

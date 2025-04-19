@@ -1,8 +1,9 @@
+import { env } from "@/env";
 import { Resend } from "resend";
 
 const resend = new Resend();
 
-const domain = process.env.NEXT_PUBLIC_API_URL;
+const domain = env.NEXT_PUBLIC_API_URL;
 
 export const sendTwoFactorEmail = async (email: string, token: string) => {
   await resend.emails.send({

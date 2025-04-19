@@ -1,11 +1,13 @@
 "use client";
 
 import * as z from "zod";
-import { useState } from "react";
+import { useEffect, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { UserRole } from "@prisma/client";
 import { toast } from "sonner";
+import { useSession } from "next-auth/react";
+
 import {
   Dialog,
   DialogContent,
@@ -17,7 +19,6 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -32,11 +33,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useSession } from "next-auth/react";
+import { api } from "@/trpc/react";
+import { env } from "@/env";
 
-// Schema for admin actions
-const adminActionsSchema = z.object({
-  userId: z.string().optional(),
+// Schema remains the same
+const AdminSchema = z.object({
   role: z.enum([UserRole.USER, UserRole.ADMIN, UserRole.SUPER_ADMIN]),
   balance: z.coerce.number().min(0, "Balance must be positive"),
 });
@@ -44,96 +45,124 @@ const adminActionsSchema = z.object({
 interface AdminDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  currentUser: any;
 }
 
-export function AdminDialog({
-  open,
-  onOpenChange,
-  currentUser,
-}: AdminDialogProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { update } = useSession();
+export function AdminDialog({ open, onOpenChange }: AdminDialogProps) {
+  const [isPending, startTransition] = useTransition();
+  const { data: session, update: updateSession } = useSession();
+  const utils = api.useUtils();
 
-  const form = useForm<z.infer<typeof adminActionsSchema>>({
-    resolver: zodResolver(adminActionsSchema),
+  // Fetch current user data using tRPC query
+  const userQuery = api.user.getById.useQuery(session?.user?.id as string, {
+    enabled: !!session?.user?.id, // Only run query if user ID exists
+  });
+
+  const form = useForm<z.infer<typeof AdminSchema>>({
+    resolver: zodResolver(AdminSchema),
     defaultValues: {
-      userId: "",
-      role: currentUser?.role || UserRole.USER,
-      balance: 10000,
+      balance: 10000, // Default fallback
+      role: UserRole.USER, // Default fallback
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof adminActionsSchema>) => {
-    try {
-      setIsSubmitting(true);
-      const targetUserId = values.userId || currentUser?.id;
-
-      if (!targetUserId) {
-        toast.error("No user selected");
-        return;
-      }
-
-      // Call API to update user
-    //   await api.put("/api/admin/users", {
-    //     userId: targetUserId,
-    //     role: values.role,
-    //     balance: values.balance,
-    //   });
-
-      toast.success("User updated successfully");
-      onOpenChange(false);
-
-      // Refresh session if updating own account
-      if (targetUserId === currentUser?.id) {
-        update();
-      }
-    } catch (error) {
-      toast.error("Failed to update user");
-      console.error(error);
-    } finally {
-      setIsSubmitting(false);
+  // Update form defaults when user data loads or changes
+  useEffect(() => {
+    if (userQuery.data) {
+      form.reset({
+        balance: userQuery.data.balance ? Number(userQuery.data.balance) : 0,
+        role: userQuery.data.role,
+      });
     }
+  }, [userQuery.data, form]);
+
+  // Define the mutation hook using the new endpoint
+  const updateMutation = api.user.updateUserByAdmin.useMutation({
+    onSuccess: async (updatedUser) => {
+      toast.success("Your details updated successfully!");
+      // Invalidate the user query cache to refetch fresh data
+      await utils.user.getById.invalidate(session?.user?.id);
+      // Update the session with the new role
+      await updateSession({
+        user: { ...session?.user, role: updatedUser.role },
+      });
+      onOpenChange(false); // Close the dialog on success
+    },
+    onError: (error) => {
+      toast.error(`Update failed: ${error.message}`);
+    },
+  });
+
+  // Handle form submission
+  const onSubmit = (values: z.infer<typeof AdminSchema>) => {
+    if (!session?.user?.id) {
+      toast.error("User session not found. Cannot perform update.");
+      return;
+    }
+    startTransition(() => {
+      // Pass targetUserId and adminId (both are the current user's ID)
+      updateMutation.mutate({
+        targetUserId: session.user.id as string,
+        adminId: env.NEXT_PUBLIC_SUPER_ADMIN_ID as string,
+        role: values.role,
+        balance: values.balance,
+      });
+    });
   };
+
+  // Handle loading state for the initial user data query
+  if (userQuery.isLoading && open) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>Loading user data...</DialogContent>
+      </Dialog>
+    );
+  }
+
+  // Handle error state for the initial user data query
+  if (userQuery.error && open) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+          Error loading data: {userQuery.error.message}
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  // Don't render the form if initial data isn't loaded yet, prevents flicker
+  if (!userQuery.data && open) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>Initializing...</DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Admin Panel</DialogTitle>
-          <DialogDescription>Modify user role or balance.</DialogDescription>
+          <DialogTitle>Dev Control Panel</DialogTitle>
+          <DialogDescription>
+            Modify your own role and balance. (Requires SUPER_ADMIN)
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="userId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>User ID (leave empty for yourself)</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="User ID (optional)" />
-                  </FormControl>
-                  <FormDescription>
-                    Leave empty to modify your own account
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
               name="role"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Role</FormLabel>
+                  <FormLabel>Your Role</FormLabel>
                   <Select
                     onValueChange={field.onChange}
-                    defaultValue={field.value}
+                    value={field.value}
+                    disabled={isPending || updateMutation.isPending}
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select a role" />
+                        <SelectValue placeholder="Select your role" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -153,17 +182,31 @@ export function AdminDialog({
               name="balance"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Balance</FormLabel>
+                  <FormLabel>Your Balance</FormLabel>
                   <FormControl>
-                    <Input type="number" {...field} min={0} />
+                    <Input
+                      type="number"
+                      {...field}
+                      min={0}
+                      disabled={isPending || updateMutation.isPending}
+                      onChange={(e) =>
+                        field.onChange(parseFloat(e.target.value) || 0)
+                      }
+                      value={field.value}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <DialogFooter>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Updating..." : "Update User"}
+              <Button
+                type="submit"
+                disabled={isPending || updateMutation.isPending}
+              >
+                {isPending || updateMutation.isPending
+                  ? "Updating..."
+                  : "Update My Account"}
               </Button>
             </DialogFooter>
           </form>
