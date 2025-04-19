@@ -1,6 +1,6 @@
 "use client";
 
-import * as z from "zod";
+import type * as z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTransition, useState } from "react";
@@ -22,7 +22,6 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { FormError } from "@/components/layout/form-error";
 import { FormSuccess } from "@/components/layout/form-success";
-import type { User } from "next-auth";
 import { api } from "@/trpc/react";
 
 export const SettingsForm = () => {
@@ -33,7 +32,7 @@ export const SettingsForm = () => {
 
   const user = useSession().data?.user;
 
-  const userQuery = api.user.getById.useQuery(user?.id as string, {
+  const userQuery = api.user.getById.useQuery(user!.id!, {
     enabled: !!user?.id,
   });
 
@@ -42,23 +41,29 @@ export const SettingsForm = () => {
     defaultValues: {
       password: undefined,
       newPassword: undefined,
-      name: user?.name || undefined,
-      email: user?.email || undefined,
-      isTwoFactorEnabled: user?.isTwoFactorEnabled || undefined,
+      name: user?.name ?? undefined,
+      email: user?.email ?? undefined,
+      isTwoFactorEnabled: user?.isTwoFactorEnabled ?? undefined,
     },
   });
 
   const onSubmit = (values: z.infer<typeof SettingsSchema>) => {
     startTransition(() => {
       settings(values)
-        .then((data) => {
+        .then(async (data) => {
           if (data.error) {
             setError(data.error);
             setSuccess(undefined); // Clear success message on new error
           } else {
             setSuccess(data.success);
             setError(undefined); // Clear error message on success
-            update(); // Update session data
+            try {
+              await update();
+            } catch (updateError) {
+              // Optionally handle session update errors specifically
+              console.error("Session update failed:", updateError);
+              setError("Settings saved, but failed to refresh session.");
+            }
           }
         })
         .catch(() => {
@@ -194,7 +199,10 @@ export const SettingsForm = () => {
           <FormItem>
             <FormLabel>Balance</FormLabel>
             <FormControl>
-              <Input value={userQuery.data?.balance.toString() || ""} disabled />
+              <Input
+                value={userQuery.data?.balance.toString() ?? ""}
+                disabled
+              />
             </FormControl>
           </FormItem>
         </div>

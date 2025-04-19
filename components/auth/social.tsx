@@ -12,7 +12,9 @@ export const Social = () => {
   const callbackUrl = searchParams.get("callbackUrl");
 
   const onClick = (provider: "google" | "github") => {
-    signIn(provider, { callbackUrl: callbackUrl || DEFAULT_LOGIN_REDIRECT });
+    void signIn(provider, {
+      callbackUrl: callbackUrl ?? DEFAULT_LOGIN_REDIRECT,
+    });
   };
 
   return (

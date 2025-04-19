@@ -1,6 +1,6 @@
 "use client";
 
-import * as z from "zod";
+import type * as z from "zod";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -46,10 +46,14 @@ export const NewPasswordForm = () => {
     setSuccess("");
 
     startTransition(() => {
-      newPassword(values, token).then((response) => {
-        setError(response?.error);
-        setSuccess(response?.success);
-      });
+      newPassword(values, token)
+        .then((response) => {
+          setError(response?.error);
+          setSuccess(response?.success);
+        })
+        .catch(() => {
+          setError("Something went wrong!");
+        });
     });
   };
 

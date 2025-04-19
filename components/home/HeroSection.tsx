@@ -62,7 +62,7 @@ const HeroSection = () => {
   }, []);
 
   // Use default data if we couldn't fetch from the API
-  const displayData = stockData || {
+  const displayData = stockData ?? {
     stock: {
       symbol: "AAPL",
       name: "Apple Inc.",
@@ -82,7 +82,7 @@ const HeroSection = () => {
   const isPriceUp = priceChange >= 0;
 
   return (
-    <section className="w-full px-4 py-24 md:py-32">
+    <section className="w-full px-4 py-4 md:py-16">
       <div className="container mx-auto flex flex-col items-center gap-8 md:flex-row">
         <div className="flex-1 space-y-6">
           <Badge className="bg-emerald-600 text-white hover:bg-emerald-700">

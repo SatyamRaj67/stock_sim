@@ -19,10 +19,16 @@ import {
 import { LogoutButton } from "@/components/auth/logout-button";
 
 import Image from "next/image";
-import { TbCreditCard, TbDotsVertical, TbLogout, TbNotification, TbUserCircle } from "react-icons/tb";
+import {
+  TbCreditCard,
+  TbDotsVertical,
+  TbLogout,
+  TbNotification,
+  TbUserCircle,
+} from "react-icons/tb";
 import type { ExtendedUser } from "@/server/auth/config";
 
-export function NavUser({ user }: {user?: ExtendedUser}) {
+export function NavUser({ user }: { user?: ExtendedUser }) {
   const { isMobile } = useSidebar();
 
   return (
@@ -38,7 +44,7 @@ export function NavUser({ user }: {user?: ExtendedUser}) {
                 <AvatarImage src={user?.image ?? ""} />
                 <AvatarFallback className="rounded-lg">
                   <Image
-                    src={user?.image || "avatar.svg"}
+                    src={user?.image ?? "avatar.svg"}
                     alt="Avatar"
                     width={32}
                     height={32}
@@ -66,7 +72,7 @@ export function NavUser({ user }: {user?: ExtendedUser}) {
                   <AvatarImage src={user?.image ?? ""} alt="avatar" />
                   <AvatarFallback className="rounded-lg">
                     <Image
-                      src={user?.image || "avatar.svg"}
+                      src={user?.image ?? "avatar.svg"}
                       alt="Avatar"
                       width={32}
                       height={32}

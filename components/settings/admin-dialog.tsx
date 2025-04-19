@@ -53,7 +53,7 @@ export function AdminDialog({ open, onOpenChange }: AdminDialogProps) {
   const utils = api.useUtils();
 
   // Fetch current user data using tRPC query
-  const userQuery = api.user.getById.useQuery(session?.user?.id as string, {
+  const userQuery = api.user.getById.useQuery(session!.user.id!, {
     enabled: !!session?.user?.id, // Only run query if user ID exists
   });
 
@@ -101,8 +101,8 @@ export function AdminDialog({ open, onOpenChange }: AdminDialogProps) {
     startTransition(() => {
       // Pass targetUserId and adminId (both are the current user's ID)
       updateMutation.mutate({
-        targetUserId: session.user.id as string,
-        adminId: env.NEXT_PUBLIC_SUPER_ADMIN_ID as string,
+        targetUserId: session.user.id!,
+        adminId: env.NEXT_PUBLIC_SUPER_ADMIN_ID!,
         role: values.role,
         balance: values.balance,
       });

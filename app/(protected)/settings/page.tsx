@@ -1,9 +1,10 @@
 "use client";
 
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useRef, useState } from "react";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { toast } from "sonner";
+
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+
 import { ReferralDialog } from "@/components/settings/referral-dialog";
 import { AdminDialog } from "@/components/settings/admin-dialog";
 import { SettingsForm } from "@/components/settings/settings-form";

@@ -14,7 +14,7 @@ const stats = [
 
 const StatsSection = () => {
   return (
-    <section className="py-12">
+    <section className="py-10">
       <div className="container mx-auto">
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           {stats.map((stat, i) => (

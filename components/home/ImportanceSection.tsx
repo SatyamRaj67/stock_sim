@@ -24,7 +24,7 @@ const keys = [
 
 const ImportanceSection = () => {
   return (
-    <section className="py-24">
+    <section className="py-12">
       <div className="container mx-auto">
         <div className="mb-16 text-center">
           <h2 className="mb-4 text-3xl font-bold md:text-4xl">

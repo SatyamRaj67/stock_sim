@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 
-import * as z from "zod";
+import type * as z from "zod";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -26,7 +26,6 @@ import { FormSuccess } from "@/components/layout/form-success";
 
 import { register } from "@/actions/register";
 
-
 export const RegisterForm = () => {
   const [error, setError] = useState<string | undefined>("");
   const [success, setSuccess] = useState<string | undefined>("");
@@ -46,10 +45,14 @@ export const RegisterForm = () => {
     setSuccess("");
 
     startTransition(() => {
-      register(values).then((response) => {
-        setError(response.error);
-        setSuccess(response.success);
-      });
+      register(values)
+        .then((response) => {
+          setError(response.error);
+          setSuccess(response.success);
+        })
+        .catch(() => {
+          setError("Something went wrong!");
+        });
     });
   };
 
