@@ -1,6 +1,7 @@
 import { userRouter } from "server/api/routers/user";
 import { adminRouter } from "server/api/routers/admin"; // Import the new admin router
 import { createCallerFactory, createTRPCRouter } from "server/api/trpc";
+import { stockRouter } from "./routers/stocks";
 
 /**
  * This is the primary router for your server.
@@ -9,6 +10,7 @@ import { createCallerFactory, createTRPCRouter } from "server/api/trpc";
  */
 export const appRouter = createTRPCRouter({
   admin: adminRouter,
+  stock: stockRouter,
   user: userRouter,
 });
 

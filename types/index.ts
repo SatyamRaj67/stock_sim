@@ -7,32 +7,25 @@ enum UserRole {
   SUPER_ADMIN = "SUPER_ADMIN",
 }
 
-enum TransactionStatus {
-  PENDING = "PENDING",
-  COMPLETED = "COMPLETED",
-  FAILED = "FAILED",
-}
+export type TransactionStatus = "PENDING" | "COMPLETED" | "FAILED";
 
-enum TransactionType {
-  BUY = "BUY",
-  SELL = "SELL",
-}
+export type TransactionType = "BUY" | "SELL";
 
 // Model Interfaces
-interface User {
+export interface User {
   id: string;
   email: string;
   name: string | null;
-  password?: string | null; // Usually excluded from client-side types
+  password?: string | null;
   role: UserRole;
   image: string | null;
   emailVerified: Date | null;
   accounts?: Account[];
   isTwoFactorEnabled: boolean;
   TwoFactorConfirmation?: TwoFactorConfirmation | null;
-  balance: Decimal; // or string
-  totalProfit: Decimal; // or string
-  portfolioValue: Decimal; // or string
+  balance: Decimal;
+  totalProfit: Decimal;
+  portfolioValue: Decimal;
   portfolio?: Portfolio | null;
   transactions?: Transaction[];
   watchlist?: Watchlist | null;
@@ -41,13 +34,13 @@ interface User {
   createdStocks?: Stock[];
 }
 
-interface ExtendedUser extends User {
-    role: UserRole;
-    isTwoFactorEnabled: boolean;
-    isOAuth: boolean;
+export interface ExtendedUser extends User {
+  role: UserRole;
+  isTwoFactorEnabled: boolean;
+  isOAuth: boolean;
 }
 
-interface Portfolio {
+export interface Portfolio {
   id: string;
   userId: string;
   user?: User;
@@ -56,21 +49,21 @@ interface Portfolio {
   positions?: Position[];
 }
 
-interface Position {
+export interface Position {
   id: string;
   portfolioId: string;
   stockId: string;
   quantity: number;
-  averageBuyPrice: Decimal; // or string
-  currentValue: Decimal; // or string
-  profitLoss: Decimal; // or string
+  averageBuyPrice: Decimal;
+  currentValue: Decimal;
+  profitLoss: Decimal;
   createdAt: Date;
   updatedAt: Date;
   portfolio?: Portfolio;
   stock?: Stock;
 }
 
-interface Stock {
+export interface Stock {
   id: string;
   symbol: string;
   name: string;
@@ -101,7 +94,7 @@ interface Stock {
   watchlistItems?: WatchlistItem[];
 }
 
-interface PriceHistory {
+export interface PriceHistory {
   id: string;
   stockId: string;
   price: Decimal; // or string
@@ -112,22 +105,22 @@ interface PriceHistory {
   stock?: Stock;
 }
 
-interface Transaction {
+export interface Transaction {
   id: string;
   userId: string;
   stockId: string;
   type: TransactionType;
   status: TransactionStatus;
   quantity: number;
-  price: Decimal; // or string
-  totalAmount: Decimal; // or string
+  price: Decimal;
+  totalAmount: Decimal;
   timestamp: Date;
   createdAt: Date;
   user?: User;
   stock?: Stock;
 }
 
-interface Watchlist {
+export interface Watchlist {
   id: string;
   userId: string;
   createdAt: Date;
@@ -136,7 +129,7 @@ interface Watchlist {
   items?: WatchlistItem[];
 }
 
-interface WatchlistItem {
+export interface WatchlistItem {
   id: string;
   watchlistId: string;
   stockId: string;
@@ -145,7 +138,7 @@ interface WatchlistItem {
   stock?: Stock;
 }
 
-interface Account {
+export interface Account {
   userId: string;
   type: string;
   provider: string;
@@ -162,35 +155,35 @@ interface Account {
   user?: User;
 }
 
-interface VerificationToken {
+export interface VerificationToken {
   id: string;
   email: string;
   token: string;
   expires: Date;
 }
 
-interface PasswordResetToken {
+export interface PasswordResetToken {
   id: string;
   email: string;
   token: string;
   expires: Date;
 }
 
-interface TwoFactorToken {
+export interface TwoFactorToken {
   id: string;
   email: string;
   token: string;
   expires: Date;
 }
 
-interface TwoFactorConfirmation {
+export interface TwoFactorConfirmation {
   id: string;
   userId: string;
   user?: User;
 }
 
 // Update existing UserSettings if needed, or remove if redundant
-interface UserSettings {
+export interface UserSettings {
   id: string;
   name: string | null;
   email: string;

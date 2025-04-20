@@ -24,6 +24,8 @@ import { NavAdmin } from "@/components/layout/nav-admin";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 import { navData } from "@/data/nav-data";
+import { RoleGate } from "../auth/role-gate";
+import { UserRole } from "@prisma/client";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const user = useCurrentUser();
@@ -46,7 +48,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={navData.navMain} />
-        {user?.role === "ADMIN" && <NavAdmin items={navData.navAdmin} />}
+        <RoleGate allowedRoles={UserRole.SUPER_ADMIN || UserRole.ADMIN}>
+          <NavAdmin items={navData.navAdmin} />
+        </RoleGate>
 
         <NavSecondary items={navData.navSecondary} className="mt-auto" />
       </SidebarContent>

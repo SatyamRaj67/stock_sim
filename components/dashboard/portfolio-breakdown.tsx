@@ -1,0 +1,143 @@
+"use client";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+// Assuming Position type includes stock relation based on previous context
+// If not, adjust the type import or definition
+import type { Position as PositionType } from "@prisma/client";
+import type { Stock } from "@prisma/client";
+import { PieChart } from "lucide-react";
+import Decimal from "decimal.js";
+import { cn, formatCurrency, formatNumber } from "@/lib/utils"; // Import formatNumber
+import { Progress } from "../ui/progress";
+
+// Define a more specific type if your imported Position doesn't include Stock
+interface PositionWithStock extends PositionType {
+  stock: Stock; // Assuming stock is always included based on getPositions query
+}
+
+interface PortfolioBreakdownProps {
+  positions: PositionWithStock[];
+}
+
+export function PortfolioBreakdown({ positions }: PortfolioBreakdownProps) {
+  if (positions.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <PieChart className="mr-2 h-5 w-5" />
+            Portfolio Breakdown
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex h-48 flex-col items-center justify-center">
+            <p className="text-muted-foreground">
+              No positions in your portfolio.
+            </p>
+            <p className="text-muted-foreground mt-1 text-sm">
+              Start investing to see your holdings here.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Calculate total portfolio value based on current value of each position
+  const totalValue = positions.reduce((acc, pos) => {
+    // Ensure pos.currentValue is treated as Decimal
+    const currentValueDecimal = new Decimal(pos.currentValue);
+    return acc.plus(currentValueDecimal);
+  }, new Decimal(0));
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center">
+          <PieChart className="mr-2 h-5 w-5" />
+          Portfolio Breakdown
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {positions.map((position) => {
+            // Ensure all calculations use Decimal
+            const currentValue = new Decimal(position.currentValue);
+            const profitLoss = new Decimal(position.profitLoss);
+            const averageBuyPrice = new Decimal(position.averageBuyPrice);
+            const quantity = new Decimal(position.quantity);
+
+            // Calculate initial cost basis
+            const initialCostBasis = averageBuyPrice.times(quantity);
+
+            // Calculate percentage of portfolio
+            const percentOfPortfolio = totalValue.isZero()
+              ? new Decimal(0)
+              : currentValue.dividedBy(totalValue).times(100);
+
+            // Determine if it's a profit
+            const isProfit = profitLoss.gte(0); // Greater than or equal to 0
+
+            // Calculate profit/loss percentage
+            const profitLossPercent = initialCostBasis.isZero()
+              ? new Decimal(0) // Avoid division by zero if cost basis is 0
+              : profitLoss.dividedBy(initialCostBasis).times(100);
+
+            return (
+              <div key={position.id} className="flex flex-col">
+                <div className="flex items-center justify-between">
+                  <div>
+                    {/* Use optional chaining for safety, though stock should exist */}
+                    <div className="font-medium">{position.stock?.symbol}</div>
+                    <div className="text-muted-foreground text-sm">
+                      {position.stock?.name}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    {/* Format currentValue */}
+                    <div className="font-medium">
+                      {formatCurrency(currentValue)}
+                    </div>
+                    <div
+                      // Use the calculated isProfit for color
+                      className={`text-sm ${isProfit ? "text-green-600" : "text-red-600"}`}
+                    >
+                      {/* Show '+' sign for profit */}
+                      {isProfit ? "+" : ""}
+                      {/* Format profitLoss */}
+                      {formatCurrency(profitLoss)}
+                      {/* Format and display profitLossPercent */}
+                      <span className="ml-1">
+                        ({isProfit ? "+" : ""}
+                        {formatNumber(profitLossPercent)}%)
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Use Progress component for visual representation */}
+                <Progress
+                  value={percentOfPortfolio.toNumber()}
+                  className={cn(
+                    "mt-2 h-2",
+                    isProfit ? "bg-green-500" : "bg-red-500",
+                  )}
+                />
+
+                <div className="text-muted-foreground mt-1 flex justify-between text-xs">
+                  <span>
+                    {position.quantity} shares @{" "}
+                    {/* Format average buy price */}
+                    {formatCurrency(averageBuyPrice)} avg
+                  </span>
+                  {/* Display percentage of portfolio */}
+                  <span>{formatNumber(percentOfPortfolio)}% of portfolio</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

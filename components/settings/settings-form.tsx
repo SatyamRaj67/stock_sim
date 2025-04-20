@@ -32,7 +32,7 @@ export const SettingsForm = () => {
 
   const user = useSession().data?.user;
 
-  const userQuery = api.user.getById.useQuery(user!.id!, {
+  const userQuery = api.user.getUserById.useQuery(user!.id!, {
     enabled: !!user?.id,
   });
 

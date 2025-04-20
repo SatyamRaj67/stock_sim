@@ -53,7 +53,7 @@ export function AdminDialog({ open, onOpenChange }: AdminDialogProps) {
   const utils = api.useUtils();
 
   // Fetch current user data using tRPC query
-  const userQuery = api.user.getById.useQuery(session!.user.id!, {
+  const userQuery = api.user.getUserById.useQuery(session!.user.id!, {
     enabled: !!session?.user?.id, // Only run query if user ID exists
   });
 
@@ -80,7 +80,7 @@ export function AdminDialog({ open, onOpenChange }: AdminDialogProps) {
     onSuccess: async (updatedUser) => {
       toast.success("Your details updated successfully!");
       // Invalidate the user query cache to refetch fresh data
-      await utils.user.getById.invalidate(session?.user?.id);
+      await utils.user.getUserById.invalidate(session?.user?.id);
       // Update the session with the new role
       await updateSession({
         user: { ...session?.user, role: updatedUser.role },
@@ -144,7 +144,7 @@ export function AdminDialog({ open, onOpenChange }: AdminDialogProps) {
         <DialogHeader>
           <DialogTitle>Dev Control Panel</DialogTitle>
           <DialogDescription>
-            Modify your own role and balance. (Requires SUPER_ADMIN)
+            Modify your own role and balance.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>

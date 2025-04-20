@@ -21,3 +21,48 @@ export const getUserById = async (id: string) => {
     return null;
   }
 };
+
+export const getUserByIdWithPortfolio = async (id: string) => {
+  try {
+    const user = await db.portfolio.findUnique({
+      where: { id },
+    });
+    return user;
+  } catch {
+    return null;
+  }
+};
+
+export const getUserByIdWithPortfolioAndPositions = async (id: string) => {
+  try {
+    const user = await db.user.findUnique({
+      where: { id },
+      include: {
+        portfolio: {
+          include: {
+            positions: {
+              include: {
+                stock: true,
+              },
+            },
+          },
+        },
+      },
+    });
+    return user;
+  } catch {
+    return null;
+  }
+};
+
+export const updateUserById = async (id: string, data: any) => {
+  try {
+    const user = await db.user.update({
+      where: { id },
+      data,
+    });
+    return user;
+  } catch {
+    return null;
+  }
+};
