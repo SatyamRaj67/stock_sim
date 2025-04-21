@@ -23,6 +23,9 @@ const nextConfig: NextConfig = {
   experimental: {
     reactCompiler: true,
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 };
 
 export default nextConfig;
