@@ -56,7 +56,6 @@ const DashboardPage = () => {
     !positionQuery.data ||
     !transactionsQuery.data
   ) {
-
     return (
       <div className="flex h-[80vh] items-center justify-center">
         <div className="text-center">

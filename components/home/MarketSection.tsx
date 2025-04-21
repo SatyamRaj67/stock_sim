@@ -2,6 +2,7 @@ import React from "react";
 import { Card, CardContent } from "../ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
 import { Button } from "../ui/button";
+import Link from "next/link";
 
 const stocks = [
   {
@@ -54,7 +55,9 @@ const MarketSection = () => {
       <div className="container mx-auto">
         <div className="mb-8 flex items-center justify-between">
           <h2 className="text-2xl font-bold md:text-3xl">Market Snapshot</h2>
-          <Button variant="outline">View all markets</Button>
+          <Link href="/market">
+            <Button variant="outline">View all markets</Button>
+          </Link>
         </div>
 
         <Tabs defaultValue="trending" className="w-full">

@@ -13,21 +13,9 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-// import type { Stock } from "@/types";
-
-// Define types for our stock data
-// type StockData = {
-//   stock: Stock;
-//   chartData: {
-//     date: string;
-//     price: number;
-//   }[];
-//   priceChange: number;
-//   percentChange: number;
-// };
+import Link from "next/link";
 
 const HeroSection = () => {
-  // const stockData = <StockData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -68,7 +56,7 @@ const HeroSection = () => {
   const isPriceUp = priceChange >= 0;
 
   return (
-    <section className="w-full px-4 py-4 md:py-16">
+    <section className="w-full py-4 md:py-16">
       <div className="container mx-auto flex flex-col items-center gap-8 md:flex-row">
         <div className="flex-1 space-y-6">
           <Badge className="bg-emerald-600 text-white hover:bg-emerald-700">
@@ -82,17 +70,21 @@ const HeroSection = () => {
             powerful tools and real-time data.
           </p>
           <div className="flex flex-col gap-3 pt-4 sm:flex-row">
-            <Button size="lg" className="bg-emerald-600 hover:bg-emerald-700">
-              Start investing now
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="text-foreground hover:bg-background/10 border-white"
-            >
-              View demo
-            </Button>
+            <Link href="/market">
+              <Button size="lg" className="bg-emerald-600 hover:bg-emerald-700">
+                Start investing now
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+            <Link href="/dashboard">
+              <Button
+                size="lg"
+                variant="outline"
+                className="text-foreground hover:bg-background/10 border-white"
+              >
+                View demo
+              </Button>
+            </Link>
           </div>
         </div>
         <div className="hidden flex-1 md:block">

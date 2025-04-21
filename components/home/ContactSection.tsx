@@ -1,5 +1,6 @@
 import React from "react";
 import { Button } from "../ui/button";
+import Link from "next/link";
 
 const ContactSection = () => {
   return (
@@ -13,9 +14,11 @@ const ContactSection = () => {
           financial goals
         </p>
         <div className="flex flex-col justify-center gap-4 sm:flex-row">
-          <Button size="lg" className="bg-emerald-600 hover:bg-emerald-700">
-            Create free account
-          </Button>
+          <Link href="/auth/login">
+            <Button size="lg" className="bg-emerald-600 hover:bg-emerald-700">
+              Create free account
+            </Button>
+          </Link>
           <Button
             size="lg"
             variant="outline"
