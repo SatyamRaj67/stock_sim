@@ -12,7 +12,11 @@ export default async function AdminProtectedLayout({
 }: AdminProtectedProps) {
   const session = await auth();
 
-  if (!session || session.user.role !== UserRole.ADMIN) {
+  if (
+    !session ||
+    (session.user.role !== UserRole.ADMIN &&
+      session.user.role !== UserRole.SUPER_ADMIN)
+  ) {
     redirect(DEFAULT_LOGIN_REDIRECT);
   }
 

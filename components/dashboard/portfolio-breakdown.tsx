@@ -7,12 +7,11 @@ import type { Position as PositionType } from "@prisma/client";
 import type { Stock } from "@prisma/client";
 import { PieChart } from "lucide-react";
 import Decimal from "decimal.js";
-import { cn, formatCurrency, formatNumber } from "@/lib/utils"; // Import formatNumber
+import { cn, formatCurrency, formatNumber } from "@/lib/utils";
 import { Progress } from "../ui/progress";
 
-// Define a more specific type if your imported Position doesn't include Stock
 interface PositionWithStock extends PositionType {
-  stock: Stock; // Assuming stock is always included based on getPositions query
+  stock: Stock;
 }
 
 interface PortfolioBreakdownProps {
@@ -43,9 +42,7 @@ export function PortfolioBreakdown({ positions }: PortfolioBreakdownProps) {
     );
   }
 
-  // Calculate total portfolio value based on current value of each position
   const totalValue = positions.reduce((acc, pos) => {
-    // Ensure pos.currentValue is treated as Decimal
     const currentValueDecimal = new Decimal(pos.currentValue);
     return acc.plus(currentValueDecimal);
   }, new Decimal(0));
@@ -118,10 +115,7 @@ export function PortfolioBreakdown({ positions }: PortfolioBreakdownProps) {
                 {/* Use Progress component for visual representation */}
                 <Progress
                   value={percentOfPortfolio.toNumber()}
-                  className={cn(
-                    "mt-2 h-2",
-                    isProfit ? "bg-green-500" : "bg-red-500",
-                  )}
+                  className={cn("mt-2 h-2")}
                 />
 
                 <div className="text-muted-foreground mt-1 flex justify-between text-xs">
@@ -131,7 +125,9 @@ export function PortfolioBreakdown({ positions }: PortfolioBreakdownProps) {
                     {formatCurrency(averageBuyPrice)} avg
                   </span>
                   {/* Display percentage of portfolio */}
-                  <span>{formatNumber(percentOfPortfolio)}% of portfolio</span>
+                  <span>
+                    {percentOfPortfolio.toFixed(2)}% of portfolio value
+                  </span>
                 </div>
               </div>
             );

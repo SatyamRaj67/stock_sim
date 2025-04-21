@@ -212,7 +212,7 @@ export function MarketTable() {
                         ) : (
                           <ArrowDownIcon className="mr-1" size={16} />
                         )}
-                        {priceChange.toNumber()}%
+                        {priceChange.toFixed(2)}%
                       </div>
                     </TableCell>
                     <TableCell>{formatNumber(stock.volume)}</TableCell>

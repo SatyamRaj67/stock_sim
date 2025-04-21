@@ -5,6 +5,8 @@ import { TransactionType } from "@prisma/client";
 import { getAllStocks, getStockByStockId } from "@/data/stocks";
 import { getUserById } from "@/data/user";
 import Decimal from "decimal.js";
+import { getPositionByPortfolioIdandStockId } from "@/data/positions";
+import { getPortfolioByUserId } from "@/data/portfolio";
 
 export const stockRouter = createTRPCRouter({
   getStocks: protectedProcedure.query(async () => {
@@ -62,10 +64,12 @@ export const stockRouter = createTRPCRouter({
               });
             }
 
-            // Deduct balance
             await db.user.update({
               where: { id: userId },
-              data: { balance: { decrement: transactionAmount } },
+              data: {
+                balance: { decrement: transactionAmount },
+                portfolioValue: { increment: transactionAmount },
+              },
             });
 
             // Upsert Portfolio
@@ -83,12 +87,10 @@ export const stockRouter = createTRPCRouter({
             });
 
             // Upsert Position (Buy logic)
-            const existingPosition = await db.position.findUnique({
-              where: {
-                portfolioId_stockId: { portfolioId: portfolio.id, stockId },
-              },
-              select: { id: true, quantity: true, averageBuyPrice: true },
-            });
+            const existingPosition = await getPositionByPortfolioIdandStockId(
+              portfolio.id,
+              stockId,
+            );
 
             if (existingPosition) {
               const existingTotalValue = existingPosition.averageBuyPrice.mul(
@@ -122,10 +124,7 @@ export const stockRouter = createTRPCRouter({
             message = "Stock purchased successfully.";
           } else if (type === TransactionType.SELL) {
             // --- SELL Logic ---
-            const portfolio = await db.portfolio.findUnique({
-              where: { userId: userId },
-              select: { id: true },
-            });
+            const portfolio = await getPortfolioByUserId(userId!);
 
             if (!portfolio)
               throw new TRPCError({
@@ -133,12 +132,10 @@ export const stockRouter = createTRPCRouter({
                 message: "Portfolio not found.",
               });
 
-            const position = await db.position.findUnique({
-              where: {
-                portfolioId_stockId: { portfolioId: portfolio.id, stockId },
-              },
-              select: { id: true, quantity: true, averageBuyPrice: true },
-            });
+            const position = await getPositionByPortfolioIdandStockId(
+              portfolio.id,
+              stockId,
+            );
 
             if (!position)
               throw new TRPCError({
@@ -151,7 +148,7 @@ export const stockRouter = createTRPCRouter({
                 message: `Insufficient shares. You only own ${position.quantity}.`,
               });
 
-            transactionAmount = stock.currentPrice.mul(quantity); // Proceeds
+            transactionAmount = stock.currentPrice.mul(quantity);
             const costBasis = position.averageBuyPrice.mul(quantity);
             const profitOrLoss = transactionAmount.sub(costBasis);
 
@@ -160,6 +157,7 @@ export const stockRouter = createTRPCRouter({
               where: { id: userId },
               data: {
                 balance: { increment: transactionAmount },
+                portfolioValue: { decrement: transactionAmount },
                 totalProfit: { increment: profitOrLoss },
               },
             });

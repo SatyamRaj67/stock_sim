@@ -1,4 +1,3 @@
-import { UserRole } from "@prisma/client";
 import * as z from "zod";
 
 export const SettingsSchema = z
@@ -71,6 +70,31 @@ export const RegisterSchema = z.object({
 });
 
 export const stockUpdateSchema = z.object({
+  id: z.string(),
+  name: z.string().min(1).max(100),
+  sector: z.string().optional().nullable(),
+  currentPrice: z.coerce.number().min(0),
+  previousClose: z.coerce.number().min(0).optional().nullable(),
+  volume: z.coerce.number().min(0),
+  marketCap: z.coerce.number().min(0).optional().nullable(),
+  isActive: z.boolean(),
+  isFrozen: z.boolean(),
+});
+
+export const stockSchema = z.object({
+  name: z.string().min(1).max(100),
+  symbol: z.string().min(1).max(10),
+  sector: z.string().optional().nullable(),
+  currentPrice: z.coerce.number().min(0),
+  previousClose: z.coerce.number().min(0).optional().nullable(),
+  volume: z.coerce.number().min(0),
+  marketCap: z.coerce.number().min(0).optional().nullable(),
+  isActive: z.boolean(),
+  isFrozen: z.boolean(),
+});
+
+export const stockCreateSchema = z.object({
+  symbol: z.string().min(1).max(10),
   name: z.string().min(1).max(100),
   sector: z.string().optional().nullable(),
   currentPrice: z.coerce.number().min(0),

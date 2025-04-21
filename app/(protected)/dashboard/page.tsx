@@ -9,7 +9,7 @@ import { Loader2 } from "lucide-react";
 import { api } from "@/trpc/react";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import Decimal from "decimal.js";
-import { formatCurrency, formatNumber } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
 
 const DashboardPage = () => {
   const user = useCurrentUser();
@@ -24,6 +24,7 @@ const DashboardPage = () => {
   const transactionsQuery = api.user.getTransactions.useQuery(
     {
       userId: user!.id!,
+      limit: 5,
     },
     { enabled: !!user?.id },
   );
@@ -72,20 +73,12 @@ const DashboardPage = () => {
   const positions = positionQuery.data;
   const transactions = transactionsQuery.data;
 
-  const portfolioValue =
-    positions.portfolio?.positions.reduce((total, position) => {
-      const currentPrice = new Decimal(position.stock?.currentPrice || 0);
-      const quantity = new Decimal(position.quantity || 0);
-      const positionValue = currentPrice.times(quantity);
-      return total.add(positionValue);
-    }, new Decimal(0)) || new Decimal(0);
-
   const growthRate = 2.5;
 
   const cardData = [
     {
       description: "Portfolio Value",
-      value: formatCurrency(portfolioValue),
+      value: formatCurrency(userFinancials.portfolioValue),
       badge: "0.5%",
       footerTitle:
         growthRate >= 0
