@@ -10,6 +10,8 @@ import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "@/providers/theme-provider";
 // import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
+import { Analytics } from "@vercel/analytics/next";
+
 import { Toaster } from "sonner";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
@@ -62,6 +64,7 @@ export default async function RootLayout({
                   <SiteHeader />
                   <Toaster />
                   {children}
+                  <Analytics />
                 </SidebarInset>
               </SidebarProvider>
               {/* {process.env.NODE_ENV === "development" && <ReactQueryDevtools />} */}
