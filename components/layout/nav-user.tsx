@@ -27,6 +27,7 @@ import {
   TbUserCircle,
 } from "react-icons/tb";
 import type { ExtendedUser } from "@/server/auth/config";
+import Link from "next/link";
 
 export function NavUser({ user }: { user?: ExtendedUser }) {
   const { isMobile } = useSidebar();
@@ -91,15 +92,15 @@ export function NavUser({ user }: { user?: ExtendedUser }) {
             <DropdownMenuGroup>
               <DropdownMenuItem>
                 <TbUserCircle />
-                Account
+                <Link href="/settings">Account</Link>
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <TbCreditCard />
-                Billing
+                <Link href="/billing">Billing</Link>
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <TbNotification />
-                Notifications
+                <Link href="/notifications">Notifications</Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

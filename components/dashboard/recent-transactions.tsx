@@ -17,7 +17,7 @@ interface RecentTransactionsProps {
 }
 
 export function RecentTransactions({ transactions }: RecentTransactionsProps) {
-  if (transactions.length === 0) {
+  if (transactions.length < 1) {
     return (
       <Card>
         <CardHeader>

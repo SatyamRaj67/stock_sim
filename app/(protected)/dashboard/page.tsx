@@ -13,31 +13,34 @@ import { formatCurrency } from "@/lib/utils";
 
 const DashboardPage = () => {
   const user = useCurrentUser();
+
   // Fetch data using tRPC
   const financialsQuery = api.user.getUserByIdWithFinancials.useQuery(
-    user!.id!,
+    user?.id!,
     { enabled: !!user?.id },
   );
-  const positionQuery = api.user.getPositions.useQuery(user!.id!, {
+  const positionQuery = api.user.getPositions.useQuery(user?.id!, {
     enabled: !!user?.id,
   });
   const transactionsQuery = api.user.getTransactions.useQuery(
     {
-      userId: user!.id!,
+      userId: user?.id!,
       limit: 5,
     },
     { enabled: !!user?.id },
   );
 
-  // Combine loading states
+  // Combine loading states using logical OR
   const isLoading =
-    financialsQuery.isLoading ??
-    positionQuery.isLoading ??
+    financialsQuery.isLoading ||
+    positionQuery.isLoading ||
     transactionsQuery.isLoading;
 
+  // Combine potential errors
   const error =
-    financialsQuery.error ?? positionQuery.error ?? transactionsQuery.error;
+    financialsQuery.error || positionQuery.error || transactionsQuery.error;
 
+  // Render loading state
   if (isLoading) {
     return (
       <div className="flex h-[80vh] items-center justify-center">
@@ -46,50 +49,69 @@ const DashboardPage = () => {
     );
   }
 
+  // Render error state or if data is missing after loading
   if (
-    error ??
-    !financialsQuery.data ??
-    !positionQuery.data ??
+    error ||
+    !financialsQuery.data ||
+    !positionQuery.data ||
     !transactionsQuery.data
   ) {
-    // Added checks for data existence after loading is false
+
     return (
       <div className="flex h-[80vh] items-center justify-center">
         <div className="text-center">
           <h2 className="text-xl font-bold">Failed to load dashboard data</h2>
           <p className="text-muted-foreground">
-            {error?.message ?? "An unknown error occurred."}
+            {error?.message ?? "Required data is missing."}
           </p>
           <p className="text-muted-foreground">
-            Please try refreshing the page
+            Please try refreshing the page.
           </p>
         </div>
       </div>
     );
   }
 
-  // Access data from individual queries
-  const userFinancials = financialsQuery.data;
-  const positions = positionQuery.data;
+  // --- Data is confirmed to be loaded and available here ---
+  const rawFinancials = financialsQuery.data;
+  const positionsData = positionQuery.data.portfolio?.positions ?? [];
   const transactions = transactionsQuery.data;
 
-  const growthRate = 2.5;
+  // --- Convert necessary fields to Decimal ---
+  const portfolioValue = new Decimal(rawFinancials.portfolioValue ?? 0);
+  const totalProfit = new Decimal(rawFinancials.totalProfit ?? 0);
+  const balance = new Decimal(rawFinancials.balance ?? 0);
+  // --- End Conversion ---
+
+  // --- Calculate card data using Decimal objects ---
+  let growthRate = new Decimal(0); // Default to 0
+  const costBasis = portfolioValue.minus(totalProfit);
+
+  // Calculate growth rate only if cost basis is not zero to avoid division by zero
+  if (!costBasis.isZero()) {
+    growthRate = totalProfit
+      .dividedBy(costBasis.abs()) // Use absolute value of cost basis
+      .times(100);
+    // Check if the result is NaN (which can happen in edge cases)
+    if (growthRate.isNaN()) {
+      growthRate = new Decimal(0);
+    }
+  }
 
   const cardData = [
     {
       description: "Portfolio Value",
-      value: formatCurrency(userFinancials.portfolioValue),
-      badge: "0.5%",
-      footerTitle:
-        growthRate >= 0
-          ? "Your investments are growing"
-          : "Your investments are declining",
+      value: formatCurrency(portfolioValue),
+      badge: `${growthRate.toFixed(1)}%`,
+      footerTitle: growthRate.gte(0)
+        ? "Your investments are growing"
+        : "Your investments are declining",
       footerDescription: "Based on current market performance",
-      positive: growthRate >= 0,
+      positive: growthRate.gte(0),
     },
     {
       description: "Available Cash",
-      value: formatCurrency(userFinancials.balance),
+      value: formatCurrency(balance),
       badge: "",
       footerTitle: "Ready to invest",
       footerDescription: "Current available balance",
@@ -97,26 +119,24 @@ const DashboardPage = () => {
     },
     {
       description: "Total Gains / Loss",
-      value: formatCurrency(userFinancials.totalProfit),
-      badge: growthRate.toString(),
-      footerTitle:
-        userFinancials.totalProfit >= new Decimal(0) ? "Profit" : "Loss",
-      footerDescription:
-        userFinancials.totalProfit >= new Decimal(0)
-          ? "Keep up the good work!"
-          : "Analyze your positions",
-      positive: userFinancials.totalProfit >= new Decimal(0),
+      value: formatCurrency(totalProfit),
+      badge: `${growthRate.toFixed(1)}%`,
+      footerTitle: totalProfit.gte(0) ? "Profit" : "Loss",
+      footerDescription: totalProfit.gte(0)
+        ? "Keep up the good work!"
+        : "Analyze your positions",
+      positive: totalProfit.gte(0),
     },
     {
-      description: "Growth Rate",
-      value: growthRate.toString(),
-      badge: "",
-      footerTitle:
-        growthRate >= 0 ? "Positive trajectory" : "Needs improvement",
-      footerDescription: "Overall portfolio performance",
-      positive: growthRate >= 0,
+      description: "Today's Change",
+      value: formatCurrency(0),
+      badge: "0.0%",
+      footerTitle: "Market movement today",
+      footerDescription: "Compared to previous close",
+      positive: true,
     },
   ];
+  // --- End Calculate card data ---
 
   return (
     <div className="flex flex-1 flex-col">
@@ -136,7 +156,8 @@ const DashboardPage = () => {
 
             <div className="grid gap-6 md:grid-cols-2">
               <PortfolioBreakdown
-                positions={positions.portfolio?.positions ?? []}
+                portfolioValue={portfolioValue}
+                positions={positionsData}
               />
               <RecentTransactions transactions={transactions} />
             </div>

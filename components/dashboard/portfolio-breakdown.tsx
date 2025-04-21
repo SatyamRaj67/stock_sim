@@ -1,8 +1,6 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-// Assuming Position type includes stock relation based on previous context
-// If not, adjust the type import or definition
 import type { Position as PositionType } from "@prisma/client";
 import type { Stock } from "@prisma/client";
 import { PieChart } from "lucide-react";
@@ -15,17 +13,21 @@ interface PositionWithStock extends PositionType {
 }
 
 interface PortfolioBreakdownProps {
+  portfolioValue: Decimal;
   positions: PositionWithStock[];
 }
 
-export function PortfolioBreakdown({ positions }: PortfolioBreakdownProps) {
+export function PortfolioBreakdown({
+  portfolioValue,
+  positions,
+}: PortfolioBreakdownProps) {
   if (positions.length === 0) {
     return (
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
             <PieChart className="mr-2 h-5 w-5" />
-            Portfolio Breakdown
+            Portfolio Breakdown {portfolioValue.toString()}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -42,11 +44,6 @@ export function PortfolioBreakdown({ positions }: PortfolioBreakdownProps) {
     );
   }
 
-  const totalValue = positions.reduce((acc, pos) => {
-    const currentValueDecimal = new Decimal(pos.currentValue);
-    return acc.plus(currentValueDecimal);
-  }, new Decimal(0));
-
   return (
     <Card>
       <CardHeader>
@@ -58,6 +55,10 @@ export function PortfolioBreakdown({ positions }: PortfolioBreakdownProps) {
       <CardContent>
         <div className="space-y-4">
           {positions.map((position) => {
+            console.log(`Processing Position ID: ${position.id}`, {
+              rawData: position,
+              incomingPortfolioValue: portfolioValue.toString(), // Log Decimal as string
+            });
             // Ensure all calculations use Decimal
             const currentValue = new Decimal(position.currentValue);
             const profitLoss = new Decimal(position.profitLoss);
@@ -66,6 +67,7 @@ export function PortfolioBreakdown({ positions }: PortfolioBreakdownProps) {
 
             // Calculate initial cost basis
             const initialCostBasis = averageBuyPrice.times(quantity);
+            const totalValue = new Decimal(portfolioValue);
 
             // Calculate percentage of portfolio
             const percentOfPortfolio = totalValue.isZero()

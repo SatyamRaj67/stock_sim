@@ -173,8 +173,8 @@ const HeroSection = () => {
                           }}
                           labelStyle={{ color: "#f8fafc" }}
                           itemStyle={{ color: "#f8fafc" }}
-                          formatter={(value) => [
-                            `$${typeof value === "number" ? value.toFixed(2) : value}`,
+                          formatter={(value: number) => [
+                            `$${value.toFixed(2)}`,
                             "Price",
                           ]}
                         />

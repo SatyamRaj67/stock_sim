@@ -4,6 +4,7 @@ import { createCallerFactory, createTRPCRouter } from "server/api/trpc";
 import { stockRouter } from "./routers/stocks";
 import { stockAdminRouter } from "./routers/stockAdmin";
 import { analyticsRouter } from "./routers/analytics";
+import { notificationRouter } from "./routers/notifications";
 
 /**
  * This is the primary router for your server.
@@ -13,6 +14,7 @@ import { analyticsRouter } from "./routers/analytics";
 export const appRouter = createTRPCRouter({
   analytics: analyticsRouter,
   admin: adminRouter,
+  notifications: notificationRouter,
   stockAdmin: stockAdminRouter,
   stock: stockRouter,
   user: userRouter,
