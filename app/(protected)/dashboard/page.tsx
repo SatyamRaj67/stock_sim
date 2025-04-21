@@ -31,12 +31,12 @@ const DashboardPage = () => {
 
   // Combine loading states
   const isLoading =
-    financialsQuery.isLoading ||
-    positionQuery.isLoading ||
+    financialsQuery.isLoading ??
+    positionQuery.isLoading ??
     transactionsQuery.isLoading;
 
   const error =
-    financialsQuery.error || positionQuery.error || transactionsQuery.error;
+    financialsQuery.error ?? positionQuery.error ?? transactionsQuery.error;
 
   if (isLoading) {
     return (
@@ -47,9 +47,9 @@ const DashboardPage = () => {
   }
 
   if (
-    error ||
-    !financialsQuery.data ||
-    !positionQuery.data ||
+    error ??
+    !financialsQuery.data ??
+    !positionQuery.data ??
     !transactionsQuery.data
   ) {
     // Added checks for data existence after loading is false
@@ -58,7 +58,7 @@ const DashboardPage = () => {
         <div className="text-center">
           <h2 className="text-xl font-bold">Failed to load dashboard data</h2>
           <p className="text-muted-foreground">
-            {error?.message || "An unknown error occurred."}
+            {error?.message ?? "An unknown error occurred."}
           </p>
           <p className="text-muted-foreground">
             Please try refreshing the page
@@ -136,7 +136,7 @@ const DashboardPage = () => {
 
             <div className="grid gap-6 md:grid-cols-2">
               <PortfolioBreakdown
-                positions={positions.portfolio?.positions || []}
+                positions={positions.portfolio?.positions ?? []}
               />
               <RecentTransactions transactions={transactions} />
             </div>

@@ -10,7 +10,7 @@ import {
   Legend,
   ZAxis,
 } from "recharts";
-import { MarketCorrelationItem } from "@/types/analytics";
+import type { MarketCorrelationItem } from "@/types/analytics";
 
 interface MarketCorrelationChartProps {
   data: MarketCorrelationItem[];

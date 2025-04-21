@@ -6,10 +6,10 @@ import {
   ResponsiveContainer,
   Legend,
   Tooltip,
-  TooltipProps,
+  type TooltipProps,
   Sector,
 } from "recharts";
-import { SectorAllocationItem } from "@/types/analytics";
+import type { payloadItem, SectorAllocationItem } from "@/types/analytics";
 
 interface SectorAllocationChartProps {
   data: SectorAllocationItem[];
@@ -18,22 +18,22 @@ interface SectorAllocationChartProps {
 // Custom tooltip component
 interface CustomTooltipProps extends TooltipProps<number, string> {
   active?: boolean;
-  payload?: any[];
+  payload?: payloadItem[];
 }
 
 const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
   if (!active || !payload || payload.length === 0) return null;
 
   const data = payload[0];
-  const sectorName = data.name;
-  const value = data.value;
-  const color = data.payload.fill;
+  const sectorName = data?.name;
+  const value = data?.value;
+  const color = data?.fill;
 
   return (
-    <div className="custom-tooltip bg-background p-4 rounded-lg shadow-lg border border-muted-background min-w-[200px]">
-      <div className="flex items-center gap-2 mb-2">
+    <div className="custom-tooltip bg-background border-muted-background min-w-[200px] rounded-lg border p-4 shadow-lg">
+      <div className="mb-2 flex items-center gap-2">
         <div
-          className="w-3 h-3 rounded-sm"
+          className="h-3 w-3 rounded-sm"
           style={{ backgroundColor: color }}
         ></div>
         <span className="font-medium">{sectorName}</span>
@@ -41,11 +41,11 @@ const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
 
       <div className="mt-2">
         <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">Allocation:</span>
-          <span className="text-lg font-bold">{value.toFixed(2)}%</span>
+          <span className="text-muted-foreground text-sm">Allocation:</span>
+          <span className="text-lg font-bold">{value?.toFixed(2)}%</span>
         </div>
 
-        <div className="mt-3 w-full bg-slate-100 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+        <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700">
           <div
             className="h-full rounded-full"
             style={{
@@ -57,19 +57,18 @@ const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
         </div>
       </div>
 
-      <div className="mt-3 pt-2 border-t border-slate-200 dark:border-slate-700">
-        <div className="flex justify-between items-center">
-          <span className="text-sm text-muted-foreground">Portfolio rank:</span>
+      {/* <div className="mt-3 border-t border-slate-200 pt-2 dark:border-slate-700">
+        <div className="flex items-center justify-between">
+          <span className="text-muted-foreground text-sm">Portfolio rank:</span>
           <span className="text-sm font-medium">
-            #{payload[0].payload.rank}
+            #{payload[0]?.payload.rank}
           </span>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };
 
-// Custom active shape for interactive pie segments
 const renderActiveShape = (props: any) => {
   const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } =
     props;
@@ -95,7 +94,7 @@ export function SectorAllocationChart({ data }: SectorAllocationChartProps) {
 
   if (!data || data.length === 0) {
     return (
-      <div className="text-center py-12 text-muted-foreground">
+      <div className="text-muted-foreground py-12 text-center">
         No sector allocation data available
       </div>
     );
@@ -121,10 +120,7 @@ export function SectorAllocationChart({ data }: SectorAllocationChartProps) {
     .sort((a, b) => b.value - a.value);
 
   return (
-    <ResponsiveContainer
-      width="100%"
-      height={300}
-    >
+    <ResponsiveContainer width="100%" height={300}>
       <PieChart>
         <Pie
           activeIndex={activeIndex}
@@ -160,9 +156,9 @@ export function SectorAllocationChart({ data }: SectorAllocationChartProps) {
           layout="vertical"
           align="right"
           verticalAlign="middle"
-          formatter={(value, entry: any) => (
+          formatter={(value: number, entry) => (
             <span className="text-sm">
-              {value} ({entry.payload.value.toFixed(1)}%)
+              {value} ({entry.payload?.value.toFixed(2)}%)
             </span>
           )}
         />

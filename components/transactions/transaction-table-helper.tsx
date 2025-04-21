@@ -42,7 +42,7 @@ export function TransactionTableHelper({}) {
     isLoading,
     error,
   } = api.user.getTransactions.useQuery({
-    userId: user?.id!,
+    userId: user!.id!,
     dateRange: filters.dateRange,
     type: filters.type,
   });

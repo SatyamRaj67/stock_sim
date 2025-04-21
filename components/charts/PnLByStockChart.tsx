@@ -10,18 +10,14 @@ import {
   Cell,
   type TooltipProps,
 } from "recharts";
-import type { PnLItem } from "@/types/analytics";
+import type { payloadItem, PnLByStockChartProps, PnLItem } from "@/types/analytics";
 import { ArrowUpIcon, ArrowDownIcon } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
-
-interface PnLByStockChartProps {
-  data: PnLItem[];
-}
 
 // Custom tooltip component
 interface CustomTooltipProps extends TooltipProps<number, string> {
   active?: boolean;
-  payload?: any[];
+  payload?: payloadItem[];
   label?: string;
   data: PnLItem[];
 }
@@ -153,7 +149,7 @@ export function PnLByStockChart({ data }: PnLByStockChartProps) {
           horizontal={true}
           vertical={false}
         />
-        <XAxis type="number" tickFormatter={(value) => formatCurrency(value)} />
+        <XAxis type="number" tickFormatter={(value: number) => formatCurrency(value)} />
         <YAxis
           type="category"
           dataKey="symbol"

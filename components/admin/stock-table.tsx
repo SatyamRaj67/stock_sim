@@ -48,8 +48,6 @@ export function AdminStockTable() {
     setIsCreateDialogOpen(false);
     setIsEditDialogOpen(false);
     setIsDeleteDialogOpen(false);
-    // Optionally invalidate cache after mutation success in dialogs
-    utils.stockAdmin.getAllStocks.invalidate();
   };
 
   if (isLoading) {
@@ -96,11 +94,10 @@ export function AdminStockTable() {
                   <TableCell className="font-medium">{stock.symbol}</TableCell>
                   <TableCell>{stock.name}</TableCell>
                   <TableCell>{formatCurrency(stock.currentPrice)}</TableCell>
-                  <TableCell>{formatNumber(stock.volume || 0)}</TableCell>
-                  <TableCell>{formatNumber(stock.marketCap || 0)}</TableCell>
-                  <TableCell>{stock.sector || "-"}</TableCell>
+                  <TableCell>{formatNumber(stock.volume ?? 0)}</TableCell>
+                  <TableCell>{formatNumber(stock.marketCap ?? 0)}</TableCell>
+                  <TableCell>{stock.sector ?? "-"}</TableCell>
                   <TableCell>
-                    {" "}
                     <div className="flex flex-wrap gap-1">
                       {!stock.isActive && (
                         <Badge variant="outline" className="bg-red-700">
@@ -159,8 +156,8 @@ export function AdminStockTable() {
         open={isCreateDialogOpen}
         onClose={handleCloseDialogs}
         onSuccess={() => {
-          utils.stockAdmin.getAllStocks.invalidate();
-          handleCloseDialogs();
+          void utils.stockAdmin.getAllStocks.invalidate();
+          void handleCloseDialogs();
         }}
       />
 
@@ -171,8 +168,8 @@ export function AdminStockTable() {
           open={isEditDialogOpen}
           onClose={handleCloseDialogs}
           onSuccess={() => {
-            utils.stockAdmin.getAllStocks.invalidate(); // Invalidate cache on success
-            handleCloseDialogs();
+            void utils.stockAdmin.getAllStocks.invalidate(); // Invalidate cache on success
+            void handleCloseDialogs();
           }}
         />
       )}
@@ -185,8 +182,8 @@ export function AdminStockTable() {
           open={isDeleteDialogOpen}
           onClose={handleCloseDialogs}
           onSuccess={() => {
-            utils.stockAdmin.getAllStocks.invalidate();
-            handleCloseDialogs();
+            void utils.stockAdmin.getAllStocks.invalidate();
+            void handleCloseDialogs();
           }}
         />
       )}

@@ -13,26 +13,21 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+// import type { Stock } from "@/types";
 
 // Define types for our stock data
-type StockData = {
-  stock: {
-    id: string;
-    symbol: string;
-    name: string;
-    currentPrice: number;
-    sector?: string;
-  };
-  chartData: {
-    date: string;
-    price: number;
-  }[];
-  priceChange: number;
-  percentChange: number;
-};
+// type StockData = {
+//   stock: Stock;
+//   chartData: {
+//     date: string;
+//     price: number;
+//   }[];
+//   priceChange: number;
+//   percentChange: number;
+// };
 
 const HeroSection = () => {
-  const [stockData, setStockData] = useState<StockData | null>(null);
+  // const stockData = <StockData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,15 +35,6 @@ const HeroSection = () => {
     const fetchStockData = async () => {
       try {
         setIsLoading(true);
-        // Replace with the specific stock symbol you want, e.g., "AAPL"
-        // const response = await fetch("/api/stocks/history?symbol=AAPL");
-
-        // if (!response.ok) {
-        //   throw new Error("Failed to fetch stock data");
-        // }
-
-        // const data = await response.json();
-        // setStockData(data);
         setError(null);
       } catch (err) {
         console.error("Error fetching stock data:", err);
@@ -58,11 +44,11 @@ const HeroSection = () => {
       }
     };
 
-    fetchStockData();
+    void fetchStockData();
   }, []);
 
   // Use default data if we couldn't fetch from the API
-  const displayData = stockData ?? {
+  const displayData = {
     stock: {
       symbol: "AAPL",
       name: "Apple Inc.",
@@ -132,7 +118,7 @@ const HeroSection = () => {
                     </div>
                     <div className="text-right">
                       <p className="text-xl font-bold">
-                        ${displayData.stock.currentPrice}
+                        ${displayData.stock.currentPrice.toString()}
                       </p>
                       <p
                         className={`${isPriceUp ? "text-emerald-400" : "text-red-400"} text-sm`}

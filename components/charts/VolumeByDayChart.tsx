@@ -1,6 +1,5 @@
 import React from "react";
 import {
-  BarChart,
   Bar,
   Line,
   XAxis,
@@ -38,13 +37,13 @@ export function VolumeByDayChart({ data }: VolumeByDayChartProps) {
         <YAxis
           yAxisId="left"
           orientation="left"
-          tickFormatter={(value) => value.toLocaleString()}
+          tickFormatter={(value: number) => value.toLocaleString()}
           tick={{ fontSize: 12 }}
         />
         <YAxis
           yAxisId="right"
           orientation="right"
-          tickFormatter={(value) => formatCurrency(value)}
+          tickFormatter={(value: number) => formatCurrency(value)}
           tick={{ fontSize: 12 }}
         />
         <Tooltip

@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import type * as z from "zod";
 import { api } from "@/trpc/react";
 import { stockUpdateSchema } from "@/schemas";
 import {
@@ -109,7 +109,7 @@ export function StockEditDialog({
         <DialogHeader>
           <DialogTitle>Edit Stock: {stock.symbol}</DialogTitle>
           <DialogDescription>
-            Make changes to the stock details. Click save when you're done.
+            Make changes to the stock details. Click save when you&apos;re done.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>

@@ -30,14 +30,10 @@ const calculatePriceChange = (
   const previousClose = new Decimal(previousCloseValue);
 
   if (previousClose.isZero()) {
-    return new Decimal(0); 
+    return new Decimal(0);
   }
-  return currentPrice
-    .minus(previousClose)
-    .dividedBy(previousClose)
-    .times(100);
+  return currentPrice.minus(previousClose).dividedBy(previousClose).times(100);
 };
-
 
 export function MarketTable() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -57,7 +53,7 @@ export function MarketTable() {
   // Use the tRPC mutation hook for trading stocks
   const tradeMutation = api.stock.tradeStock.useMutation({
     onSuccess: (data, variables) => {
-      toast.success(data.message || "Trade successful!");
+      toast.success(data.message ?? "Trade successful!");
 
       setQuantities((prev) => {
         const updated = { ...prev };
@@ -67,7 +63,7 @@ export function MarketTable() {
       setProcessingTrade(null);
     },
     onError: (error) => {
-      toast.error(error.message || "Trade failed.");
+      toast.error(error.message ?? "Trade failed.");
       setProcessingTrade(null); // Clear processing state on error
     },
   });
@@ -90,7 +86,7 @@ export function MarketTable() {
   };
 
   const handleBuy = (stockId: string) => {
-    const quantity = quantities[stockId] || 0;
+    const quantity = quantities[stockId] ?? 0;
     if (quantity <= 0) {
       toast.error("Please enter a valid quantity");
       return;
@@ -108,7 +104,7 @@ export function MarketTable() {
   };
 
   const handleSell = (stockId: string) => {
-    const quantity = quantities[stockId] || 0;
+    const quantity = quantities[stockId] ?? 0;
     if (quantity <= 0) {
       toast.error("Please enter a valid quantity");
       return;
@@ -130,10 +126,9 @@ export function MarketTable() {
   const activeStocks = safeStocks.filter((stock) => stock.isActive);
   const filteredStocks = activeStocks.filter(
     (stock) =>
-      stock.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      stock.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (stock.sector &&
-        stock.sector.toLowerCase().includes(searchQuery.toLowerCase())),
+      stock.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ??
+    stock.name.toLowerCase().includes(searchQuery.toLowerCase()) ??
+    (stock.sector && stock.sector.toLowerCase().includes(searchQuery.toLowerCase())),
   );
 
   return (
@@ -194,7 +189,7 @@ export function MarketTable() {
                   processingTrade?.type === TransactionType.SELL;
                 // Disable input/buttons if *any* trade is processing for this stock
                 const isProcessingCurrentStock =
-                  isProcessingBuy || isProcessingSell;
+                  isProcessingBuy ?? isProcessingSell;
 
                 return (
                   <TableRow key={stock.id}>
@@ -217,22 +212,22 @@ export function MarketTable() {
                     </TableCell>
                     <TableCell>{formatNumber(stock.volume)}</TableCell>
                     <TableCell>{formatNumber(stock.marketCap)}</TableCell>
-                    <TableCell>{stock.sector || "-"}</TableCell>
+                    <TableCell>{stock.sector ?? "-"}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Input
                           type="number"
                           placeholder="Qty"
                           className="h-8 w-16"
-                          value={quantities[stock.id] || ""} // Control the input value
+                          value={quantities[stock.id] ?? ""} // Control the input value
                           onChange={(e) =>
                             handleQuantityChange(stock.id, e.target.value)
                           }
                           // Disable input if this specific stock is being processed or globally disabled
                           disabled={
-                            isProcessingCurrentStock ||
-                            stock.isFrozen ||
-                            !stock.isActive ||
+                            isProcessingCurrentStock ??
+                            stock.isFrozen ??
+                            !stock.isActive ??
                             tradeMutation.isPending
                           }
                           min="0" // Prevent negative numbers
@@ -245,9 +240,9 @@ export function MarketTable() {
                           onClick={() => handleBuy(stock.id)}
                           disabled={
                             // Disable if processing this stock, or globally disabled, or any mutation is pending
-                            isProcessingCurrentStock ||
-                            stock.isFrozen ||
-                            !stock.isActive ||
+                            isProcessingCurrentStock ??
+                            stock.isFrozen ??
+                            !stock.isActive ??
                             tradeMutation.isPending
                           }
                         >
@@ -266,9 +261,9 @@ export function MarketTable() {
                           onClick={() => handleSell(stock.id)}
                           disabled={
                             // Disable if processing this stock, or globally disabled, or any mutation is pending
-                            isProcessingCurrentStock ||
-                            stock.isFrozen ||
-                            !stock.isActive ||
+                            isProcessingCurrentStock ??
+                            stock.isFrozen ??
+                            !stock.isActive ??
                             tradeMutation.isPending
                           }
                         >
@@ -281,7 +276,7 @@ export function MarketTable() {
                         </Button>
                       </div>
 
-                      {(stock.isFrozen || !stock.isActive) && (
+                      {(stock.isFrozen ?? !stock.isActive) && (
                         <div className="mt-1">
                           <Badge
                             variant="secondary"

@@ -10,7 +10,7 @@ import {
   Cell,
   type TooltipProps,
 } from "recharts";
-import type { PerformerItem } from "@/types/analytics";
+import type { payloadItem, PerformerItem } from "@/types/analytics";
 import { TrendingUpIcon, TrendingDownIcon, MinusIcon } from "lucide-react";
 
 interface TopPerformersChartProps {
@@ -20,7 +20,7 @@ interface TopPerformersChartProps {
 // Custom tooltip component
 interface CustomTooltipProps extends TooltipProps<number, string> {
   active?: boolean;
-  payload?: any[];
+  payload?: payloadItem[];
   label?: string;
   data: PerformerItem[];
 }
@@ -36,7 +36,7 @@ const CustomTooltip = ({
   const stockData = data.find((item) => item.symbol === label);
   if (!stockData) return null;
 
-  const returnValue = payload[0].value;
+  const returnValue = payload[0]!.value;
   const isPositive = returnValue > 0;
   const isNeutral = returnValue === 0;
 

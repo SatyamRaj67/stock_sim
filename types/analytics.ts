@@ -90,10 +90,11 @@ export interface StockPnL {
   profit: number;
   loss: number;
   unrealized: number;
-  total?: number;
+  total: number;
 }
 export interface MarketTrend {
   id: number;
+  symbol: string;
   market: number;
   stock: number;
 }
@@ -116,6 +117,20 @@ export type TransactionWithStock = Transaction & {
     name: string;
   };
 };
+
+export interface PnLByStockChartProps {
+  data: PnLItem[];
+}
+
+export interface payloadItem {
+  name: string;
+  value: number;
+  payload: PnLItem;
+  dataKey: string;
+  color?: string;
+  fill?: string;
+  stroke?: string;
+}
 
 export const timeRangeOptions: TimeRangeOption[] = [
   { value: "1w", label: "1 Week" },

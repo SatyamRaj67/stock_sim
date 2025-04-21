@@ -12,9 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 
 // Import types
-import {
-  timeRangeOptions,
-} from "@/types/analytics";
+import { timeRangeOptions } from "@/types/analytics";
 
 // Import tab content components
 import { OverviewTab } from "@/components/analytics/OverviewTab";
@@ -30,7 +28,7 @@ export default function AnalyticsPage() {
   const [activeTab, setActiveTab] = useState<string>("overview");
 
   const {
-    data: apiData,
+    data: data,
     isLoading,
     isError,
   } = api.analytics.getAnalyticsData.useQuery(
@@ -39,17 +37,6 @@ export default function AnalyticsPage() {
       refetchOnWindowFocus: false,
     },
   );
-
-  // Transform data to ensure it matches the expected AnalyticsData type
-  const data = apiData
-    ? {
-        ...apiData,
-        pnlByStock: apiData.pnlByStock.map((item) => ({
-          ...item,
-          total: item.total ?? 0, // Ensure total is never undefined
-        })),
-      }
-    : undefined;
 
   if (isError) {
     return (
@@ -66,7 +53,7 @@ export default function AnalyticsPage() {
   }
 
   const selectedTimeLabel =
-    timeRangeOptions.find((o) => o.value === timeRange)?.label || timeRange;
+    timeRangeOptions.find((o) => o.value === timeRange)?.label ?? timeRange;
 
   return (
     <div className="container mx-auto space-y-8 p-8">

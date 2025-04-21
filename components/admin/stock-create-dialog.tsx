@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import type * as z from "zod";
 import { api } from "@/trpc/react";
 import { stockCreateSchema } from "@/schemas";
 import {
@@ -112,7 +112,7 @@ export function CreateStockDialog({
         <DialogHeader>
           <DialogTitle>Create New Stock</DialogTitle>
           <DialogDescription>
-            Enter the details for the new stock. Click save when you're done.
+            Enter the details for the new stock. Click save when you&apos;re done.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -174,7 +174,7 @@ export function CreateStockDialog({
                     <FormLabel>Sector</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      defaultValue={field.value || ""}
+                      defaultValue={field.value ?? ""}
                     >
                       <FormControl>
                         <SelectTrigger>

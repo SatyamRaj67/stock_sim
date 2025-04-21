@@ -10,9 +10,10 @@ import {
 import { format } from "date-fns";
 import Link from "next/link";
 import { Button } from "../ui/button";
+import type { Transaction } from "@/types";
 
 interface RecentTransactionsProps {
-  transactions: any[];
+  transactions: Transaction[];
 }
 
 export function RecentTransactions({ transactions }: RecentTransactionsProps) {

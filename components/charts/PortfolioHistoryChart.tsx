@@ -15,7 +15,7 @@ import {
   TrendingUpIcon,
   TrendingDownIcon,
 } from "lucide-react";
-import type { PortfolioHistoryItem } from "@/types/analytics";
+import type { payloadItem, PortfolioHistoryItem } from "@/types/analytics";
 import { formatCurrency } from "@/lib/utils";
 
 interface PortfolioHistoryChartProps {
@@ -25,7 +25,7 @@ interface PortfolioHistoryChartProps {
 // Custom tooltip component
 interface CustomTooltipProps extends TooltipProps<number, string> {
   active?: boolean;
-  payload?: any[];
+  payload?: payloadItem[];
   label?: string;
   data: PortfolioHistoryItem[];
 }
@@ -38,15 +38,15 @@ const CustomTooltip = ({
 }: CustomTooltipProps) => {
   if (!active || !payload || payload.length === 0) return null;
 
-  const currentValue = payload[0].value;
+  const currentValue = payload[0]!.value;
   const currentIndex = data.findIndex((item) => item.date === label);
   const previousValue =
     currentIndex > 0 ? data[currentIndex - 1]?.value : currentValue;
 
   // Calculate daily change
-  const absoluteChange = currentValue - previousValue;
+  const absoluteChange = currentValue - previousValue!;
   const percentChange =
-    previousValue !== 0 ? (absoluteChange / previousValue) * 100 : 0;
+    previousValue !== 0 ? (absoluteChange / previousValue!) * 100 : 0;
   const isPositive = absoluteChange >= 0;
 
   return (
@@ -138,7 +138,7 @@ export function PortfolioHistoryChart({ data }: PortfolioHistoryChartProps) {
             axisLine={false}
           />
           <YAxis
-            tickFormatter={(value) => formatCurrency(value)}
+            tickFormatter={(value: number) => formatCurrency(value)}
             tick={{ fontSize: 12 }}
             tickLine={false}
             axisLine={false}

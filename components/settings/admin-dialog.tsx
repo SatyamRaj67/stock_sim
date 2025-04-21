@@ -83,7 +83,7 @@ export function AdminDialog({ open, onOpenChange }: AdminDialogProps) {
       await utils.user.getUserById.invalidate(session?.user?.id);
       // Update the session with the new role
       await updateSession({
-        user: { ...session?.user, role: updatedUser.role },
+        user: { ...session?.user, role: updatedUser?.role },
       });
       onOpenChange(false); // Close the dialog on success
     },

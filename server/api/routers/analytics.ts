@@ -10,14 +10,25 @@ import {
   format,
   parseISO,
 } from "date-fns";
-import { analyticsTimeRangeSchema, type MarketTrend, type PerformerData, type PortfolioHistoryPoint, type PortfolioWithPositionsAndStock, type SectorAllocation, type StockPnL, type TradeActivity, type TransactionWithStock, type VolumeData } from "@/types/analytics";
+import {
+  analyticsTimeRangeSchema,
+  type MarketTrend,
+  type PerformerData,
+  type PortfolioHistoryPoint,
+  type PortfolioWithPositionsAndStock,
+  type SectorAllocation,
+  type StockPnL,
+  type TradeActivity,
+  type TransactionWithStock,
+  type VolumeData,
+} from "@/types/analytics";
 
 export const analyticsRouter = createTRPCRouter({
   getAnalyticsData: protectedProcedure
-    .input(analyticsTimeRangeSchema) // Use the input schema
+    .input(analyticsTimeRangeSchema)
     .query(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
-      const { timeRange } = input; // Get timeRange from input
+      const { timeRange } = input;
 
       try {
         // Calculate date range based on selected time period
@@ -90,10 +101,7 @@ export const analyticsRouter = createTRPCRouter({
         })) as PortfolioWithPositionsAndStock | null; // Type assertion
 
         // Generate portfolio history data points
-        const portfolioHistory = generatePortfolioHistoryData(
-          startDate,
-          now,
-        );
+        const portfolioHistory = generatePortfolioHistoryData(startDate, now);
 
         // Calculate sector allocation
         const sectorAllocation = calculateSectorAllocation(portfolio);
@@ -102,9 +110,7 @@ export const analyticsRouter = createTRPCRouter({
         const topPerformers = calculateTopPerformers(portfolio);
 
         // Calculate trade activity
-        const tradeActivity = calculateTradeActivity(
-          transactions,
-        );
+        const tradeActivity = calculateTradeActivity(transactions);
 
         // Calculate volume by day
         const volumeByDay = calculateVolumeByDay(transactions);
@@ -263,18 +269,8 @@ function calculatePnLByStock(
         profit: 0,
         loss: 0,
         unrealized: 0,
+        total: 0,
       };
-    }
-    if (tx.type === "SELL") {
-      // TODO: Need actual P/L calculation logic here based on buy cost for sold shares
-      // This requires tracking cost basis per lot, which is complex.
-      // Placeholder: Assume profitLoss is available on sell transactions (needs schema update)
-      const profit = tx.profitLoss ? Number(tx.profitLoss) : 0; // Assuming profitLoss exists
-      if (profit >= 0) {
-        stockPnL[symbol].profit += profit;
-      } else {
-        stockPnL[symbol].loss += Math.abs(profit);
-      }
     }
   });
 
@@ -288,6 +284,7 @@ function calculatePnLByStock(
         profit: 0,
         loss: 0,
         unrealized: 0,
+        total: 0,
       };
     }
     const unrealizedPL = Number(position.profitLoss); // Assuming profitLoss exists on Position
@@ -299,18 +296,46 @@ function calculatePnLByStock(
       ...stock,
       total: stock.profit - stock.loss + stock.unrealized,
     }))
-    .sort((a, b) => Math.abs(b.total!) - Math.abs(a.total!))
+    .sort((a, b) => Math.abs(b.total) - Math.abs(a.total))
     .slice(0, 10);
 }
 
 function generateMarketTrendsData(): MarketTrend[] {
   const stocks: MarketTrend[] = [];
+
+  const exampleSymbols = [
+    "AAPL",
+    "GOOGL",
+    "MSFT",
+    "AMZN",
+    "TSLA",
+    "NVDA",
+    "META",
+    "JPM",
+    "JNJ",
+    "V",
+    "BAC",
+    "WMT",
+    "PG",
+    "MA",
+    "HD",
+    "DIS",
+    "PYPL",
+    "NFLX",
+    "ADBE",
+    "CRM",
+  ];
+
   for (let i = 0; i < 20; i++) {
     const marketReturn = Math.random() * 20 - 10;
     const correlation = 0.7 + (Math.random() * 0.6 - 0.3);
     const stockReturn = marketReturn * correlation + (Math.random() * 10 - 5);
+
+    const symbol = exampleSymbols[i % exampleSymbols.length];
+
     stocks.push({
       id: i,
+      symbol: symbol?.toString() ?? "",
       market: parseFloat(marketReturn.toFixed(2)),
       stock: parseFloat(stockReturn.toFixed(2)),
     });

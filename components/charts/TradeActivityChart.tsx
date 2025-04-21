@@ -48,13 +48,13 @@ export function TradeActivityChart({
         <YAxis
           yAxisId="left"
           orientation="left"
-          tickFormatter={(value) => formatCurrency(value)}
+          tickFormatter={(value : number) => formatCurrency(value)}
           tick={{ fontSize: 12 }}
         />
         <YAxis
           yAxisId="right"
           orientation="right"
-          tickFormatter={(value) => formatCurrency(value)}
+          tickFormatter={(value: number) => formatCurrency(value)}
           tick={{ fontSize: 12 }}
         />
         <Tooltip formatter={(value: number) => [formatCurrency(value), ""]} />

@@ -45,10 +45,10 @@ export function StockPnLDetailedChart({ data }: StockPnLDetailedChartProps) {
           tick={{ fontSize: 12 }}
           height={70}
         />
-        <YAxis tickFormatter={(value) => formatCurrency(value)} />
+        <YAxis tickFormatter={(value: number) => formatCurrency(value)} />
         <Tooltip
           formatter={(value: number) => [formatCurrency(value), ""]}
-          labelFormatter={(value) => {
+          labelFormatter={(value: string) => {
             const stock = chartData.find((item) => item.symbol === value);
             return stock ? `${stock.name} (${stock.symbol})` : value;
           }}
