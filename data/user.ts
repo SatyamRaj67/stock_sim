@@ -98,7 +98,7 @@ export const updateUserForBuy = async (
       where: { id: userId },
       data: {
         balance: { decrement: transactionAmount },
-        // Portfolio value update is handled separately by recalculation
+        portfolioValue: { increment: transactionAmount },
       },
     });
   } catch (error) {
@@ -117,6 +117,7 @@ export const updateUserForSell = async (
       where: { id: userId },
       data: {
         balance: { increment: transactionAmount },
+        portfolioValue: { decrement: transactionAmount },
         totalProfit: { increment: profitOrLossOnSale },
       },
     });
