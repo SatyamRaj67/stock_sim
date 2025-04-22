@@ -13,7 +13,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowUpIcon, ArrowDownIcon, Search, Loader2 } from "lucide-react";
+import {
+  ArrowUpIcon,
+  ArrowDownIcon,
+  Search,
+  Loader2,
+  ArrowRightFromLine,
+} from "lucide-react";
 import { formatCurrency, formatNumber } from "@/lib/utils";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
@@ -127,8 +133,9 @@ export function MarketTable() {
   const filteredStocks = activeStocks.filter(
     (stock) =>
       stock.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ??
-    stock.name.toLowerCase().includes(searchQuery.toLowerCase()) ??
-    (stock.sector && stock.sector.toLowerCase().includes(searchQuery.toLowerCase())),
+      stock.name.toLowerCase().includes(searchQuery.toLowerCase()) ??
+      (stock.sector &&
+        stock.sector.toLowerCase().includes(searchQuery.toLowerCase())),
   );
 
   return (
@@ -148,18 +155,21 @@ export function MarketTable() {
 
       <div className="rounded-md border">
         <Table>
-          <TableCaption className="p-2">
-            List of available stocks in the market
+          <TableCaption className="table-caption p-2 md:hidden">
+            <div className="flex items-center">
+              <ArrowRightFromLine />
+              &nbsp; &nbsp; Scroll Right to get more values
+            </div>
           </TableCaption>
           <TableHeader>
             <TableRow>
               <TableHead>Symbol</TableHead>
-              <TableHead>Name</TableHead>
+              <TableHead className="hidden md:table-cell">Name</TableHead>
               <TableHead>Price</TableHead>
               <TableHead>Change</TableHead>
-              <TableHead>Volume</TableHead>
-              <TableHead>Market Cap</TableHead>
-              <TableHead>Sector</TableHead>
+              <TableHead className="hidden md:table-cell">Volume</TableHead>
+              <TableHead className="hidden md:table-cell">Market Cap</TableHead>
+              <TableHead className="hidden md:table-cell">Sector</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -196,7 +206,9 @@ export function MarketTable() {
                     <TableCell className="font-medium">
                       {stock.symbol}
                     </TableCell>
-                    <TableCell>{stock.name}</TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      {stock.name}
+                    </TableCell>
                     <TableCell>{formatCurrency(stock.currentPrice)}</TableCell>
                     <TableCell>
                       <div
@@ -210,9 +222,15 @@ export function MarketTable() {
                         {priceChange.toFixed(2)}%
                       </div>
                     </TableCell>
-                    <TableCell>{formatNumber(stock.volume)}</TableCell>
-                    <TableCell>{formatNumber(stock.marketCap)}</TableCell>
-                    <TableCell>{stock.sector ?? "-"}</TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      {formatNumber(stock.volume)}
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      {formatNumber(stock.marketCap)}
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      {stock.sector ?? "-"}
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Input

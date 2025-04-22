@@ -27,7 +27,7 @@ export function PortfolioBreakdown({
         <CardHeader>
           <CardTitle className="flex items-center">
             <PieChart className="mr-2 h-5 w-5" />
-            Portfolio Breakdown {portfolioValue.toString()}
+            Portfolio Breakdown
           </CardTitle>
         </CardHeader>
         <CardContent>

@@ -9,8 +9,10 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export function NavAdmin({
   items,
@@ -21,6 +23,14 @@ export function NavAdmin({
     icon?: IconType;
   }[];
 }) {
+  const pathname = usePathname();
+  const { isMobile, setOpenMobile } = useSidebar();
+
+  const handleLinkClick = () => {
+    if (isMobile) {
+      setOpenMobile(false); // Close sidebar only if mobile
+    }
+  };
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Admin</SidebarGroupLabel>
@@ -28,12 +38,17 @@ export function NavAdmin({
         <SidebarMenu>
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>
-              <Link href={item.href}>
-                <SidebarMenuButton tooltip={item.title}>
+              <SidebarMenuButton
+                asChild
+                onClick={handleLinkClick}
+                isActive={pathname === item.href}
+                tooltip={item.title}
+              >
+                <Link href={item.href}>
                   {item.icon && <item.icon />}
                   {item.title}
-                </SidebarMenuButton>
-              </Link>
+                </Link>
+              </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
