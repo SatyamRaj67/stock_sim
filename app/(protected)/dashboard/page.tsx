@@ -1,15 +1,72 @@
 "use client";
 
+import dynamic from "next/dynamic";
+
 import { SectionCards } from "@/components/home/CardsSection";
-import { ChartAreaInteractive } from "@/components/layout/chart-area-interactive";
-import { PortfolioBreakdown } from "@/components/dashboard/portfolio-breakdown";
-import { RecentTransactions } from "@/components/dashboard/recent-transactions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { api } from "@/trpc/react";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import Decimal from "decimal.js";
 import { formatCurrency } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
+
+// --- Define Dynamic Components ---
+
+// Loading component for Chart
+const ChartLoading = () => (
+  <div className="h-[300px] w-full">
+    {" "}
+    {/* Adjust height as needed */}
+    <Skeleton className="h-full w-full" />
+  </div>
+);
+
+// Loading component for Portfolio/Transactions
+const SectionLoading = () => (
+  <Card>
+    <CardHeader>
+      <Skeleton className="h-6 w-1/2" />
+    </CardHeader>
+    <CardContent className="space-y-4">
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-3/4" />
+    </CardContent>
+  </Card>
+);
+
+const DynamicChartAreaInteractive = dynamic(
+  () =>
+    import("@/components/layout/chart-area-interactive").then(
+      (mod) => mod.ChartAreaInteractive,
+    ),
+  {
+    ssr: false, // Disable SSR if the chart relies on browser APIs
+    loading: () => <ChartLoading />,
+  },
+);
+
+const DynamicPortfolioBreakdown = dynamic(
+  () =>
+    import("@/components/dashboard/portfolio-breakdown").then(
+      (mod) => mod.PortfolioBreakdown,
+    ),
+  {
+    loading: () => <SectionLoading />,
+  },
+);
+
+const DynamicRecentTransactions = dynamic(
+  () =>
+    import("@/components/dashboard/recent-transactions").then(
+      (mod) => mod.RecentTransactions,
+    ),
+  {
+    loading: () => <SectionLoading />,
+  },
+);
+// --- End Define Dynamic Components ---
 
 const DashboardPage = () => {
   const user = useCurrentUser();
@@ -149,16 +206,16 @@ const DashboardPage = () => {
                 <CardTitle>Portfolio Performance</CardTitle>
               </CardHeader>
               <CardContent>
-                <ChartAreaInteractive />
+                <DynamicChartAreaInteractive />
               </CardContent>
             </Card>
 
             <div className="grid gap-6 md:grid-cols-2">
-              <PortfolioBreakdown
+              <DynamicPortfolioBreakdown
                 portfolioValue={portfolioValue}
                 positions={positionsData}
               />
-              <RecentTransactions transactions={transactions} />
+              <DynamicRecentTransactions transactions={transactions} />
             </div>
           </div>
         </div>
