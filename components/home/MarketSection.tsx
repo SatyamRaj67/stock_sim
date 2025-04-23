@@ -3,6 +3,7 @@ import { Card, CardContent } from "../ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
 import { Button } from "../ui/button";
 import Link from "next/link";
+import { Skeleton } from "../ui/skeleton"; // Import Skeleton
 
 const stocks = [
   {
@@ -112,5 +113,40 @@ const MarketSection = () => {
     </section>
   );
 };
+
+export const MarketSectionSkeleton = () => (
+  <section className="py-8">
+    <div className="container mx-auto">
+      <div className="mb-8 flex items-center justify-between">
+        <Skeleton className="h-8 w-48" /> {/* Title */}
+        <Skeleton className="h-10 w-36" /> {/* Button */}
+      </div>
+      <div className="mb-6 flex space-x-4 border-b">
+        <Skeleton className="h-10 w-24" /> {/* Tab Trigger */}
+        <Skeleton className="h-10 w-24" /> {/* Tab Trigger */}
+        <Skeleton className="h-10 w-24" /> {/* Tab Trigger */}
+        <Skeleton className="h-10 w-24" /> {/* Tab Trigger */}
+      </div>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {[...Array(6)].map((_, i) => (
+          <Card key={i} className="border-none shadow-sm">
+            <CardContent className="p-4">
+              <div className="flex items-start justify-between">
+                <div>
+                  <Skeleton className="h-5 w-16 mb-1" /> {/* Symbol */}
+                  <Skeleton className="h-4 w-24" /> {/* Name */}
+                </div>
+                <div className="text-right">
+                  <Skeleton className="h-5 w-20 mb-1" /> {/* Price */}
+                  <Skeleton className="h-4 w-12" /> {/* Change */}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  </section>
+);
 
 export default MarketSection;

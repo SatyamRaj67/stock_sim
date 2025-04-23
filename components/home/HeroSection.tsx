@@ -8,10 +8,10 @@ import { ArrowRightIcon, TrendingDown, TrendingUp } from "lucide-react";
 import { api } from "@/trpc/react";
 import { PriceHistoryChart } from "@/components/charts/PriceHistoryChart";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils"; 
+import { cn } from "@/lib/utils";
 
 const HeroSection = () => {
-  const featuredSymbol = "AAPL"; 
+  const featuredSymbol = "AAPL";
 
   // Fetch Price History
   const { data: chartData, isLoading: isLoadingChart } =
@@ -122,5 +122,25 @@ const HeroSection = () => {
     </section>
   );
 };
+
+export const HeroSectionSkeleton = () => (
+  <section className="w-full py-4 md:py-16">
+    <div className="container mx-auto grid grid-cols-1 items-center gap-8 md:grid-cols-2">
+      {/* Left Side Skeleton */}
+      <div className="space-y-6">
+        <Skeleton className="h-6 w-32" /> {/* Badge */}
+        <Skeleton className="h-12 w-full" /> {/* Title */}
+        <Skeleton className="h-6 w-4/5" /> {/* Subtitle line 1 */}
+        <Skeleton className="h-6 w-3/5" /> {/* Subtitle line 2 */}
+        <div className="flex flex-col gap-4 sm:flex-row">
+          <Skeleton className="h-12 w-full sm:w-40" /> {/* Button 1 */}
+          <Skeleton className="h-12 w-full sm:w-40" /> {/* Button 2 */}
+        </div>
+      </div>
+      {/* Right Side Skeleton */}
+      <Skeleton className="h-[430px] w-full rounded-lg" /> {/* Chart Area */}
+    </div>
+  </section>
+);
 
 export default HeroSection;

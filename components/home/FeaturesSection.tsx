@@ -14,6 +14,7 @@ import {
   CardTitle,
 } from "../ui/card";
 import { Button } from "../ui/button";
+import { Skeleton } from "../ui/skeleton"; // Import Skeleton
 
 const features = [
   {
@@ -77,5 +78,33 @@ const FeaturesSection = () => {
     </section>
   );
 };
+
+export const FeaturesSectionSkeleton = () => (
+  <section className="py-6">
+    <div className="container mx-auto">
+      <div className="mb-16 text-center">
+        <Skeleton className="h-10 w-3/4 mx-auto mb-4" /> {/* Title */}
+        <Skeleton className="h-6 w-1/2 mx-auto" /> {/* Subtitle */}
+      </div>
+      <div className="grid gap-8 md:grid-cols-3">
+        {[...Array(3)].map((_, i) => (
+          <Card key={i} className="border-none shadow-sm">
+            <CardHeader>
+              <Skeleton className="h-10 w-10 mb-4" /> {/* Icon */}
+              <Skeleton className="h-6 w-3/4" /> {/* Card Title */}
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-4 w-full mb-1" /> {/* Description line 1 */}
+              <Skeleton className="h-4 w-5/6" /> {/* Description line 2 */}
+            </CardContent>
+            <CardFooter>
+               <Skeleton className="h-5 w-24" /> {/* Learn more link */}
+            </CardFooter>
+          </Card>
+        ))}
+      </div>
+    </div>
+  </section>
+);
 
 export default FeaturesSection;

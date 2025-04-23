@@ -1,5 +1,6 @@
 import { Search, Shield, Star } from "lucide-react";
 import React from "react";
+import { Skeleton } from "../ui/skeleton"; // Import Skeleton
 
 const keys = [
   {
@@ -53,5 +54,29 @@ const ImportanceSection = () => {
     </section>
   );
 };
+
+export const ImportanceSectionSkeleton = () => (
+  <section className="py-12">
+    <div className="container mx-auto">
+      <div className="mb-16 text-center">
+        <Skeleton className="mx-auto mb-4 h-10 w-3/4" /> {/* Title */}
+        <Skeleton className="mx-auto h-6 w-1/2" /> {/* Subtitle */}
+      </div>
+      <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="flex gap-4">
+            <Skeleton className="h-12 w-12 rounded-full" /> {/* Icon */}
+            <div className="flex-1">
+              <Skeleton className="mb-2 h-6 w-3/4" /> {/* Item Title */}
+              <Skeleton className="mb-1 h-4 w-full" />
+              {/* Description line 1 */}
+              <Skeleton className="h-4 w-5/6" /> {/* Description line 2 */}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+);
 
 export default ImportanceSection;
