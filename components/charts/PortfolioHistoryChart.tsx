@@ -17,9 +17,11 @@ import {
 } from "lucide-react";
 import type { payloadItem, PortfolioHistoryItem } from "@/types/analytics";
 import { formatCurrency } from "@/lib/utils";
+import { format } from "date-fns";
 
 interface PortfolioHistoryChartProps {
   data: PortfolioHistoryItem[];
+  selectedDays?: number;
 }
 
 // Custom tooltip component
@@ -36,7 +38,9 @@ const CustomTooltip = ({
   label,
   data,
 }: CustomTooltipProps) => {
-  if (!active || !payload || payload.length === 0) return null;
+  if (!active || !payload || payload.length === 0 || !label) return null;
+
+  const formattedDate = format(new Date(label), "MMM d, yyyy");
 
   const currentValue = payload[0]!.value;
   const currentIndex = data.findIndex((item) => item.date === label);
@@ -52,7 +56,9 @@ const CustomTooltip = ({
   return (
     <div className="custom-tooltip bg-background border-muted-background rounded-lg border p-4 shadow-lg">
       <div className="mb-2 flex items-center justify-between">
-        <p className="text-muted-foreground text-sm font-medium">{label}</p>
+        <p className="text-muted-foreground text-sm font-medium">
+          {formattedDate}
+        </p>
         {isPositive ? (
           <TrendingUpIcon size={16} className="text-green-500" />
         ) : (
@@ -88,7 +94,10 @@ const CustomTooltip = ({
   );
 };
 
-export function PortfolioHistoryChart({ data }: PortfolioHistoryChartProps) {
+export function PortfolioHistoryChart({
+  data,
+  selectedDays, // Destructure the new prop
+}: PortfolioHistoryChartProps) {
   if (!data || data.length === 0) {
     return (
       <div className="text-muted-foreground py-12 text-center">
@@ -100,8 +109,18 @@ export function PortfolioHistoryChart({ data }: PortfolioHistoryChartProps) {
   // Calculate percent change from first to last data point
   const firstValue = data[0]!.value;
   const lastValue = data[data.length - 1]!.value;
-  const percentChange = ((lastValue - firstValue) / firstValue) * 100;
-  const isPositive = percentChange >= 0;
+  const percentChange =
+    firstValue !== 0
+      ? ((lastValue - firstValue) / firstValue) * 100
+      : lastValue > 0
+        ? Infinity
+        : 0;
+  const isPositive = lastValue >= firstValue;
+
+  // Adjust the time range description based on selectedDays
+  const timeRangeDescription = selectedDays
+    ? `Last ${selectedDays} days`
+    : `since ${data[0]?.date ? format(new Date(data[0].date), "MMM d, yyyy") : "start"}`;
 
   return (
     <div>
@@ -117,10 +136,13 @@ export function PortfolioHistoryChart({ data }: PortfolioHistoryChartProps) {
               ) : (
                 <ArrowDownIcon className="mr-1 h-4 w-4" />
               )}
-              {Math.abs(percentChange).toFixed(2)}%
+              {percentChange === Infinity
+                ? "∞"
+                : Math.abs(percentChange).toFixed(2)}
+              %
             </span>
             <span className="text-muted-foreground ml-2 text-sm">
-              since {data[0]?.date}
+              {timeRangeDescription}
             </span>
           </div>
         </div>
@@ -133,6 +155,7 @@ export function PortfolioHistoryChart({ data }: PortfolioHistoryChartProps) {
           <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
           <XAxis
             dataKey="date"
+            tickFormatter={(dateStr) => format(new Date(dateStr), "MMM d")}
             tick={{ fontSize: 12 }}
             tickLine={false}
             axisLine={false}

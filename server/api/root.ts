@@ -5,6 +5,7 @@ import { stockRouter } from "./routers/stocks";
 import { stockAdminRouter } from "./routers/stockAdmin";
 import { analyticsRouter } from "./routers/analytics";
 import { notificationRouter } from "./routers/notifications";
+import { portfolioRouter } from "./routers/portfolio";
 
 /**
  * This is the primary router for your server.
@@ -15,6 +16,7 @@ export const appRouter = createTRPCRouter({
   analytics: analyticsRouter,
   admin: adminRouter,
   notifications: notificationRouter,
+  portfolio: portfolioRouter,
   stockAdmin: stockAdminRouter,
   stock: stockRouter,
   user: userRouter,

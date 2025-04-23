@@ -1,136 +1,130 @@
-"use client";
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { Position as PositionType } from "@prisma/client";
-import type { Stock } from "@prisma/client";
-import { PieChart } from "lucide-react";
+// filepath: c:\Users\HP\Documents\VSC\Next\stock_sim\components\dashboard\portfolio-breakdown.tsx
+import React from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { formatCurrency, formatNumber } from "@/lib/utils";
 import Decimal from "decimal.js";
-import { cn, formatCurrency, formatNumber } from "@/lib/utils";
-import { Progress } from "../ui/progress";
+import Link from "next/link";
+import { ArrowDownIcon, ArrowUpIcon } from "lucide-react";
 
-interface PositionWithStock extends PositionType {
-  stock: Stock;
+// Define the expected shape of a position object coming from the API
+// Adjust based on the actual structure returned by `api.user.getPositions`
+interface PositionData {
+  id: string;
+  stock: {
+    id: string;
+    symbol: string;
+    name: string;
+    currentPrice: Decimal | number | string; // Allow different types from API
+  };
+  quantity: number;
+  averageBuyPrice: Decimal | number | string;
+  currentValue: Decimal | number | string;
+  profitLoss: Decimal | number | string;
 }
 
 interface PortfolioBreakdownProps {
-  portfolioValue: Decimal;
-  positions: PositionWithStock[];
+  portfolioValue: Decimal; // Expect Decimal object
+  positions: PositionData[]; // Expect array of positions
 }
 
 export function PortfolioBreakdown({
   portfolioValue,
   positions,
 }: PortfolioBreakdownProps) {
-  if (positions.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <PieChart className="mr-2 h-5 w-5" />
-            Portfolio Breakdown
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex h-48 flex-col items-center justify-center">
-            <p className="text-muted-foreground">
-              No positions in your portfolio.
-            </p>
-            <p className="text-muted-foreground mt-1 text-sm">
-              Start investing to see your holdings here.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  // Ensure positions is an array before proceeding
+  const safePositions = Array.isArray(positions) ? positions : [];
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center">
-          <PieChart className="mr-2 h-5 w-5" />
-          Portfolio Breakdown
-        </CardTitle>
+        <CardTitle>Portfolio Breakdown</CardTitle>
+        <CardDescription>
+          Your current holdings and their performance.
+        </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          {positions.map((position) => {
-            // Ensure all calculations use Decimal
-            const currentValue = new Decimal(position.currentValue);
-            const profitLoss = new Decimal(position.profitLoss);
-            const averageBuyPrice = new Decimal(position.averageBuyPrice);
-            const quantity = new Decimal(position.quantity);
+        {safePositions.length === 0 ? (
+          <div className="text-muted-foreground py-6 text-center">
+            You currently have no positions. Start trading in the market!
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Symbol</TableHead>
+                <TableHead className="text-right">Quantity</TableHead>
+                <TableHead className="text-right">Value</TableHead>
+                <TableHead className="text-right">P/L</TableHead>
+                <TableHead className="text-right">% of Port.</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {safePositions.map((pos) => {
+                // Convert necessary fields to Decimal for calculations
+                const currentValue = new Decimal(pos.currentValue);
+                const profitLoss = new Decimal(pos.profitLoss);
+                const isPositive = profitLoss.gte(0);
+                const percentageOfPortfolio = portfolioValue.isZero()
+                  ? new Decimal(0)
+                  : currentValue.dividedBy(portfolioValue).times(100);
 
-            // Calculate initial cost basis
-            const initialCostBasis = averageBuyPrice.times(quantity);
-            const totalValue = new Decimal(portfolioValue);
-
-            // Calculate percentage of portfolio
-            const percentOfPortfolio = totalValue.isZero()
-              ? new Decimal(0)
-              : currentValue.dividedBy(totalValue).times(100);
-
-            // Determine if it's a profit
-            const isProfit = profitLoss.gte(0); // Greater than or equal to 0
-
-            // Calculate profit/loss percentage
-            const profitLossPercent = initialCostBasis.isZero()
-              ? new Decimal(0) // Avoid division by zero if cost basis is 0
-              : profitLoss.dividedBy(initialCostBasis).times(100);
-
-            return (
-              <div key={position.id} className="flex flex-col">
-                <div className="flex items-center justify-between">
-                  <div>
-                    {/* Use optional chaining for safety, though stock should exist */}
-                    <div className="font-medium">{position.stock?.symbol}</div>
-                    <div className="text-muted-foreground text-sm">
-                      {position.stock?.name}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    {/* Format currentValue */}
-                    <div className="font-medium">
+                return (
+                  <TableRow key={pos.id}>
+                    <TableCell className="font-medium">
+                      <Link
+                        href={`/market/${pos.stock.symbol}`}
+                        className="hover:underline"
+                      >
+                        {pos.stock.symbol}
+                      </Link>
+                      <div className="text-muted-foreground text-xs">
+                        {pos.stock.name}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {formatNumber(pos.quantity)}
+                    </TableCell>
+                    <TableCell className="text-right">
                       {formatCurrency(currentValue)}
-                    </div>
-                    <div
-                      // Use the calculated isProfit for color
-                      className={`text-sm ${isProfit ? "text-green-600" : "text-red-600"}`}
+                    </TableCell>
+                    <TableCell
+                      className={`text-right font-medium ${
+                        isPositive ? "text-green-600" : "text-red-600"
+                      }`}
                     >
-                      {/* Show '+' sign for profit */}
-                      {isProfit ? "+" : ""}
-                      {/* Format profitLoss */}
-                      {formatCurrency(profitLoss)}
-                      {/* Format and display profitLossPercent */}
-                      <span className="ml-1">
-                        ({isProfit ? "+" : ""}
-                        {formatNumber(profitLossPercent)}%)
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Use Progress component for visual representation */}
-                <Progress
-                  value={percentOfPortfolio.toNumber()}
-                  className={cn("mt-2 h-2")}
-                />
-
-                <div className="text-muted-foreground mt-1 flex justify-between text-xs">
-                  <span>
-                    {position.quantity} shares @{" "}
-                    {/* Format average buy price */}
-                    {formatCurrency(averageBuyPrice)} avg
-                  </span>
-                  {/* Display percentage of portfolio */}
-                  <span>
-                    {percentOfPortfolio.toFixed(2)}% of portfolio value
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+                      <div className="flex items-center justify-end">
+                        {isPositive ? (
+                          <ArrowUpIcon className="mr-1 h-3 w-3" />
+                        ) : (
+                          <ArrowDownIcon className="mr-1 h-3 w-3" />
+                        )}
+                        {formatCurrency(profitLoss)}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {percentageOfPortfolio.toFixed(1)}%
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        )}
       </CardContent>
     </Card>
   );

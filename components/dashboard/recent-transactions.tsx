@@ -1,105 +1,103 @@
-"use client";
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React from "react";
 import {
-  ArrowDownIcon,
-  ArrowRightIcon,
-  ArrowUpIcon,
-  ClockIcon,
-} from "lucide-react";
-import { format } from "date-fns";
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { formatCurrency } from "@/lib/utils";
+import { TransactionStatus, TransactionType } from "@prisma/client";
+import Decimal from "decimal.js";
 import Link from "next/link";
-import { Button } from "../ui/button";
-import type { Transaction } from "@/types";
+
+// Define the expected shape of a transaction object
+// Adjust based on the actual structure returned by `api.user.getTransactions`
+interface TransactionData {
+  id: string;
+  stock: {
+    symbol: string;
+  };
+  type: TransactionType;
+  status: TransactionStatus;
+  quantity: number;
+  price: Decimal | number | null;
+  totalAmount: Decimal | number | string;
+  timestamp: Date | string;
+}
 
 interface RecentTransactionsProps {
-  transactions: Transaction[];
+  transactions: TransactionData[]; // Expect array of transactions
 }
 
 export function RecentTransactions({ transactions }: RecentTransactionsProps) {
-  if (transactions.length < 1) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <ClockIcon className="mr-2 h-5 w-5" />
-            Recent Transactions
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex h-48 flex-col items-center justify-center">
-            <p className="text-muted-foreground">No recent transactions.</p>
-            <p className="text-muted-foreground mt-1 text-sm">
-              Your trading activity will appear here.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  // Ensure transactions is an array
+  const safeTransactions = Array.isArray(transactions) ? transactions : [];
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="flex items-center">
-          <ClockIcon className="mr-2 h-5 w-5" />
-          Recent Transactions
-        </CardTitle>
-        <Link href="/transactions">
-          <Button variant="ghost" size="sm" className="gap-1">
-            View All <ArrowRightIcon className="h-4 w-4" />
-          </Button>
-        </Link>
+      <CardHeader>
+        <CardTitle>Recent Transactions</CardTitle>
+        <CardDescription>Your latest buy and sell activities.</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          {transactions.map((transaction) => {
-            const isBuy = transaction.type === "BUY";
-            const date = new Date(transaction.timestamp);
+        {safeTransactions.length === 0 ? (
+          <div className="text-muted-foreground py-6 text-center">
+            No recent transactions found.
+          </div>
+        ) : (
+          <ul className="space-y-4">
+            {safeTransactions.map((tx) => {
+              const totalAmount = new Decimal(tx.totalAmount);
+              const isBuy = tx.type === TransactionType.BUY;
 
-            return (
-              <div
-                key={transaction.id}
-                className="flex items-center justify-between"
-              >
-                <div className="flex items-start gap-3">
-                  <div
-                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
-                      isBuy ? "bg-green-100" : "bg-red-100"
-                    }`}
-                  >
-                    {isBuy ? (
-                      <ArrowDownIcon className="h-4 w-4 text-green-600" />
-                    ) : (
-                      <ArrowUpIcon className="h-4 w-4 text-red-600" />
-                    )}
-                  </div>
-
+              return (
+                <li
+                  key={tx.id}
+                  className="flex items-center justify-between border-b pb-3 last:border-b-0 last:pb-0"
+                >
                   <div>
-                    <div className="font-medium">
-                      {isBuy ? "Bought" : "Sold"} {transaction.quantity}{" "}
-                      {transaction?.stock?.symbol}
+                    <div className="flex items-center gap-2">
+                      <Badge variant={isBuy ? "success" : "destructive"}>
+                        {tx.type}
+                      </Badge>
+                      <Link
+                        href={`/market/${tx.stock.symbol}`}
+                        className="font-medium hover:underline"
+                      >
+                        {tx.stock.symbol}
+                      </Link>
                     </div>
-                    <div className="text-muted-foreground flex flex-wrap gap-1 text-sm">
-                      <span>@ </span>
-                      <span>·</span>
-                      <span>{format(date, "MMM d, h:mm a")}</span>
-                    </div>
+                    <p className="text-muted-foreground text-sm">
+                      {tx.quantity} shares @ {formatCurrency(tx.price)}
+                    </p>
+                    <p className="text-muted-foreground text-xs">
+                      {tx.timestamp.toLocaleString()}
+                    </p>
                   </div>
-                </div>
-
-                <div className="text-right">
-                  <div className="font-medium"></div>
-                  <div
-                    className={`text-xs ${isBuy ? "text-green-600" : "text-red-600"}`}
-                  >
-                    {transaction.type}
+                  <div className="text-right">
+                    <p
+                      className={`font-medium ${isBuy ? "text-red-600" : "text-green-600"}`}
+                    >
+                      {isBuy ? "-" : "+"}
+                      {formatCurrency(totalAmount)}
+                    </p>
+                    <Badge
+                      variant={
+                        tx.status === TransactionStatus.COMPLETED
+                          ? "outline"
+                          : "secondary"
+                      }
+                    >
+                      {tx.status}
+                    </Badge>
                   </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </CardContent>
     </Card>
   );

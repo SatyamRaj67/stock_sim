@@ -53,7 +53,7 @@ const HeroSection = () => {
     <Skeleton className="h-4 w-48" />
   ) : stockDetails ? (
     <>
-      Current Price: ${stockDetails.currentPrice.toFixed(2)}{" "}
+      Current Price: ${stockDetails.currentPrice}{" "}
       {formatPriceChange(stockDetails.priceChange, stockDetails.percentChange)}
     </>
   ) : (

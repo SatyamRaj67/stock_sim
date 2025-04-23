@@ -27,6 +27,7 @@ import { api } from "@/trpc/react";
 import { TransactionType } from "@prisma/client";
 import Decimal from "decimal.js";
 import { Skeleton } from "../ui/skeleton";
+import Link from "next/link";
 
 const calculatePriceChange = (
   currentPriceInput: Decimal | number | string,
@@ -107,8 +108,6 @@ export function MarketTable() {
       quantity,
       type: TransactionType.BUY,
     });
-
-    // Don't clear quantity here, do it in onSuccess
   };
 
   const handleSell = (stockId: string) => {
@@ -315,7 +314,6 @@ export function MarketTable() {
                           className="h-8 bg-red-50 text-red-700 hover:bg-red-100 hover:text-red-800"
                           onClick={() => handleSell(stock.id)}
                           disabled={
-                            // Disable if processing this stock, or globally disabled, or any mutation is pending
                             isProcessingCurrentStock ??
                             stock.isFrozen ??
                             !stock.isActive ??
@@ -329,6 +327,11 @@ export function MarketTable() {
                             "Sell"
                           )}
                         </Button>
+                        <Link href={`/market/${stock.symbol}`} passHref>
+                          <Button size="sm" variant="outline">
+                            Details
+                          </Button>
+                        </Link>
                       </div>
 
                       {(stock.isFrozen ?? !stock.isActive) && (

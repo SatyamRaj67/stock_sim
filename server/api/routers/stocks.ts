@@ -244,7 +244,6 @@ export const stockRouter = createTRPCRouter({
         });
       }
 
-      // Calculate change and percentage change
       const currentPrice = stock.currentPrice.toNumber();
       const previousClose = stock.previousClose?.toNumber() ?? currentPrice; // Use current if previous is null
       const priceChange = currentPrice - previousClose;
@@ -252,11 +251,10 @@ export const stockRouter = createTRPCRouter({
         previousClose !== 0 ? (priceChange / previousClose) * 100 : 0;
 
       return {
-        symbol: stock.symbol,
-        name: stock.name,
-        currentPrice: currentPrice,
+        // currentPrice: currentPrice,
         priceChange: priceChange,
         percentChange: percentChange,
+        ...stock,
       };
     }),
 });
