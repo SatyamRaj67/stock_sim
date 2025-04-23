@@ -1,6 +1,6 @@
-"use client";
+"use client"
 
-import React, { useState } from "react"; // Import useState
+import React, { useState } from "react";
 import dynamic from "next/dynamic";
 
 import { SectionCards } from "@/components/home/CardsSection";
@@ -17,18 +17,16 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"; // Import Select components
+} from "@/components/ui/select";
 
 // --- Define Dynamic Components ---
 
-// Loading component for Chart
 const ChartLoading = () => (
   <div className="h-[300px] w-full">
     <Skeleton className="h-full w-full" />
   </div>
 );
 
-// Loading component for Portfolio/Transactions
 const SectionLoading = () => (
   <Card>
     <CardHeader>
@@ -42,7 +40,6 @@ const SectionLoading = () => (
   </Card>
 );
 
-// Import the actual PortfolioHistoryChart component
 const DynamicPortfolioHistoryChart = dynamic(
   () =>
     import("@/components/charts/PortfolioHistoryChart").then(
@@ -50,6 +47,7 @@ const DynamicPortfolioHistoryChart = dynamic(
     ),
   {
     ssr: false,
+    // Use a specific chart loading skeleton here
     loading: () => <ChartLoading />,
   },
 );
@@ -77,7 +75,7 @@ const DynamicRecentTransactions = dynamic(
 
 const DashboardPage = () => {
   const user = useCurrentUser();
-  const [selectedDays, setSelectedDays] = useState<number>(90); // State for selected days
+  const [selectedDays, setSelectedDays] = useState<number>(90);
 
   // Fetch data using tRPC
   const financialsQuery = api.user.getUserByIdWithFinancials.useQuery(
@@ -90,36 +88,35 @@ const DashboardPage = () => {
   const transactionsQuery = api.user.getTransactions.useQuery(
     {
       userId: user?.id!,
-      limit: 5, // Fetch last 5 transactions
+      limit: 5,
     },
     { enabled: !!user?.id },
   );
 
-  // Fetch portfolio history data using selectedDays
   const portfolioHistoryQuery = api.portfolio.getPortfolioHistory.useQuery(
     {
       userId: user?.id!,
-      days: selectedDays, // Use state here
+      days: selectedDays,
     },
-    { enabled: !!user?.id },
+    {
+      enabled: !!user?.id,
+      // Keep previous data while refetching for a smoother experience
+      // keepPreviousData: true,
+    },
   );
 
-  // Combine loading states using logical OR
-  const isLoading =
+  // Initial page loading state (exclude history query)
+  const isInitialLoading =
     financialsQuery.isLoading ||
     positionQuery.isLoading ||
-    transactionsQuery.isLoading ||
-    portfolioHistoryQuery.isLoading; // Add history loading state
+    transactionsQuery.isLoading;
 
-  // Combine potential errors
-  const error =
-    financialsQuery.error ||
-    positionQuery.error ||
-    transactionsQuery.error ||
-    portfolioHistoryQuery.error; // Add history error
+  // Check for errors in essential queries (exclude history query initially)
+  const initialError =
+    financialsQuery.error || positionQuery.error || transactionsQuery.error;
 
-  // Render loading state
-  if (isLoading) {
+  // Render initial loading state
+  if (isInitialLoading) {
     return (
       <div className="flex h-[80vh] items-center justify-center">
         <Loader2 className="text-primary h-8 w-8 animate-spin" />
@@ -127,20 +124,21 @@ const DashboardPage = () => {
     );
   }
 
-  // Render error state or if data is missing after loading
+  // Render error state for essential data
   if (
-    error ||
+    initialError ||
     !financialsQuery.data ||
     !positionQuery.data ||
-    !transactionsQuery.data ||
-    !portfolioHistoryQuery.data // Add history data check
+    !transactionsQuery.data
   ) {
     return (
       <div className="flex h-[80vh] items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-bold">Failed to load dashboard data</h2>
+          <h2 className="text-xl font-bold">
+            Failed to load essential dashboard data
+          </h2>
           <p className="text-muted-foreground">
-            {error?.message ?? "Required data is missing."}
+            {initialError?.message ?? "Required data is missing."}
           </p>
           <p className="text-muted-foreground">
             Please try refreshing the page.
@@ -150,19 +148,21 @@ const DashboardPage = () => {
     );
   }
 
-  // --- Data is confirmed to be loaded and available here ---
+  // --- Essential data is loaded ---
   const rawFinancials = financialsQuery.data;
   const positionsData = positionQuery.data?.portfolio?.positions ?? [];
   const transactions = transactionsQuery.data;
-  const portfolioHistory = portfolioHistoryQuery.data; // Use the fetched history
 
-  // --- Convert necessary fields to Decimal ---
+  // History data and loading/error state (handle separately)
+  const portfolioHistory = portfolioHistoryQuery.data;
+  const isHistoryLoading = portfolioHistoryQuery.isLoading;
+  const historyError = portfolioHistoryQuery.error;
+
+  // --- Calculations (can proceed with essential data) ---
   const portfolioValue = new Decimal(rawFinancials.portfolioValue ?? 0);
   const totalProfit = new Decimal(rawFinancials.totalProfit ?? 0);
   const balance = new Decimal(rawFinancials.balance ?? 0);
-  // --- End Conversion ---
 
-  // --- Calculate card data using Decimal objects ---
   let growthRate = new Decimal(0);
   const costBasis = portfolioValue.minus(totalProfit);
   if (!costBasis.isZero()) {
@@ -172,10 +172,11 @@ const DashboardPage = () => {
     }
   }
 
-  // Calculate Today's Change using portfolio history
+  // Calculate Today's Change using portfolio history (check if history is available)
   let todaysChangeValue = new Decimal(0);
   let todaysChangePercent = new Decimal(0);
-  if (portfolioHistory.length >= 2) {
+  if (portfolioHistory && portfolioHistory.length >= 2) {
+    // Calculation logic remains the same...
     const latestValue = new Decimal(
       portfolioHistory[portfolioHistory.length - 1]!.value,
     );
@@ -188,19 +189,18 @@ const DashboardPage = () => {
         .dividedBy(previousValue)
         .times(100);
     }
-  } else if (portfolioHistory.length === 1) {
-    // If only one data point, change is compared to 0 (or initial balance if tracked)
+  } else if (portfolioHistory && portfolioHistory.length === 1) {
     todaysChangeValue = new Decimal(portfolioHistory[0]!.value);
-    // Percentage change is effectively infinite or 100% if starting from 0, handle appropriately
     todaysChangePercent = todaysChangeValue.isZero()
       ? new Decimal(0)
-      : new Decimal(100); // Or handle differently
+      : new Decimal(100);
   }
 
   const cardData = [
+    // ... card data definitions ...
     {
       description: "Portfolio Value",
-      value: formatCurrency(portfolioValue), // Use current calculated value from user financials
+      value: formatCurrency(portfolioValue),
       badge: `${growthRate.toFixed(1)}% total`,
       footerTitle: growthRate.gte(0)
         ? "Your investments are growing"
@@ -228,14 +228,13 @@ const DashboardPage = () => {
     },
     {
       description: "Today's Change",
-      value: formatCurrency(todaysChangeValue), // Use calculated value
-      badge: `${todaysChangePercent.toFixed(1)}%`, // Use calculated percentage
+      value: formatCurrency(todaysChangeValue),
+      badge: `${todaysChangePercent.toFixed(1)}%`,
       footerTitle: "Market movement today",
-      footerDescription: "Compared to previous day", // Updated description
+      footerDescription: "Compared to previous day",
       positive: todaysChangeValue.gte(0),
     },
   ];
-  // --- End Calculate card data ---
 
   return (
     <div className="flex flex-1 flex-col">
@@ -247,12 +246,11 @@ const DashboardPage = () => {
             <Card className="mb-6">
               <CardHeader className="flex flex-row items-center justify-between space-y-0">
                 <CardTitle>Portfolio Performance Over Time</CardTitle>
-                {/* Add Select dropdown */}
                 <Select
                   value={selectedDays.toString()}
-                  onValueChange={(value) =>
-                    setSelectedDays(parseInt(value, 10))
-                  }
+                  onValueChange={(value) => {
+                    setSelectedDays(parseInt(value, 10));
+                  }}
                 >
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="Select time range" />
@@ -263,15 +261,22 @@ const DashboardPage = () => {
                     <SelectItem value="90">Last 90 Days</SelectItem>
                     <SelectItem value="180">Last 180 Days</SelectItem>
                     <SelectItem value="365">Last 365 Days</SelectItem>
+                    <SelectItem value="0">All Time</SelectItem>
                   </SelectContent>
                 </Select>
               </CardHeader>
               <CardContent>
-                {portfolioHistory.length > 0 ? (
-                  // Pass selectedDays to the chart component
+                {/* Handle history loading/error state specifically here */}
+                {isHistoryLoading ? (
+                  <ChartLoading /> // Show skeleton only for the chart area
+                ) : historyError ? (
+                  <div className="text-destructive flex h-[300px] items-center justify-center">
+                    Error loading portfolio history: {historyError.message}
+                  </div>
+                ) : portfolioHistory && portfolioHistory.length > 0 ? (
                   <DynamicPortfolioHistoryChart
                     data={portfolioHistory}
-                    selectedDays={selectedDays}
+                    selectedDays={selectedDays === 0 ? 0 : selectedDays}
                   />
                 ) : (
                   <div className="text-muted-foreground flex h-[300px] items-center justify-center">
@@ -282,6 +287,7 @@ const DashboardPage = () => {
             </Card>
 
             <div className="grid gap-6 md:grid-cols-2">
+              {/* These components load based on the initial queries */}
               <DynamicPortfolioBreakdown
                 portfolioValue={portfolioValue}
                 positions={positionsData}

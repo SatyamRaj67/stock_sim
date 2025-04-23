@@ -2,14 +2,14 @@ import { z } from "zod";
 import {
   subDays,
   startOfDay,
-  endOfDay, // Import endOfDay
+  endOfDay,
   eachDayOfInterval,
   formatISO,
+  isAfter,
 } from "date-fns";
 import Decimal from "decimal.js";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { TransactionType } from "@prisma/client";
-import { db } from "@/server/db"; // Ensure db is imported
 
 type TransactionSubset = {
   stockId: string;
@@ -18,7 +18,6 @@ type TransactionSubset = {
   timestamp: Date;
 };
 
-// Helper function to get holdings on a specific date
 const getHoldingsOnDate = (
   transactions: TransactionSubset[],
   targetDate: Date,
@@ -51,16 +50,54 @@ export const portfolioRouter = createTRPCRouter({
     .input(
       z.object({
         userId: z.string(),
-        days: z.number().int().positive().default(90),
+        // Allow 0 for "All Time", default remains 90
+        days: z.number().int().nonnegative().default(90),
       }),
     )
     .query(async ({ ctx, input }) => {
       const { userId, days } = input;
       const currentDayStart = startOfDay(new Date());
-      const startDate = startOfDay(subDays(currentDayStart, days - 1));
       const endDateForDataFetch = endOfDay(currentDayStart);
 
-      // 1. Fetch ALL completed transactions for the user
+      // --- Determine the actual start date ---
+      const firstTransaction = await ctx.db.transaction.findFirst({
+        where: { userId: userId, status: "COMPLETED" },
+        orderBy: { timestamp: "asc" },
+        select: { timestamp: true },
+      });
+
+      let actualStartDate: Date;
+
+      if (days === 0) {
+        // "All Time" selected
+        if (firstTransaction) {
+          // Start one day before the first transaction
+          actualStartDate = startOfDay(subDays(firstTransaction.timestamp, 1));
+        } else {
+          // No transactions, start from today (will result in empty history)
+          actualStartDate = currentDayStart;
+        }
+      } else {
+        // Specific duration selected
+        const startDateBasedOnDays = startOfDay(
+          subDays(currentDayStart, days - 1),
+        );
+        if (firstTransaction) {
+          const startDateBasedOnFirstTx = startOfDay(
+            subDays(firstTransaction.timestamp, 1),
+          );
+          // Use the LATER of the two start dates to avoid showing excessive zero period
+          actualStartDate = isAfter(startDateBasedOnFirstTx, startDateBasedOnDays)
+            ? startDateBasedOnFirstTx
+            : startDateBasedOnDays;
+        } else {
+          // No transactions, use the start date based on days
+          actualStartDate = startDateBasedOnDays;
+        }
+      }
+      // --- End Determine the actual start date ---
+
+      // Fetch ALL completed transactions (needed for holdings calc)
       const allTransactions = await ctx.db.transaction.findMany({
         where: {
           userId: userId,
@@ -81,20 +118,19 @@ export const portfolioRouter = createTRPCRouter({
       });
 
       if (allTransactions.length === 0) {
-        return []; // No transactions, no history
+        return [];
       }
 
-      // 2. Identify unique stock IDs from *all* transactions
       const stockIds = [...new Set(allTransactions.map((tx) => tx.stockId))];
 
-      // 3. Fetch price history for the relevant *date range*
+      // Fetch price history using the *actualStartDate*
       const priceHistoryData = await ctx.db.priceHistory.findMany({
         where: {
           stockId: {
             in: stockIds,
           },
           timestamp: {
-            gte: startDate,
+            gte: actualStartDate,
             lte: endDateForDataFetch,
           },
         },
@@ -109,10 +145,10 @@ export const portfolioRouter = createTRPCRouter({
       });
 
       if (priceHistoryData.length === 0 && stockIds.length > 0) {
-        return []; // No prices found for relevant stocks in the period
+        return [];
       }
 
-      // 4. Group prices by date and stock ID (taking the *last* price for each day)
+      // Group prices by date
       const pricesByDateStock: Record<string, Record<string, Decimal>> = {};
       priceHistoryData.forEach((ph) => {
         const dateStr = formatISO(ph.timestamp, { representation: "date" });
@@ -122,12 +158,17 @@ export const portfolioRouter = createTRPCRouter({
         pricesByDateStock[dateStr]![ph.stockId] = ph.price;
       });
 
-      // 5. Calculate daily values using reduce
+      // Generate date interval using the *actualStartDate*
       const dateInterval = eachDayOfInterval({
-        start: startDate,
+        start: actualStartDate,
         end: currentDayStart,
       });
 
+      if (dateInterval.length === 0) {
+        return [];
+      }
+
+      // Calculate daily values using reduce
       const initialState: {
         history: { date: string; value: number }[];
         lastKnownPrices: Record<string, Decimal>;
@@ -151,7 +192,6 @@ export const portfolioRouter = createTRPCRouter({
               const valueOfHolding = price.times(quantity);
               dailyPortfolioValue = dailyPortfolioValue.add(valueOfHolding);
             }
-            // If price is missing, value for that holding on that day is 0
           }
         }
 

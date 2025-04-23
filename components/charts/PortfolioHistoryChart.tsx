@@ -21,7 +21,7 @@ import { format } from "date-fns";
 
 interface PortfolioHistoryChartProps {
   data: PortfolioHistoryItem[];
-  selectedDays?: number;
+  selectedDays?: number; // 0 can mean "All Time"
 }
 
 // Custom tooltip component
@@ -96,7 +96,7 @@ const CustomTooltip = ({
 
 export function PortfolioHistoryChart({
   data,
-  selectedDays, // Destructure the new prop
+  selectedDays,
 }: PortfolioHistoryChartProps) {
   if (!data || data.length === 0) {
     return (
@@ -106,7 +106,6 @@ export function PortfolioHistoryChart({
     );
   }
 
-  // Calculate percent change from first to last data point
   const firstValue = data[0]!.value;
   const lastValue = data[data.length - 1]!.value;
   const percentChange =
@@ -117,10 +116,17 @@ export function PortfolioHistoryChart({
         : 0;
   const isPositive = lastValue >= firstValue;
 
-  // Adjust the time range description based on selectedDays
-  const timeRangeDescription = selectedDays
-    ? `Last ${selectedDays} days`
-    : `since ${data[0]?.date ? format(new Date(data[0].date), "MMM d, yyyy") : "start"}`;
+  // Adjust the time range description
+  let timeRangeDescription: string;
+  if (selectedDays === 0) {
+    timeRangeDescription = "All Time";
+  } else if (selectedDays && selectedDays > 0) {
+    timeRangeDescription = `Last ${selectedDays} days`;
+  } else {
+    timeRangeDescription = `since ${
+      data[0]?.date ? format(new Date(data[0].date), "MMM d, yyyy") : "start"
+    }`;
+  }
 
   return (
     <div>
