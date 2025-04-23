@@ -1,6 +1,17 @@
 "use client";
 
-import { MarketTable } from "@/components/market/market-table";
+import dynamic from "next/dynamic";
+import { MarketTableSkeleton } from "@/components/market/market-table";
+
+// Dynamically import MarketTable
+const MarketTable = dynamic(
+  () =>
+    import("@/components/market/market-table").then((mod) => mod.MarketTable),
+  {
+    loading: () => <MarketTableSkeleton />,
+    ssr: false,
+  },
+);
 
 const MarketPage = () => {
   return (
