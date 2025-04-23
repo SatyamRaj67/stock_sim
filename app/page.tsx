@@ -16,32 +16,27 @@ import { FooterSkeleton } from "@/components/layout/footer";
 // --- Dynamically Import Components using imported skeletons ---
 const HeroSection = dynamic(() => import("@/components/home/HeroSection"), {
   loading: () => <HeroSectionSkeleton />,
-  ssr: false,
 });
 
 const StatsSection = dynamic(() => import("@/components/home/StatsSection"), {
   loading: () => <StatsSectionSkeleton />,
-  ssr: false,
 });
 
 const FeaturesSection = dynamic(
   () => import("@/components/home/FeaturesSection"),
   {
     loading: () => <FeaturesSectionSkeleton />,
-    ssr: false,
   },
 );
 
 const MarketSection = dynamic(() => import("@/components/home/MarketSection"), {
   loading: () => <MarketSectionSkeleton />,
-  ssr: false,
 });
 
 const ImportanceSection = dynamic(
   () => import("@/components/home/ImportanceSection"),
   {
     loading: () => <ImportanceSectionSkeleton />,
-    ssr: false,
   },
 );
 
@@ -49,13 +44,11 @@ const ContactSection = dynamic(
   () => import("@/components/home/ContactSection"),
   {
     loading: () => <ContactSectionSkeleton />,
-    ssr: false,
   },
 );
 
 const Footer = dynamic(() => import("@/components/layout/footer"), {
   loading: () => <FooterSkeleton />,
-  ssr: false,
 });
 
 const HomePage = () => {

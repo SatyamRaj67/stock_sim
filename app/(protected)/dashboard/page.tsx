@@ -46,8 +46,6 @@ const DynamicPortfolioHistoryChart = dynamic(
       (mod) => mod.PortfolioHistoryChart,
     ),
   {
-    ssr: false,
-    // Use a specific chart loading skeleton here
     loading: () => <ChartLoading />,
   },
 );

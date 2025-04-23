@@ -16,7 +16,6 @@ const AdminStockTable = dynamic(
     import("@/components/admin/stock-table").then((mod) => mod.AdminStockTable),
   {
     loading: () => <AdminStockTableSkeleton />,
-    ssr: false,
   },
 );
 
