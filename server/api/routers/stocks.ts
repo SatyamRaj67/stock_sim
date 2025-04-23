@@ -1,8 +1,12 @@
 import { TRPCError } from "@trpc/server";
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import * as z from "zod";
 import { TransactionStatus, TransactionType } from "@prisma/client";
-import { getAllStocks, getStockByStockId } from "@/data/stocks";
+import {
+  getAllStocks,
+  getStockByStockId,
+  getStockBySymbol,
+} from "@/data/stocks";
 import {
   getUserById,
   recalculateUserPortfolioValue,
@@ -19,6 +23,8 @@ import {
 } from "@/data/positions";
 import { getPortfolioByUserId, upsertPortfolio } from "@/data/portfolio";
 import { createTransactionRecord } from "@/data/transactions";
+import { formatISO, subDays } from "date-fns";
+import type { PriceHistory } from "@/types";
 
 export const stockRouter = createTRPCRouter({
   getStocks: protectedProcedure.query(async () => {
@@ -188,5 +194,69 @@ export const stockRouter = createTRPCRouter({
           timeout: 10000,
         },
       );
+    }),
+
+  getPriceHistory: publicProcedure
+    .input(
+      z.object({
+        symbol: z.string(),
+        days: z.number().int().positive().default(30),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const { symbol, days } = input;
+      const endDate = new Date();
+      const startDate = subDays(endDate, days);
+
+      const stock = await getStockBySymbol(symbol);
+
+      if (!stock) {
+        throw new Error(`Stock with symbol ${symbol} not found.`);
+      }
+
+      const history: PriceHistory[] = await ctx.db.priceHistory.findMany({
+        where: {
+          stockId: stock.id,
+          timestamp: {
+            gte: startDate,
+            lte: endDate,
+          },
+        },
+        orderBy: {
+          timestamp: "asc",
+        },
+      });
+      return history.map((item) => ({
+        date: formatISO(item.timestamp),
+        price: item.price.toNumber(),
+      }));
+    }),
+
+  getStockDetails: publicProcedure
+    .input(z.object({ symbol: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const stock = await getStockBySymbol(input.symbol);
+
+      if (!stock) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: `Stock with symbol ${input.symbol} not found.`,
+        });
+      }
+
+      // Calculate change and percentage change
+      const currentPrice = stock.currentPrice.toNumber();
+      const previousClose = stock.previousClose?.toNumber() ?? currentPrice; // Use current if previous is null
+      const priceChange = currentPrice - previousClose;
+      const percentChange =
+        previousClose !== 0 ? (priceChange / previousClose) * 100 : 0;
+
+      return {
+        symbol: stock.symbol,
+        name: stock.name,
+        currentPrice: currentPrice,
+        priceChange: priceChange,
+        percentChange: percentChange,
+      };
     }),
 });
