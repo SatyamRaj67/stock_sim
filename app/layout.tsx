@@ -61,9 +61,9 @@ export default async function RootLayout({
             <TRPCReactProvider>
               <SidebarProvider defaultOpen={defaultOpen}>
                 <AppSidebar variant="inset" />
-                <SidebarInset className="flex min-h-screen flex-col">
+                <SidebarInset>
                   <SiteHeader />
-                  <main className="flex-1 p-2 md:p-6 lg:p-8">
+                  <main>
                     <Toaster />
                     {children}
                     <Analytics />
