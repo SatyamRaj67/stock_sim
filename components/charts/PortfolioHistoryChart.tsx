@@ -176,7 +176,7 @@ export function PortfolioHistoryChart({
           <Tooltip
             content={<CustomTooltip data={data} />}
             cursor={{
-              stroke: "#6366f1",
+              stroke: "white",
               strokeWidth: 1,
               strokeDasharray: "3 3",
             }}
