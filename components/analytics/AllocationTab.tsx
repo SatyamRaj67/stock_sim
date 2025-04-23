@@ -7,8 +7,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { AnalyticsData } from "@/types/analytics";
+import type { RouterOutputs } from "@/trpc/react";
 import { SectorAllocationChart } from "@/components/charts/SectorAllocationChart";
+import { formatCurrency } from "@/lib/utils";
+
+type AnalyticsData = RouterOutputs["analytics"]["getAnalyticsData"];
 
 interface AllocationTabProps {
   data: AnalyticsData | undefined;
@@ -16,6 +19,12 @@ interface AllocationTabProps {
 }
 
 export function AllocationTab({ data, isLoading }: AllocationTabProps) {
+  const allocation = data?.allocation;
+  const sectorData = allocation?.bySector ?? [];
+  const assetData = allocation?.byAsset ?? [];
+  const marketCapData = allocation?.byMarketCap ?? [];
+  const totalValue = allocation?.totalPortfolioValue ?? 0;
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -24,15 +33,19 @@ export function AllocationTab({ data, isLoading }: AllocationTabProps) {
           <CardHeader>
             <CardTitle>Sector Allocation</CardTitle>
             <CardDescription>
-              Distribution of your portfolio across market sectors
+              Distribution of portfolio value ({formatCurrency(totalValue)}) across market sectors
             </CardDescription>
           </CardHeader>
           <CardContent>
             {isLoading ? (
               <Skeleton className="h-[350px] w-full" />
-            ) : data?.sectorAllocation ? (
-              <SectorAllocationChart data={data.sectorAllocation} />
-            ) : null}
+            ) : sectorData && sectorData.length > 0 ? (
+              <SectorAllocationChart data={sectorData} />
+            ) : (
+              <div className="flex h-[350px] items-center justify-center text-muted-foreground">
+                No allocation data available.
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -46,36 +59,29 @@ export function AllocationTab({ data, isLoading }: AllocationTabProps) {
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <Skeleton className="h-[300px] w-full" />
-            ) : (
+              <Skeleton className="h-[200px] w-full" />
+            ) : assetData && assetData.length > 0 ? (
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  {[
-                    { name: "Stocks", value: 65, color: "bg-blue-500" },
-                    { name: "ETFs", value: 20, color: "bg-green-500" },
-                    { name: "Bonds", value: 10, color: "bg-amber-500" },
-                    { name: "Cash", value: 5, color: "bg-slate-400" },
-                  ].map((item) => (
-                    <div key={item.name} className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-sm font-medium">{item.name}</span>
-                        <span className="text-muted-foreground text-sm">
-                          {item.value}%
-                        </span>
-                      </div>
-                      <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
-                        <div
-                          className={`h-full ${item.color} rounded-full`}
-                          style={{ width: `${item.value}%` }}
-                        ></div>
-                      </div>
+                {assetData.map((item) => (
+                  <div key={item.name} className="space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-sm font-medium">{item.name}</span>
+                      <span className="text-muted-foreground text-sm">
+                        {item.value.toFixed(1)}%
+                      </span>
                     </div>
-                  ))}
-                </div>
-                <p className="text-muted-foreground mt-4 text-center text-xs">
-                  Note: This is example data. Connect your portfolio for
-                  accurate allocation.
-                </p>
+                    <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
+                      <div
+                        className={`h-full ${item.name === "Stocks" ? "bg-blue-500" : "bg-gray-500"} rounded-full`}
+                        style={{ width: `${item.value}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex h-[200px] items-center justify-center text-muted-foreground">
+                No asset class data available.
               </div>
             )}
           </CardContent>
@@ -86,57 +92,34 @@ export function AllocationTab({ data, isLoading }: AllocationTabProps) {
           <CardHeader>
             <CardTitle>Market Cap Distribution</CardTitle>
             <CardDescription>
-              Portfolio allocation by company size
+              Portfolio allocation by company size (Placeholder)
             </CardDescription>
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <Skeleton className="h-[300px] w-full" />
-            ) : (
+              <Skeleton className="h-[200px] w-full" />
+            ) : marketCapData && marketCapData.length > 0 ? (
               <div className="space-y-4">
-                <div className="space-y-4">
-                  {[
-                    {
-                      name: "Large Cap (>$10B)",
-                      value: 55,
-                      color: "bg-indigo-500",
-                    },
-                    {
-                      name: "Mid Cap ($2B-$10B)",
-                      value: 30,
-                      color: "bg-purple-500",
-                    },
-                    {
-                      name: "Small Cap ($300M-$2B)",
-                      value: 12,
-                      color: "bg-pink-500",
-                    },
-                    {
-                      name: "Micro Cap (<$300M)",
-                      value: 3,
-                      color: "bg-rose-500",
-                    },
-                  ].map((item) => (
-                    <div key={item.name} className="space-y-1">
-                      <div className="flex justify-between">
-                        <span className="text-sm font-medium">{item.name}</span>
-                        <span className="text-muted-foreground text-sm">
-                          {item.value}%
-                        </span>
-                      </div>
-                      <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
-                        <div
-                          className={`h-full ${item.color} rounded-full`}
-                          style={{ width: `${item.value}%` }}
-                        ></div>
-                      </div>
+                {marketCapData.map((item) => (
+                  <div key={item.name} className="space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-sm font-medium">{item.name}</span>
+                      <span className="text-muted-foreground text-sm">
+                        {item.value.toFixed(1)}%
+                      </span>
                     </div>
-                  ))}
-                </div>
-                <p className="text-muted-foreground mt-4 text-center text-xs">
-                  Note: This is example data. Connect your portfolio for
-                  accurate allocation.
-                </p>
+                    <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
+                      <div
+                        className={`h-full ${item.name === "Large Cap (>$10B)" ? "bg-indigo-500" : "bg-gray-500"} rounded-full`}
+                        style={{ width: `${item.value}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex h-[200px] items-center justify-center text-muted-foreground">
+                Market cap data calculation not implemented yet.
               </div>
             )}
           </CardContent>

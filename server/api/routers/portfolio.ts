@@ -1,6 +1,5 @@
 import { z } from "zod";
 import {
-  subDays,
   startOfDay,
   endOfDay,
   eachDayOfInterval,
@@ -9,6 +8,7 @@ import {
 import Decimal from "decimal.js";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { TransactionType } from "@prisma/client";
+import { getEffectiveStartDateForUser } from "@/lib/date";
 
 type TransactionSubset = {
   stockId: string;
@@ -57,26 +57,12 @@ export const portfolioRouter = createTRPCRouter({
       const currentDayStart = startOfDay(new Date());
       const endDateForDataFetch = endOfDay(currentDayStart);
 
-      // --- Determine the actual start date ---
-      let actualStartDate: Date;
+      // --- Determine the actual start date using the utility ---
+      const actualStartDate = await getEffectiveStartDateForUser(userId, days);
 
-      if (days === 0) {
-        // "All Time" selected: Start 1 day before the first transaction
-        const firstTransaction = await ctx.db.transaction.findFirst({
-          where: { userId: userId, status: "COMPLETED" },
-          orderBy: { timestamp: "asc" },
-          select: { timestamp: true },
-        });
-
-        if (firstTransaction) {
-          actualStartDate = startOfDay(subDays(firstTransaction.timestamp, 1));
-        } else {
-          // No transactions, start from today (will result in empty/single point history)
-          actualStartDate = currentDayStart;
-        }
-      } else {
-        // Specific duration selected: Always start exactly 'days' ago
-        actualStartDate = startOfDay(subDays(currentDayStart, days - 1));
+      // If user has no transactions, return empty history
+      if (actualStartDate === null) {
+        return [];
       }
       // --- End Determine the actual start date ---
 
@@ -86,7 +72,6 @@ export const portfolioRouter = createTRPCRouter({
           userId: userId,
           status: "COMPLETED",
           timestamp: {
-            // Fetch transactions up to the end date, needed for holdings calc on any day
             lte: endDateForDataFetch,
           },
         },
@@ -101,7 +86,7 @@ export const portfolioRouter = createTRPCRouter({
         },
       });
 
-      // If no transactions exist at all, return empty (no history to calculate)
+      // If somehow transactions are empty despite having a start date (edge case), return empty
       if (allTransactions.length === 0) {
         return [];
       }
@@ -128,9 +113,6 @@ export const portfolioRouter = createTRPCRouter({
           timestamp: true,
         },
       });
-
-      // Note: We don't return early here if priceHistory is empty,
-      // as we still want to show 0 value for the period if holdings existed.
 
       // Group prices by date
       const pricesByDateStock: Record<string, Record<string, Decimal>> = {};

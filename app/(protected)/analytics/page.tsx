@@ -11,9 +11,6 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 
-// Import types
-import { timeRangeOptions } from "@/types/analytics";
-
 // Import tab content components
 import { OverviewTab } from "@/components/analytics/OverviewTab";
 import { AllocationTab } from "@/components/analytics/AllocationTab";
@@ -21,18 +18,24 @@ import { PerformanceTab } from "@/components/analytics/PerformanceTab";
 import { ActivityTab } from "@/components/analytics/ActivityTab";
 import { api } from "@/trpc/react";
 
+// Define options for the Select dropdown (can be moved to types/analytics if preferred)
+const timeRangeOptions = [
+  { value: 7, label: "Last 7 Days" },
+  { value: 30, label: "Last 30 Days" },
+  { value: 90, label: "Last 90 Days" },
+  { value: 180, label: "Last 180 Days" },
+  { value: 365, label: "Last 365 Days" },
+  { value: 0, label: "All Time" },
+];
+
 export default function AnalyticsPage() {
-  const [timeRange, setTimeRange] = useState<
-    "1m" | "1w" | "3m" | "6m" | "1y" | "all"
-  >("1m");
+  // Use numeric state for selected days, default to 30
+  const [selectedDays, setSelectedDays] = useState<number>(30);
   const [activeTab, setActiveTab] = useState<string>("overview");
 
-  const {
-    data: data,
-    isLoading,
-    isError,
-  } = api.analytics.getAnalyticsData.useQuery(
-    { timeRange },
+  // Call tRPC query with the numeric 'days' state
+  const { data, isLoading, isError } = api.analytics.getAnalyticsData.useQuery(
+    { days: selectedDays }, // Pass 'days' instead of 'timeRange'
     {
       refetchOnWindowFocus: false,
     },
@@ -52,8 +55,10 @@ export default function AnalyticsPage() {
     );
   }
 
+  // Find the label corresponding to the selected number of days
   const selectedTimeLabel =
-    timeRangeOptions.find((o) => o.value === timeRange)?.label ?? timeRange;
+    timeRangeOptions.find((o) => o.value === selectedDays)?.label ??
+    `${selectedDays} Days`; // Fallback label
 
   return (
     <div className="container mx-auto space-y-8 p-8">
@@ -68,18 +73,22 @@ export default function AnalyticsPage() {
           </p>
         </div>
         <div className="w-full sm:w-48">
+          {/* Update Select component to use numeric values */}
           <Select
-            value={timeRange}
-            onValueChange={(value: "1w" | "1m" | "3m" | "6m" | "1y" | "all") =>
-              setTimeRange(value)
-            }
+            value={selectedDays.toString()} // Value must be string for Select
+            onValueChange={(value) => {
+              setSelectedDays(parseInt(value, 10)); // Parse string value back to number
+            }}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select Time Range" />
             </SelectTrigger>
             <SelectContent>
               {timeRangeOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
+                <SelectItem
+                  key={option.value}
+                  value={option.value.toString()} // Value must be string
+                >
                   {option.label}
                 </SelectItem>
               ))}
@@ -101,6 +110,7 @@ export default function AnalyticsPage() {
           <TabsTrigger value="activity">Activity</TabsTrigger>
         </TabsListWrapper>
 
+        {/* Pass data/loading state to tabs */}
         <TabsContent value="overview">
           <OverviewTab
             data={data}

@@ -6,12 +6,20 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { AnalyticsData } from "@/types/analytics";
-import { TradeActivityChart } from "@/components/charts/TradeActivityChart";
-import { VolumeByDayChart } from "@/components/charts/VolumeByDayChart";
-import { ArrowUpIcon, ArrowDownIcon } from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
+import type { RouterOutputs } from "@/trpc/react";
+import { formatCurrency, formatNumber } from "@/lib/utils";
+import { BarChart, Repeat } from "lucide-react"; // Import icons
+
+type AnalyticsData = RouterOutputs["analytics"]["getAnalyticsData"];
 
 interface ActivityTabProps {
   data: AnalyticsData | undefined;
@@ -19,176 +27,126 @@ interface ActivityTabProps {
 }
 
 export function ActivityTab({ data, isLoading }: ActivityTabProps) {
+  const activity = data?.activity;
+
+  const metrics = [
+    {
+      title: "Total Volume Traded",
+      value: activity?.totalVolumeTraded,
+      formatter: formatCurrency,
+      icon: BarChart,
+      color: "text-purple-600",
+      description: "Sum of (price * quantity) for all trades in period",
+    },
+    {
+      title: "Average Trades Per Day",
+      value: activity?.averageTradesPerDay,
+      formatter: (val: number) => val.toFixed(1), // Format to one decimal place
+      icon: Repeat,
+      color: "text-orange-600",
+      description: "Average number of Buy/Sell transactions per day",
+    },
+  ];
+
+  const mostTraded = activity?.mostTradedStocks ?? [];
+
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-6">
-        {/* Trade Activity Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Trade Activity</CardTitle>
-            <CardDescription>Buy and sell patterns over time</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <Skeleton className="h-[350px] w-full" />
-            ) : data?.tradeActivity ? (
-              <TradeActivityChart data={data.tradeActivity} />
-            ) : null}
-          </CardContent>
-        </Card>
-
-        {/* Volume By Day Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Trading Volume</CardTitle>
-            <CardDescription>Daily trading volume and value</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <Skeleton className="h-[350px] w-full" />
-            ) : data?.volumeByDay ? (
-              <VolumeByDayChart data={data.volumeByDay} />
-            ) : null}
-          </CardContent>
-        </Card>
-
-        {/* Recent Transactions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Transactions</CardTitle>
-            <CardDescription>Your most recent trading activity</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="space-y-3">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Skeleton key={i} className="h-[60px] w-full" />
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="px-4 py-2 text-left font-medium">
-                          Date
-                        </th>
-                        <th className="px-4 py-2 text-left font-medium">
-                          Symbol
-                        </th>
-                        <th className="px-4 py-2 text-left font-medium">
-                          Type
-                        </th>
-                        <th className="px-4 py-2 text-left font-medium">
-                          Quantity
-                        </th>
-                        <th className="px-4 py-2 text-left font-medium">
-                          Price
-                        </th>
-                        <th className="px-4 py-2 text-right font-medium">
-                          Total
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {[
-                        {
-                          date: "2025-04-02",
-                          symbol: "AAPL",
-                          name: "Apple Inc.",
-                          type: "Buy",
-                          quantity: 10,
-                          price: 187.5,
-                          total: 1875,
-                        },
-                        {
-                          date: "2025-04-01",
-                          symbol: "MSFT",
-                          name: "Microsoft Corp.",
-                          type: "Buy",
-                          quantity: 5,
-                          price: 425.2,
-                          total: 2126,
-                        },
-                        {
-                          date: "2025-03-30",
-                          symbol: "TSLA",
-                          name: "Tesla Inc.",
-                          type: "Sell",
-                          quantity: 3,
-                          price: 172.8,
-                          total: 518.4,
-                        },
-                        {
-                          date: "2025-03-28",
-                          symbol: "NVDA",
-                          name: "NVIDIA Corp.",
-                          type: "Buy",
-                          quantity: 2,
-                          price: 950.25,
-                          total: 1900.5,
-                        },
-                        {
-                          date: "2025-03-27",
-                          symbol: "AMZN",
-                          name: "Amazon.com Inc.",
-                          type: "Sell",
-                          quantity: 4,
-                          price: 187.35,
-                          total: 749.4,
-                        },
-                      ].map((transaction, i) => (
-                        <tr key={i} className="border-b">
-                          <td className="px-4 py-3 whitespace-nowrap">
-                            {transaction.date}
-                          </td>
-                          <td className="px-4 py-3 font-medium whitespace-nowrap">
-                            {transaction.symbol}
-                            <span className="text-muted-foreground ml-2 text-xs">
-                              {transaction.name}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 whitespace-nowrap">
-                            <span
-                              className={`inline-flex items-center ${
-                                transaction.type === "Buy"
-                                  ? "text-green-600"
-                                  : "text-red-600"
-                              }`}
-                            >
-                              {transaction.type === "Buy" ? (
-                                <ArrowUpIcon className="mr-1 h-3 w-3" />
-                              ) : (
-                                <ArrowDownIcon className="mr-1 h-3 w-3" />
-                              )}
-                              {transaction.type}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 whitespace-nowrap">
-                            {transaction.quantity}
-                          </td>
-                          <td className="px-4 py-3 whitespace-nowrap">
-                            {formatCurrency(transaction.price)}
-                          </td>
-                          <td className="px-4 py-3 text-right whitespace-nowrap">
-                            {formatCurrency(transaction.total)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+      {/* Metric Cards */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        {metrics.map((metric, index) => (
+          <Card key={index}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-muted-foreground text-sm font-medium">
+                {metric.title}
+              </CardTitle>
+              {metric.icon && (
+                <metric.icon
+                  className={`h-4 w-4 ${metric.color ?? "text-muted-foreground"}`}
+                />
+              )}
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <>
+                  <Skeleton className="mb-1 h-7 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                </>
+              ) : typeof metric.value === "number" ? (
+                <>
+                  <div className={`text-2xl font-bold ${metric.color ?? ""}`}>
+                    {metric.formatter(metric.value)}
+                  </div>
+                  {metric.description && (
+                    <p className="text-muted-foreground text-xs">
+                      {metric.description}
+                    </p>
+                  )}
+                </>
+              ) : (
+                <div className="text-muted-foreground text-2xl font-bold">
+                  -
                 </div>
-                <div className="mt-4 flex justify-center">
-                  <button className="text-sm text-blue-600 hover:text-blue-800">
-                    View all transactions →
-                  </button>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              )}
+            </CardContent>
+          </Card>
+        ))}
       </div>
+
+      {/* Most Traded Stocks Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Most Traded Stocks</CardTitle>
+          <CardDescription>
+            Stocks with the highest number of Buy/Sell transactions in the
+            period (Top 5).
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="space-y-2">
+              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-8 w-full" />
+            </div>
+          ) : mostTraded && mostTraded.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Symbol</TableHead>
+                  <TableHead className="text-right">Number of Trades</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {mostTraded.map((stock) => (
+                  <TableRow key={stock.symbol}>
+                    <TableCell className="font-medium">
+                      {stock.symbol}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {formatNumber(stock.count)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <div className="text-muted-foreground flex h-[150px] items-center justify-center">
+              No trading activity data available for this period.
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Placeholder for future charts */}
+      {/* <Card>
+        <CardHeader>
+          <CardTitle>Trade Volume Over Time</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? <Skeleton className="h-[250px] w-full" /> : <p className="text-muted-foreground">Chart coming soon...</p>}
+        </CardContent>
+      </Card> */}
     </div>
   );
 }

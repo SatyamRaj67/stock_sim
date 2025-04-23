@@ -6,153 +6,205 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { AnalyticsData } from "@/types/analytics";
-import { MarketCorrelationChart } from "@/components/charts/MarketCorrelationChart";
-import { StockPnLDetailedChart } from "@/components/charts/StockPnLDetailedChart";
+import { formatCurrency, formatNumber } from "@/lib/utils";
+import { ArrowUpIcon, ArrowDownIcon } from "lucide-react";
+import type { RouterOutputs } from "@/trpc/react";
+
+type AnalyticsData = RouterOutputs["analytics"]["getAnalyticsData"];
+// Extract specific types for performance data for clarity
+type ClosedTradePerformance =
+  AnalyticsData["performance"]["bestPerformers"][number];
+type PositionPerformance =
+  AnalyticsData["performance"]["currentPositionsPerformance"][number];
 
 interface PerformanceTabProps {
   data: AnalyticsData | undefined;
   isLoading: boolean;
 }
 
-export function PerformanceTab({
+// Helper component for rendering performance tables
+const PerformanceTable = ({
+  title,
+  description,
   data,
   isLoading,
-}: PerformanceTabProps) {
+  isClosedTrades, // Flag to differentiate columns
+}: {
+  title: string;
+  description: string;
+  data: ClosedTradePerformance[] | PositionPerformance[] | undefined;
+  isLoading: boolean;
+  isClosedTrades: boolean;
+}) => {
+  const hasData = data && data.length > 0;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-full" />
+            <Skeleton className="h-8 w-full" />
+            <Skeleton className="h-8 w-full" />
+          </div>
+        ) : hasData ? (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Symbol</TableHead>
+                <TableHead className="text-right">
+                  {isClosedTrades ? "Realized P/L" : "Unrealized P/L"}
+                </TableHead>
+                {!isClosedTrades && (
+                  <TableHead className="text-right">Unrealized P/L %</TableHead>
+                )}
+                {isClosedTrades && (
+                  <TableHead className="hidden text-right sm:table-cell">
+                    Sell Date
+                  </TableHead>
+                )}
+                {!isClosedTrades && (
+                  <TableHead className="hidden text-right sm:table-cell">
+                    Avg. Buy Price
+                  </TableHead>
+                )}
+                {!isClosedTrades && (
+                  <TableHead className="hidden text-right sm:table-cell">
+                    Current Price
+                  </TableHead>
+                )}
+                <TableHead className="hidden text-right sm:table-cell">
+                  Quantity
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.map((item) => {
+                const pnl = isClosedTrades
+                  ? (item as ClosedTradePerformance).realizedPnl
+                  : (item as PositionPerformance).unrealizedPnl;
+                const isPositive = pnl >= 0;
+                const pnlPercent = !isClosedTrades
+                  ? (item as PositionPerformance).unrealizedPnlPercent
+                  : null;
+
+                return (
+                  <TableRow
+                    key={
+                      item.stockId +
+                      (isClosedTrades
+                        ? (item as ClosedTradePerformance).sellDate.toString()
+                        : "")
+                    }
+                  >
+                    <TableCell className="font-medium">{item.symbol}</TableCell>
+                    <TableCell
+                      className={`text-right font-semibold ${isPositive ? "text-green-600" : "text-red-600"}`}
+                    >
+                      {formatCurrency(pnl)}
+                    </TableCell>
+                    {!isClosedTrades && pnlPercent !== null && (
+                      <TableCell
+                        className={`text-right ${isPositive ? "text-green-600" : "text-red-600"}`}
+                      >
+                        <div className="flex items-center justify-end">
+                          {isPositive ? (
+                            <ArrowUpIcon size={14} className="mr-1" />
+                          ) : (
+                            <ArrowDownIcon size={14} className="mr-1" />
+                          )}
+                          {pnlPercent / 100}{" "}
+                          {/* formatPercent expects value like 0.1 for 10% */}
+                        </div>
+                      </TableCell>
+                    )}
+                    {isClosedTrades && (
+                      <TableCell className="hidden text-right sm:table-cell">
+                        {new Date(
+                          (item as ClosedTradePerformance).sellDate,
+                        ).toLocaleDateString()}
+                      </TableCell>
+                    )}
+                    {!isClosedTrades && (
+                      <TableCell className="hidden text-right sm:table-cell">
+                        {formatCurrency(
+                          (item as PositionPerformance).averageBuyPrice,
+                        )}
+                      </TableCell>
+                    )}
+                    {!isClosedTrades && (
+                      <TableCell className="hidden text-right sm:table-cell">
+                        {formatCurrency(
+                          (item as PositionPerformance).currentPrice,
+                        )}
+                      </TableCell>
+                    )}
+                    <TableCell className="hidden text-right sm:table-cell">
+                      {formatNumber(
+                        isClosedTrades
+                          ? (item as ClosedTradePerformance).quantitySold
+                          : (item as PositionPerformance).quantity,
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        ) : (
+          <div className="text-muted-foreground flex h-[150px] items-center justify-center">
+            No data available.
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+export function PerformanceTab({ data, isLoading }: PerformanceTabProps) {
+  const performance = data?.performance;
+
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-6">
-        {/* Performance Metrics */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Performance Metrics</CardTitle>
-            <CardDescription>
-              Key performance indicators for your portfolio
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <Skeleton className="h-[100px] w-full" />
-            ) : (
-              <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-                {[
-                  { name: "Sharpe Ratio", value: "1.42" },
-                  { name: "Alpha", value: "2.18%" },
-                  { name: "Beta", value: "0.85" },
-                  { name: "Max Drawdown", value: "-12.4%" },
-                  { name: "Volatility", value: "15.2%" },
-                  { name: "R-Squared", value: "0.78" },
-                  { name: "Sortino Ratio", value: "1.64" },
-                  { name: "Treynor Ratio", value: "8.2%" },
-                ].map((metric) => (
-                  <div
-                    key={metric.name}
-                    className="bg-muted/50 rounded-lg p-4 text-center"
-                  >
-                    <div className="text-muted-foreground text-sm font-medium">
-                      {metric.name}
-                    </div>
-                    <div className="mt-1 text-2xl font-bold">
-                      {metric.value}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      {/* Current Positions Performance */}
+      <PerformanceTable
+        title="Current Positions Performance"
+        description="Unrealized profit and loss for your open positions."
+        data={performance?.currentPositionsPerformance}
+        isLoading={isLoading}
+        isClosedTrades={false}
+      />
 
-        {/* Market Correlation Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Market Correlation</CardTitle>
-            <CardDescription>
-              How your stocks correlate with broader market movements
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <Skeleton className="h-[350px] w-full" />
-            ) : data?.marketTrends ? (
-              <MarketCorrelationChart data={data.marketTrends} />
-            ) : null}
-          </CardContent>
-        </Card>
+      {/* Best Performing Closed Trades */}
+      <PerformanceTable
+        title="Best Performing Closed Trades"
+        description="Top 5 trades by realized profit in the selected period."
+        data={performance?.bestPerformers}
+        isLoading={isLoading}
+        isClosedTrades={true}
+      />
 
-        {/* Stock P&L Detailed Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Detailed Profit & Loss</CardTitle>
-            <CardDescription>
-              Breakdown of realized and unrealized gains and losses
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <Skeleton className="h-[400px] w-full" />
-            ) : data?.pnlByStock ? (
-              <StockPnLDetailedChart
-                data={data.pnlByStock}
-              />
-            ) : null}
-          </CardContent>
-        </Card>
-
-        {/* Benchmark Comparison */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Benchmark Comparison</CardTitle>
-            <CardDescription>
-              Performance relative to market indices
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <Skeleton className="h-[150px] w-full" />
-            ) : (
-              <div className="space-y-6">
-                <div className="space-y-4">
-                  {[
-                    {
-                      name: "Your Portfolio",
-                      value: 18.7,
-                      color: "bg-blue-600",
-                    },
-                    { name: "S&P 500", value: 14.2, color: "bg-green-600" },
-                    { name: "NASDAQ", value: 15.8, color: "bg-amber-600" },
-                    { name: "Dow Jones", value: 12.5, color: "bg-purple-600" },
-                  ].map((item) => (
-                    <div key={item.name} className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">{item.name}</span>
-                        <span
-                          className={`text-sm ${item.value >= 0 ? "text-green-600" : "text-red-600"}`}
-                        >
-                          {item.value > 0 ? "+" : ""}
-                          {item.value}%
-                        </span>
-                      </div>
-                      <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
-                        <div
-                          className={`h-full ${item.color} rounded-full`}
-                          style={{
-                            width: `${Math.min(Math.abs(item.value) * 3, 100)}%`,
-                          }}
-                        ></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <p className="text-muted-foreground text-center text-xs">
-                  Note: This shows YTD performance. Past performance is not
-                  indicative of future results.
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+      {/* Worst Performing Closed Trades */}
+      <PerformanceTable
+        title="Worst Performing Closed Trades"
+        description="Bottom 5 trades by realized loss in the selected period."
+        data={performance?.worstPerformers}
+        isLoading={isLoading}
+        isClosedTrades={true}
+      />
     </div>
   );
 }
