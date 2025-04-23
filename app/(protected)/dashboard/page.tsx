@@ -38,7 +38,7 @@ const SectionLoading = () => (
 
 const DynamicChartAreaInteractive = dynamic(
   () =>
-    import("@/components/layout/chart-area-interactive").then(
+    import("@/components/dashboard/chart-area-interactive").then(
       (mod) => mod.ChartAreaInteractive,
     ),
   {

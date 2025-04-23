@@ -55,10 +55,6 @@ export function PortfolioBreakdown({
       <CardContent>
         <div className="space-y-4">
           {positions.map((position) => {
-            console.log(`Processing Position ID: ${position.id}`, {
-              rawData: position,
-              incomingPortfolioValue: portfolioValue.toString(), // Log Decimal as string
-            });
             // Ensure all calculations use Decimal
             const currentValue = new Decimal(position.currentValue);
             const profitLoss = new Decimal(position.profitLoss);
