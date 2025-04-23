@@ -15,7 +15,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatNumber } from "@/lib/utils";
 import Decimal from "decimal.js";
 import Link from "next/link";

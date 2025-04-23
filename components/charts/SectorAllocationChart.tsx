@@ -56,15 +56,6 @@ const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
           ></div>
         </div>
       </div>
-
-      {/* <div className="mt-3 border-t border-slate-200 pt-2 dark:border-slate-700">
-        <div className="flex items-center justify-between">
-          <span className="text-muted-foreground text-sm">Portfolio rank:</span>
-          <span className="text-sm font-medium">
-            #{payload[0]?.payload.rank}
-          </span>
-        </div>
-      </div> */}
     </div>
   );
 };

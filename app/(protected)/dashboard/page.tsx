@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import React, { useState } from "react";
 import dynamic from "next/dynamic";
@@ -77,9 +77,13 @@ const DashboardPage = () => {
   const user = useCurrentUser();
   const [selectedDays, setSelectedDays] = useState<number>(90);
 
+  if (!user?.id) {
+    return;
+  }
+
   // Fetch data using tRPC
   const financialsQuery = api.user.getUserByIdWithFinancials.useQuery(
-    user?.id!,
+    user?.id,
     { enabled: !!user?.id },
   );
   const positionQuery = api.user.getPositions.useQuery(user?.id!, {
@@ -87,7 +91,7 @@ const DashboardPage = () => {
   });
   const transactionsQuery = api.user.getTransactions.useQuery(
     {
-      userId: user?.id!,
+      userId: user?.id,
       limit: 5,
     },
     { enabled: !!user?.id },
@@ -95,7 +99,7 @@ const DashboardPage = () => {
 
   const portfolioHistoryQuery = api.portfolio.getPortfolioHistory.useQuery(
     {
-      userId: user?.id!,
+      userId: user?.id,
       days: selectedDays,
     },
     {
@@ -107,13 +111,13 @@ const DashboardPage = () => {
 
   // Initial page loading state (exclude history query)
   const isInitialLoading =
-    financialsQuery.isLoading ||
-    positionQuery.isLoading ||
+    financialsQuery.isLoading ??
+    positionQuery.isLoading ??
     transactionsQuery.isLoading;
 
   // Check for errors in essential queries (exclude history query initially)
   const initialError =
-    financialsQuery.error || positionQuery.error || transactionsQuery.error;
+    financialsQuery.error ?? positionQuery.error ?? transactionsQuery.error;
 
   // Render initial loading state
   if (isInitialLoading) {

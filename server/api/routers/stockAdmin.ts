@@ -14,10 +14,8 @@ export const stockAdminRouter = createTRPCRouter({
   getAllStocks: adminProtectedProcedure.query(async ({ ctx }) => {
     const stocks = await ctx.db.stock.findMany({
       orderBy: { symbol: "asc" },
-      // Include necessary relations if needed, e.g., createdBy user
-      // include: { createdBy: { select: { name: true } } }
+      include: { createdBy: { select: { name: true } } }
     });
-    // tRPC handles Decimal serialization automatically
     return stocks;
   }),
 

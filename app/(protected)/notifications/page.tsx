@@ -2,10 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { api } from "@/trpc/react";
-import {
-  Card,
-  CardContent
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
@@ -73,7 +70,7 @@ const NotificationsPage = () => {
     );
   }
 
-  const { activeVerificationTokens = [], recentTransactions = [] } = data || {};
+  const { activeVerificationTokens = [], recentTransactions = [] } = data ?? {};
 
   // --- Main Content ---
   return (

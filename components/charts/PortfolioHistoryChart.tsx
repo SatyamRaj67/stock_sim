@@ -161,7 +161,9 @@ export function PortfolioHistoryChart({
           <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
           <XAxis
             dataKey="date"
-            tickFormatter={(dateStr) => format(new Date(dateStr), "MMM d")}
+            tickFormatter={(dateStr: string) =>
+              format(new Date(dateStr), "MMM d")
+            }
             tick={{ fontSize: 12 }}
             tickLine={false}
             axisLine={false}

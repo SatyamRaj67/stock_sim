@@ -13,10 +13,17 @@ import { ArrowDownIcon, ArrowUpIcon } from "lucide-react";
 import Decimal from "decimal.js";
 
 // Helper function to calculate change and percentage
-const calculateChange = (current: Decimal, previous: Decimal | null | undefined) => {
+const calculateChange = (
+  current: Decimal,
+  previous: Decimal | null | undefined,
+) => {
   const prev = previous ?? current; // Use current if previous is null/undefined
   if (prev.isZero()) {
-    return { change: new Decimal(0), percent: new Decimal(0), isPositive: true };
+    return {
+      change: new Decimal(0),
+      percent: new Decimal(0),
+      isPositive: true,
+    };
   }
   const change = current.minus(prev);
   const percent = change.dividedBy(prev).times(100);
@@ -59,7 +66,7 @@ const StockDetailPage = () => {
   if (errorDetails || !stockDetails) {
     return (
       <div className="container mx-auto py-8 text-center">
-        <h1 className="text-2xl font-bold text-destructive">
+        <h1 className="text-destructive text-2xl font-bold">
           Error loading stock details for {symbol}.
         </h1>
         <p className="text-muted-foreground">{errorDetails?.message}</p>
@@ -78,8 +85,12 @@ const StockDetailPage = () => {
       {/* Header Section */}
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div>
-          <h1 className="text-3xl font-bold">{stockDetails.name} ({stockDetails.symbol})</h1>
-          <p className="text-muted-foreground">{stockDetails.sector ?? "N/A"}</p>
+          <h1 className="text-3xl font-bold">
+            {stockDetails.name} ({stockDetails.symbol})
+          </h1>
+          <p className="text-muted-foreground">
+            {stockDetails.sector ?? "N/A"}
+          </p>
         </div>
         <div className="flex items-baseline gap-2">
           <span className="text-3xl font-bold">
@@ -111,7 +122,7 @@ const StockDetailPage = () => {
               {isLoadingChart ? (
                 <Skeleton className="h-[300px] w-full" />
               ) : errorChart || !chartData || chartData.length === 0 ? (
-                <div className="flex h-[300px] items-center justify-center text-muted-foreground">
+                <div className="text-muted-foreground flex h-[300px] items-center justify-center">
                   Could not load chart data.
                 </div>
               ) : (
@@ -131,7 +142,9 @@ const StockDetailPage = () => {
                 <CardTitle>About {stockDetails.name}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">{stockDetails.description}</p>
+                <p className="text-muted-foreground">
+                  {stockDetails.description}
+                </p>
               </CardContent>
             </Card>
           )}
@@ -154,18 +167,40 @@ const StockDetailPage = () => {
               <CardTitle>Key Statistics</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <StatItem label="Previous Close" value={formatCurrency(stockDetails.previousClose)} />
-              <StatItem label="Open" value={formatCurrency(stockDetails.openPrice)} />
-              <StatItem label="Day's High" value={formatCurrency(stockDetails.highPrice)} />
-              <StatItem label="Day's Low" value={formatCurrency(stockDetails.lowPrice)} />
-              <StatItem label="Volume" value={formatNumber(stockDetails.volume)} />
-              <StatItem label="Market Cap" value={formatCurrency(stockDetails.marketCap)} />
+              <StatItem
+                label="Previous Close"
+                value={formatCurrency(stockDetails.previousClose)}
+              />
+              <StatItem
+                label="Open"
+                value={formatCurrency(stockDetails.openPrice)}
+              />
+              <StatItem
+                label="Day's High"
+                value={formatCurrency(stockDetails.highPrice)}
+              />
+              <StatItem
+                label="Day's Low"
+                value={formatCurrency(stockDetails.lowPrice)}
+              />
+              <StatItem
+                label="Volume"
+                value={formatNumber(stockDetails.volume)}
+              />
+              <StatItem
+                label="Market Cap"
+                value={formatCurrency(stockDetails.marketCap)}
+              />
               {(stockDetails.isFrozen || !stockDetails.isActive) && (
-                 <div className="pt-2">
-                    <Badge variant={stockDetails.isFrozen ? "destructive" : "secondary"}>
-                      {stockDetails.isFrozen ? "Trading Frozen" : "Inactive"}
-                    </Badge>
-                 </div>
+                <div className="pt-2">
+                  <Badge
+                    variant={
+                      stockDetails.isFrozen ? "destructive" : "secondary"
+                    }
+                  >
+                    {stockDetails.isFrozen ? "Trading Frozen" : "Inactive"}
+                  </Badge>
+                </div>
               )}
             </CardContent>
           </Card>
@@ -176,9 +211,15 @@ const StockDetailPage = () => {
 };
 
 // Helper component for statistics items
-const StatItem = ({ label, value }: { label: string; value: string | number | null | undefined }) => (
+const StatItem = ({
+  label,
+  value,
+}: {
+  label: string;
+  value: string | number | null | undefined;
+}) => (
   <div className="flex justify-between border-b pb-2 last:border-b-0">
-    <span className="text-sm text-muted-foreground">{label}</span>
+    <span className="text-muted-foreground text-sm">{label}</span>
     <span className="text-sm font-medium">{value ?? "N/A"}</span>
   </div>
 );
@@ -211,15 +252,15 @@ const StockDetailSkeleton = () => (
           </CardContent>
         </Card>
         <Card>
-           <CardHeader>
-             <Skeleton className="h-6 w-40" />
-           </CardHeader>
-           <CardContent className="space-y-2">
-             <Skeleton className="h-4 w-full" />
-             <Skeleton className="h-4 w-full" />
-             <Skeleton className="h-4 w-3/4" />
-           </CardContent>
-         </Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-40" />
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+          </CardContent>
+        </Card>
       </div>
 
       {/* Right Column Skeleton */}
@@ -245,7 +286,7 @@ const StockDetailSkeleton = () => (
             <Skeleton className="h-6 w-40" />
           </CardHeader>
           <CardContent className="space-y-4">
-            {[...Array(6)].map((_, i) => (
+            {[...Array(6)].map((i: number) => (
               <div key={i} className="flex justify-between">
                 <Skeleton className="h-4 w-24" />
                 <Skeleton className="h-4 w-20" />
@@ -257,6 +298,5 @@ const StockDetailSkeleton = () => (
     </div>
   </div>
 );
-
 
 export default StockDetailPage;

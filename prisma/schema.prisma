@@ -37,8 +37,9 @@ model User {
     updatedAt     DateTime @updatedAt
     createdStocks Stock[]  @relation("Stock_createdBy")
 
-    sessions Session[]
-    posts    Post[]
+    adminWatchlists AdminWatchlist[]
+    sessions        Session[]
+    posts           Post[]
 }
 
 model Portfolio {
@@ -265,4 +266,23 @@ model TwoFactorConfirmation {
     user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
     @@unique([userId])
+}
+
+model AdminWatchlist {
+    id          String   @id @default(cuid())
+    userId      String
+    issueType   String
+    description String
+    details     Json?
+    resolved    Boolean  @default(false)
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    // Relation to the user (optional, but helpful for querying)
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@index([userId])
+    @@index([issueType])
+    @@index([resolved])
+    @@index([createdAt])
 }

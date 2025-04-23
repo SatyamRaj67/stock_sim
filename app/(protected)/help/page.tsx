@@ -12,10 +12,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, LifeBuoy, BookOpen } from "lucide-react";
-import Link from "next/link";
+import { LifeBuoy } from "lucide-react";
 
 const HelpPage = () => {
   const faqs = [
@@ -42,7 +40,7 @@ const HelpPage = () => {
     {
       question: "How can I reset my password?",
       answer:
-        "Click on the 'Forgot Password?' link on the login page. You will receive an email with instructions on how to reset your password.",
+        "Click on the &apos;Forgot Password?&apos; link on the login page. You will receive an email with instructions on how to reset your password.",
     },
   ];
 

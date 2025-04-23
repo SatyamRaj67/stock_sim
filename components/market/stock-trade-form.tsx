@@ -31,11 +31,10 @@ export function StockTradeForm({
     useState<TransactionType | null>(null);
 
   const tradeMutation = api.stock.tradeStock.useMutation({
-    onSuccess: (data, variables) => {
+    onSuccess: (data) => {
       toast.success(data.message ?? "Trade successful!");
-      setQuantity(""); // Reset quantity on success
+      setQuantity(""); 
       setProcessingTrade(null);
-      // Optionally refetch user balance or portfolio data here if needed
     },
     onError: (error) => {
       toast.error(error.message ?? "Trade failed.");

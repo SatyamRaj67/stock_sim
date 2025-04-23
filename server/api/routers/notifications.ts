@@ -14,18 +14,16 @@ export const notificationRouter = createTRPCRouter({
       where: {
         email: user.email!,
         expires: {
-          gt: now, // Only tokens that haven't expired yet
+          gt: now, 
         },
       },
       orderBy: {
         expires: "asc",
       },
       select: {
-        // Select only necessary fields
         id: true,
         email: true,
         expires: true,
-        // Avoid selecting the token itself for security unless needed
       },
     });
 
