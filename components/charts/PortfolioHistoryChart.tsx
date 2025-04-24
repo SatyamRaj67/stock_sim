@@ -21,7 +21,7 @@ import { format } from "date-fns";
 
 interface PortfolioHistoryChartProps {
   data: PortfolioHistoryItem[];
-  selectedDays?: number; 
+  selectedDays?: number;
 }
 
 // Custom tooltip component
@@ -54,9 +54,11 @@ const CustomTooltip = ({
   const isPositive = absoluteChange >= 0;
 
   return (
-    <div className="custom-tooltip bg-background border-muted-background rounded-lg border p-4 shadow-lg">
+    // Apply responsive padding
+    <div className="custom-tooltip bg-background border-muted-background rounded-lg border p-2 shadow-lg sm:p-4">
       <div className="mb-2 flex items-center justify-between">
-        <p className="text-muted-foreground text-sm font-medium">
+        {/* Apply responsive font size */}
+        <p className="text-muted-foreground text-xs font-medium sm:text-sm">
           {formattedDate}
         </p>
         {isPositive ? (
@@ -65,29 +67,37 @@ const CustomTooltip = ({
           <TrendingDownIcon size={16} className="text-red-500" />
         )}
       </div>
-      <p className="mb-1 text-xl font-bold">{formatCurrency(currentValue)}</p>
-      <div className="flex items-center">
-        <span
-          className={`flex items-center text-xs font-medium ${isPositive ? "text-green-500" : "text-red-500"}`}
-        >
-          {isPositive ? (
-            <ArrowUpIcon className="mr-1 h-3 w-3" />
-          ) : (
-            <ArrowDownIcon className="mr-1 h-3 w-3" />
-          )}
-          {absoluteChange !== 0
-            ? formatCurrency(Math.abs(absoluteChange))
-            : "$0"}
-        </span>
-        <span
-          className={`ml-2 text-xs font-medium ${isPositive ? "text-green-500" : "text-red-500"}`}
-        >
-          ({percentChange.toFixed(2)}%)
-        </span>
-        {currentIndex > 0 && (
-          <span className="text-muted-foreground ml-2 text-xs">
-            vs previous day
+      {/* Apply responsive font size */}
+      <p className="mb-1 text-lg font-bold sm:text-xl">
+        {formatCurrency(currentValue)}
+      </p>
+      {/* Outer container for change info: flex-col on mobile, flex-row on sm+ */}
+      <div className="flex flex-col items-start sm:flex-row sm:items-center sm:gap-x-2">
+        {/* Inner container for absolute and percentage change */}
+        <div className="flex items-center gap-x-2">
+          {/* Absolute change */}
+          <span
+            className={`flex items-center text-xs font-medium ${isPositive ? "text-green-500" : "text-red-500"}`}
+          >
+            {isPositive ? (
+              <ArrowUpIcon className="mr-1 h-3 w-3" />
+            ) : (
+              <ArrowDownIcon className="mr-1 h-3 w-3" />
+            )}
+            {absoluteChange !== 0
+              ? formatCurrency(Math.abs(absoluteChange))
+              : "$0"}
           </span>
+          {/* Percentage change */}
+          <span
+            className={`text-xs font-medium ${isPositive ? "text-green-500" : "text-red-500"}`}
+          >
+            ({percentChange.toFixed(2)}%)
+          </span>
+        </div>
+        {/* 'vs previous day' text (below the div above on mobile, next to it on sm+) */}
+        {currentIndex > 0 && (
+          <span className="text-muted-foreground text-xs">vs previous day</span>
         )}
       </div>
     </div>
