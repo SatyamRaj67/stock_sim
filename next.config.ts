@@ -6,6 +6,11 @@ import "./env.js";
 
 import type { NextConfig } from "next";
 
+// Import the bundle analyzer plugin
+const withBundleAnalyzer = require("@next/bundle-analyzer")({
+  enabled: process.env.ANALYZE === "true",
+});
+
 /** @type {import("next").NextConfig} */
 const nextConfig: NextConfig = {
   images: {
@@ -20,16 +25,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  optimizePackageImports: [
-    "lucide-react",
-    "@radix-ui/react-dialog",
-    "@radix-ui/react-dropdown-menu",
-    "@radix-ui/react-slot",
-    "@radix-ui/react-label",
-    "@radix-ui/react-tooltip",
-    "cmdk",
-    "class-variance-authority",
-  ],
   serverExternalPackages: [
     "bcryptjs",
     "next-auth",
@@ -37,6 +32,19 @@ const nextConfig: NextConfig = {
     "next-auth/providers",
   ],
   experimental: {
+    optimizePackageImports: [
+      "lucide-react",
+      // Radix UI components
+      "@radix-ui/react-dialog",
+      "@radix-ui/react-dropdown-menu",
+      "@radix-ui/react-slot",
+      "@radix-ui/react-label",
+      "@radix-ui/react-tooltip",
+      // Other potential candidates
+      "cmdk",
+      "class-variance-authority",
+    ],
+
     reactCompiler: true,
   },
   eslint: {
@@ -45,4 +53,4 @@ const nextConfig: NextConfig = {
 };
 
 // Wrap the config with the analyzer
-export default nextConfig;
+export default withBundleAnalyzer(nextConfig);
