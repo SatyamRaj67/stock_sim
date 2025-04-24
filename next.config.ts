@@ -27,9 +27,6 @@ const nextConfig: NextConfig = {
   },
   serverExternalPackages: [
     "bcryptjs",
-    "next-auth",
-    "next-auth/react",
-    "next-auth/providers",
   ],
   experimental: {
     optimizePackageImports: [

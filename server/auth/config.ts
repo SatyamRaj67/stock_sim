@@ -1,4 +1,4 @@
-import { getUserByEmail} from "@/data/user";
+import { getUserByEmail } from "@/data/user";
 
 import type { UserRole } from "@prisma/client";
 import bcrypt from "bcryptjs";
