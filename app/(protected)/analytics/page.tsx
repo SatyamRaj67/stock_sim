@@ -29,7 +29,6 @@ const timeRangeOptions = [
 ];
 
 export default function AnalyticsPage() {
-  // Use numeric state for selected days, default to 30
   const [selectedDays, setSelectedDays] = useState<number>(0);
   const [activeTab, setActiveTab] = useState<string>("overview");
 
