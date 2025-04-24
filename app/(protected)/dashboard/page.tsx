@@ -73,7 +73,7 @@ const DynamicRecentTransactions = dynamic(
 
 const DashboardPage = () => {
   const user = useCurrentUser();
-  const [selectedDays, setSelectedDays] = useState<number>(90);
+  const [selectedDays, setSelectedDays] = useState<number>(0);
 
   if (!user?.id) {
     return;
@@ -288,7 +288,8 @@ const DashboardPage = () => {
               </CardContent>
             </Card>
 
-            <div className="grid gap-6 md:grid-cols-2">
+            {/* Change grid layout for responsiveness */}
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               {/* These components load based on the initial queries */}
               <DynamicPortfolioBreakdown
                 portfolioValue={portfolioValue}

@@ -30,7 +30,7 @@ const timeRangeOptions = [
 
 export default function AnalyticsPage() {
   // Use numeric state for selected days, default to 30
-  const [selectedDays, setSelectedDays] = useState<number>(30);
+  const [selectedDays, setSelectedDays] = useState<number>(0);
   const [activeTab, setActiveTab] = useState<string>("overview");
 
   // Call tRPC query with the numeric 'days' state
@@ -61,7 +61,7 @@ export default function AnalyticsPage() {
     `${selectedDays} Days`; // Fallback label
 
   return (
-    <div className="container mx-auto space-y-8 p-8">
+    <div className="container space-y-8 p-2 md:p-8">
       {/* Header and time range selector */}
       <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>

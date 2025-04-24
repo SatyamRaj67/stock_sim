@@ -33,7 +33,8 @@ export function AllocationTab({ data, isLoading }: AllocationTabProps) {
           <CardHeader>
             <CardTitle>Sector Allocation</CardTitle>
             <CardDescription>
-              Distribution of portfolio value ({formatCurrency(totalValue)}) across market sectors
+              Distribution of portfolio value ({formatCurrency(totalValue)})
+              across market sectors
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -42,7 +43,7 @@ export function AllocationTab({ data, isLoading }: AllocationTabProps) {
             ) : sectorData && sectorData.length > 0 ? (
               <SectorAllocationChart data={sectorData} />
             ) : (
-              <div className="flex h-[350px] items-center justify-center text-muted-foreground">
+              <div className="text-muted-foreground flex h-[350px] items-center justify-center">
                 No allocation data available.
               </div>
             )}
@@ -80,7 +81,7 @@ export function AllocationTab({ data, isLoading }: AllocationTabProps) {
                 ))}
               </div>
             ) : (
-              <div className="flex h-[200px] items-center justify-center text-muted-foreground">
+              <div className="text-muted-foreground flex h-[200px] items-center justify-center">
                 No asset class data available.
               </div>
             )}
@@ -118,7 +119,7 @@ export function AllocationTab({ data, isLoading }: AllocationTabProps) {
                 ))}
               </div>
             ) : (
-              <div className="flex h-[200px] items-center justify-center text-muted-foreground">
+              <div className="text-muted-foreground flex h-[200px] items-center justify-center">
                 Market cap data calculation not implemented yet.
               </div>
             )}

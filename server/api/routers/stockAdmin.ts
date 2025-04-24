@@ -2,7 +2,7 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { adminProtectedProcedure, createTRPCRouter } from "server/api/trpc";
-import { stockCreateSchema, stockSchema, stockUpdateSchema } from "@/schemas";
+import { stockCreateSchema, stockUpdateSchema } from "@/schemas";
 import { getStockByStockId, getStockBySymbol } from "@/data/stocks";
 
 const idSchema = z.object({ id: z.string().cuid() });

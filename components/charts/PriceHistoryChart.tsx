@@ -37,7 +37,7 @@ interface PriceHistoryChartProps {
   data: PriceHistoryDataPoint[];
   title: React.ReactNode;
   description: React.ReactNode;
-  initialTimeRange?: "90d" | "30d" | "7d";
+  initialTimeRange?: "90d" | "30d" | "7d" | "all";
 }
 
 const chartConfig = {
@@ -51,7 +51,7 @@ export function PriceHistoryChart({
   data,
   title,
   description,
-  initialTimeRange = "90d",
+  initialTimeRange = "all",
 }: PriceHistoryChartProps) {
   const isMobile = useIsMobile();
   const [timeRange, setTimeRange] = React.useState(initialTimeRange);
@@ -59,7 +59,7 @@ export function PriceHistoryChart({
   // Adjust initial range for mobile if needed
   React.useEffect(() => {
     if (isMobile) {
-      setTimeRange("30d"); // Default to 30d on mobile for potentially better view
+      setTimeRange("all"); // Default to 30d on mobile for potentially better view
     } else {
       setTimeRange(initialTimeRange); // Reset to initial/default on desktop
     }
@@ -115,7 +115,7 @@ export function PriceHistoryChart({
             type="single"
             value={timeRange}
             onValueChange={(value) =>
-              value && setTimeRange(value as "90d" | "30d" | "7d")
+              value && setTimeRange(value as "90d" | "30d" | "7d" | "all")
             }
             variant="outline"
             className="hidden *:data-[slot=toggle-group-item]:!px-4 @[767px]/card:flex"

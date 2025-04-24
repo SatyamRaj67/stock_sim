@@ -10,6 +10,7 @@ import {
   Sector,
 } from "recharts";
 import type { payloadItem, SectorAllocationItem } from "@/types/analytics";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface SectorAllocationChartProps {
   data: SectorAllocationItem[];
@@ -45,7 +46,7 @@ const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
           <span className="text-lg font-bold">{value?.toFixed(2)}%</span>
         </div>
 
-        <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700">
+        <div className="mt-3 h-2 w-full overflow-hidden rounded-full">
           <div
             className="h-full rounded-full"
             style={{
@@ -82,6 +83,7 @@ const renderActiveShape = (props: any) => {
 
 export function SectorAllocationChart({ data }: SectorAllocationChartProps) {
   const [activeIndex, setActiveIndex] = React.useState(-1);
+  const isMobile = useIsMobile();
 
   if (!data || data.length === 0) {
     return (
@@ -110,8 +112,26 @@ export function SectorAllocationChart({ data }: SectorAllocationChartProps) {
     .map((item, i) => ({ ...item, rank: i + 1 }))
     .sort((a, b) => b.value - a.value);
 
+  // Define legend props based on screen size
+  const legendProps = isMobile
+    ? {
+        layout: "horizontal" as const,
+        align: "center" as const,
+        verticalAlign: "bottom" as const,
+        wrapperStyle: { paddingTop: 10 },
+      }
+    : {
+        layout: "vertical" as const,
+        align: "right" as const,
+        verticalAlign: "middle" as const,
+        wrapperStyle: { paddingLeft: 10 },
+      };
+
+  // Adjust container height for mobile to accommodate legend below
+  const containerHeight = isMobile ? 350 : 300;
+
   return (
-    <ResponsiveContainer width="100%" height={300}>
+    <ResponsiveContainer width="100%" height={containerHeight}>
       <PieChart>
         <Pie
           activeIndex={activeIndex}
@@ -144,14 +164,20 @@ export function SectorAllocationChart({ data }: SectorAllocationChartProps) {
           wrapperStyle={{ outline: "none" }}
         />
         <Legend
-          layout="vertical"
-          align="right"
-          verticalAlign="middle"
-          formatter={(value: number, entry) => (
-            <span className="text-sm">
-              {value} ({entry.payload?.value.toFixed(2)}%)
-            </span>
-          )}
+          {...legendProps}
+          formatter={(value: string, entry) => {
+            const originalItem = enhancedData.find(
+              (item) => item.name === value,
+            );
+            const percentage = originalItem
+              ? originalItem.value.toFixed(1)
+              : "N/A";
+            return (
+              <span className="text-sm">
+                {value} ({percentage}%)
+              </span>
+            );
+          }}
         />
       </PieChart>
     </ResponsiveContainer>

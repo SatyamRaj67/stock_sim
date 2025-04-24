@@ -126,8 +126,8 @@ const PerformanceTable = ({
                           ) : (
                             <ArrowDownIcon size={14} className="mr-1" />
                           )}
-                          {pnlPercent / 100}{" "}
-                          {/* formatPercent expects value like 0.1 for 10% */}
+                          {/* Display percentage correctly */}
+                          {pnlPercent.toFixed(2)}%
                         </div>
                       </TableCell>
                     )}
@@ -188,23 +188,26 @@ export function PerformanceTab({ data, isLoading }: PerformanceTabProps) {
         isClosedTrades={false}
       />
 
-      {/* Best Performing Closed Trades */}
-      <PerformanceTable
-        title="Best Performing Closed Trades"
-        description="Top 5 trades by realized profit in the selected period."
-        data={performance?.bestPerformers}
-        isLoading={isLoading}
-        isClosedTrades={true}
-      />
+      {/* Grid for Best/Worst Performers */}
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        {/* Best Performing Closed Trades */}
+        <PerformanceTable
+          title="Best Performing Closed Trades"
+          description="Top 5 trades by realized profit in the selected period."
+          data={performance?.bestPerformers}
+          isLoading={isLoading}
+          isClosedTrades={true}
+        />
 
-      {/* Worst Performing Closed Trades */}
-      <PerformanceTable
-        title="Worst Performing Closed Trades"
-        description="Bottom 5 trades by realized loss in the selected period."
-        data={performance?.worstPerformers}
-        isLoading={isLoading}
-        isClosedTrades={true}
-      />
+        {/* Worst Performing Closed Trades */}
+        <PerformanceTable
+          title="Worst Performing Closed Trades"
+          description="Bottom 5 trades by realized loss in the selected period."
+          data={performance?.worstPerformers}
+          isLoading={isLoading}
+          isClosedTrades={true}
+        />
+      </div>
     </div>
   );
 }

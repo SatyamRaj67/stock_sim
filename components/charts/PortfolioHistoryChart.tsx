@@ -21,7 +21,7 @@ import { format } from "date-fns";
 
 interface PortfolioHistoryChartProps {
   data: PortfolioHistoryItem[];
-  selectedDays?: number; // 0 can mean "All Time"
+  selectedDays?: number; 
 }
 
 // Custom tooltip component
