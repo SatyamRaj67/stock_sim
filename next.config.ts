@@ -25,9 +25,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  serverExternalPackages: [
-    "bcryptjs",
-  ],
+  serverExternalPackages: ["bcryptjs"],
   experimental: {
     optimizePackageImports: [
       "lucide-react",

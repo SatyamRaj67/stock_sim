@@ -9,6 +9,7 @@ const MarketTable = dynamic(
     import("@/components/market/market-table").then((mod) => mod.MarketTable),
   {
     // loading: () => <MarketTableSkeleton />,
+    ssr: false,
   },
 );
 

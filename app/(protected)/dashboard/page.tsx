@@ -47,6 +47,7 @@ const DynamicPortfolioHistoryChart = dynamic(
     ),
   {
     loading: () => <ChartLoading />,
+    ssr: false,
   },
 );
 
@@ -57,6 +58,7 @@ const DynamicPortfolioBreakdown = dynamic(
     ),
   {
     loading: () => <SectionLoading />,
+    ssr: false,
   },
 );
 
@@ -67,6 +69,7 @@ const DynamicRecentTransactions = dynamic(
     ),
   {
     loading: () => <SectionLoading />,
+    ssr: false,
   },
 );
 // --- End Define Dynamic Components ---
@@ -255,7 +258,10 @@ const DashboardPage = () => {
                   }}
                 >
                   <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Select time range" />
+                    <SelectValue
+                      placeholder="Select time range"
+                      aria-label="Select time range for portfolio history"
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="7">Last 7 Days</SelectItem>

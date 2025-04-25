@@ -74,7 +74,7 @@ const HeroSection = () => {
       <div className="container mx-auto grid grid-cols-1 items-center gap-8 md:grid-cols-2">
         {/* Left Side: Text Content (Renders immediately) */}
         <div className="space-y-6">
-          <Badge className="bg-emerald-600 text-white hover:bg-emerald-700">
+          <Badge className="bg-emerald-800 text-white hover:bg-emerald-900">
             Real Data Simulation
           </Badge>
           <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
