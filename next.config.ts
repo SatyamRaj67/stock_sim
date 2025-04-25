@@ -6,11 +6,6 @@ import "./env.js";
 
 import type { NextConfig } from "next";
 
-// Import the bundle analyzer plugin
-const withBundleAnalyzer = require("@next/bundle-analyzer")({
-  enabled: process.env.ANALYZE === "true",
-});
-
 /** @type {import("next").NextConfig} */
 const nextConfig: NextConfig = {
   images: {
@@ -48,4 +43,4 @@ const nextConfig: NextConfig = {
 };
 
 // Wrap the config with the analyzer
-export default withBundleAnalyzer(nextConfig);
+export default nextConfig;
