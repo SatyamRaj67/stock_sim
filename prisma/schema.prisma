@@ -268,15 +268,24 @@ model TwoFactorConfirmation {
     @@unique([userId])
 }
 
+enum IssueSeverity {
+    NONE
+    LOW
+    MEDIUM
+    HIGH
+    CRITICAL
+}
+
 model AdminWatchlist {
-    id          String   @id @default(cuid())
-    userId      String
-    issueType   String
-    description String
-    details     Json?
-    resolved    Boolean  @default(false)
-    createdAt   DateTime @default(now())
-    updatedAt   DateTime @updatedAt
+    id            String        @id @default(cuid())
+    userId        String
+    issueType     String
+    issueSeverity IssueSeverity @default(MEDIUM)
+    description   String?
+    details       Json?
+    resolved      Boolean       @default(false)
+    createdAt     DateTime      @default(now())
+    updatedAt     DateTime      @updatedAt
 
     // Relation to the user (optional, but helpful for querying)
     user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -284,5 +293,6 @@ model AdminWatchlist {
     @@index([userId])
     @@index([issueType])
     @@index([resolved])
+    @@index([issueSeverity])
     @@index([createdAt])
 }
