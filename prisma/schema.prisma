@@ -1,3 +1,4 @@
+// datasource and generator remain the same
 generator client {
     provider = "prisma-client-js"
 }
@@ -7,11 +8,45 @@ datasource db {
     url      = env("NEON_DATABASE_URL")
 }
 
+// --- Enums ---
+
 enum UserRole {
     USER
     ADMIN
     SUPER_ADMIN
 }
+
+enum TransactionStatus {
+    PENDING
+    COMPLETED
+    FAILED
+}
+
+enum TransactionType {
+    BUY
+    SELL
+}
+
+enum IssueSeverity {
+    NONE
+    LOW
+    MEDIUM
+    HIGH
+    CRITICAL
+}
+
+// Added Enum for AdminWatchlist Issue Types
+enum IssueType {
+    SUSPICIOUS_LOGIN
+    LARGE_TRANSACTION_VOLUME
+    POTENTIAL_MARKET_MANIPULATION
+    ACCOUNT_VERIFICATION_PENDING
+    USER_REPORTED_ISSUE
+    SYSTEM_ALERT
+    OTHER // Example types, adjust as needed
+}
+
+// --- Models ---
 
 model User {
     id                    String                 @id @default(cuid())
@@ -25,21 +60,20 @@ model User {
     isTwoFactorEnabled    Boolean                @default(false)
     TwoFactorConfirmation TwoFactorConfirmation?
 
-    balance        Decimal @default(10000.00) @db.Decimal(12, 2)
-    totalProfit    Decimal @default(0.00) @db.Decimal(12, 2)
-    portfolioValue Decimal @default(0.00) @db.Decimal(12, 2)
+    // Financial Info (Portfolio value and profit removed - calculate on demand)
+    balance Decimal @default(10000.00) @db.Decimal(12, 2)
 
-    portfolio    Portfolio?
-    transactions Transaction[]
-    watchlist    Watchlist?
+    // Relations
+    portfolio             Portfolio?
+    transactions          Transaction[]
+    watchlist             Watchlist?
+    createdStocks         Stock[]          @relation("Stock_createdBy") // Stocks this user created
+    adminWatchlistEntries AdminWatchlist[] // Issues related to this user
+    sessions              Session[]
+    posts                 Post[] // Posts created by this user
 
-    createdAt     DateTime @default(now())
-    updatedAt     DateTime @updatedAt
-    createdStocks Stock[]  @relation("Stock_createdBy")
-
-    adminWatchlists AdminWatchlist[]
-    sessions        Session[]
-    posts           Post[]
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }
 
 model Portfolio {
@@ -61,16 +95,15 @@ model Position {
     stockId         String
     quantity        Int
     averageBuyPrice Decimal  @db.Decimal(12, 2)
-    currentValue    Decimal  @db.Decimal(12, 2)
-    profitLoss      Decimal  @db.Decimal(12, 2)
+    // currentValue and profitLoss removed - calculate using Stock.currentPrice and averageBuyPrice/quantity
     createdAt       DateTime @default(now())
     updatedAt       DateTime @updatedAt
 
     // Relations
     portfolio Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
-    stock     Stock     @relation(fields: [stockId], references: [id])
+    stock     Stock     @relation(fields: [stockId], references: [id]) // Don't cascade delete positions if stock is deleted
 
-    @@unique([portfolioId, stockId])
+    @@unique([portfolioId, stockId]) // Ensures one position per stock per portfolio
     @@index([portfolioId])
     @@index([stockId])
 }
@@ -89,21 +122,21 @@ model Stock {
     previousClose       Decimal? @db.Decimal(12, 2)
     volume              Int      @default(0)
     marketCap           Decimal? @db.Decimal(16, 2)
-    isActive            Boolean  @default(true)
-    isFrozen            Boolean  @default(false)
-    priceChangeDisabled Boolean  @default(false)
-    priceCap            Decimal? @db.Decimal(12, 2)
-    createdById         String // User who created this stock
+    isActive            Boolean  @default(true) // Can be traded
+    isFrozen            Boolean  @default(false) // Trading temporarily halted
+    priceChangeDisabled Boolean  @default(false) // Price won't update via simulation
+    priceCap            Decimal? @db.Decimal(12, 2) // Max price allowed
+    createdById         String? // User who created this stock (optional)
     createdAt           DateTime @default(now())
     updatedAt           DateTime @updatedAt
 
-    // Volatility and jump settings
+    // Volatility and jump settings for simulation
     volatility        Decimal @default(0.02) @db.Decimal(5, 4) // 0.0001 to 0.9999
     jumpProbability   Decimal @default(0.01) @db.Decimal(5, 4) // 0.0001 to 0.9999
     maxJumpMultiplier Decimal @default(1.10) @db.Decimal(5, 4) // 1.0001 to 2.0000
 
     // Relations
-    createdBy      User            @relation("Stock_createdBy", fields: [createdById], references: [id])
+    createdBy      User?           @relation("Stock_createdBy", fields: [createdById], references: [id]) // Relation is now optional
     positions      Position[]
     transactions   Transaction[]
     priceHistory   PriceHistory[]
@@ -124,10 +157,10 @@ model PriceHistory {
     jumpPercentage Decimal? @db.Decimal(6, 2) // If it was a jump, record the percentage
 
     // Relations
-    stock Stock @relation(fields: [stockId], references: [id], onDelete: Cascade)
+    stock Stock @relation(fields: [stockId], references: [id], onDelete: Cascade) // History deleted if stock is deleted
 
     @@index([stockId])
-    @@index([timestamp])
+    @@index([timestamp]) // Crucial for time-series queries
 }
 
 model Transaction {
@@ -137,10 +170,10 @@ model Transaction {
     type        TransactionType
     status      TransactionStatus @default(COMPLETED)
     quantity    Int
-    price       Decimal           @db.Decimal(12, 2)
-    totalAmount Decimal           @db.Decimal(12, 2)
-    timestamp   DateTime          @default(now())
-    createdAt   DateTime          @default(now())
+    price       Decimal           @db.Decimal(12, 2) // Price per share at time of transaction
+    totalAmount Decimal           @db.Decimal(12, 2) // quantity * price
+    timestamp   DateTime          @default(now()) // Time transaction occurred/was recorded
+    createdAt   DateTime          @default(now()) // Time record was created
 
     // Relations
     user  User  @relation(fields: [userId], references: [id])
@@ -149,17 +182,8 @@ model Transaction {
     @@index([userId])
     @@index([stockId])
     @@index([timestamp])
-}
-
-enum TransactionStatus {
-    PENDING
-    COMPLETED
-    FAILED
-}
-
-enum TransactionType {
-    BUY
-    SELL
+    @@index([status])
+    @@index([type])
 }
 
 model Watchlist {
@@ -183,43 +207,47 @@ model WatchlistItem {
 
     // Relations
     watchlist Watchlist @relation(fields: [watchlistId], references: [id], onDelete: Cascade)
-    stock     Stock     @relation(fields: [stockId], references: [id])
+    stock     Stock     @relation(fields: [stockId], references: [id], onDelete: Cascade) // If stock is deleted, remove from watchlist
 
-    @@unique([watchlistId, stockId])
+    @@unique([watchlistId, stockId]) // Ensures one entry per stock per watchlist
     @@index([watchlistId])
     @@index([stockId])
 }
 
 model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
+    id        String   @id @default(cuid()) // Changed to CUID String
+    name      String // Consider changing to 'title'
+    content   String? // Added content field
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
     createdBy   User   @relation(fields: [createdById], references: [id])
-    createdById String
+    createdById String // References User.id which is String
 
-    @@index([name])
+    @@index([createdById])
+    @@index([createdAt])
 }
 
-// Necessary for Next auth
+// --- Auth Models (NextAuth.js - generally standard) ---
+
 model Account {
     id                       String  @id @default(cuid())
     userId                   String
     type                     String
     provider                 String
     providerAccountId        String
-    refresh_token            String? // @db.Text
-    access_token             String? // @db.Text
+    refresh_token            String? @db.Text
+    access_token             String? @db.Text
     expires_at               Int?
     token_type               String?
     scope                    String?
-    id_token                 String? // @db.Text
+    id_token                 String? @db.Text
     session_state            String?
     user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
     refresh_token_expires_in Int?
 
     @@unique([provider, providerAccountId])
+    @@index([userId])
 }
 
 model Session {
@@ -228,17 +256,18 @@ model Session {
     userId       String
     expires      DateTime
     user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@index([userId])
 }
 
 model VerificationToken {
-    id         String   @id @default(cuid())
-    identifier String?
-    email      String
+    identifier String // Changed from String? to String - typically non-null with email
     token      String   @unique
     expires    DateTime
+    // Removed email field as identifier serves this purpose
+    // Removed @@unique([email, token])
 
-    @@unique([identifier, token])
-    @@unique([email, token])
+    @@unique([identifier, token]) // identifier is often email or phone
 }
 
 model PasswordResetToken {
@@ -260,34 +289,28 @@ model TwoFactorToken {
 }
 
 model TwoFactorConfirmation {
-    id String @id @default(cuid())
-
-    userId String
+    id     String @id @default(cuid())
+    userId String @unique // Added unique constraint here directly
     user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-    @@unique([userId])
+    // @@unique([userId]) // Already defined above
 }
 
-enum IssueSeverity {
-    NONE
-    LOW
-    MEDIUM
-    HIGH
-    CRITICAL
-}
+// --- Admin Models ---
 
 model AdminWatchlist {
-    id            String        @id @default(cuid())
-    userId        String
-    issueType     String
-    issueSeverity IssueSeverity @default(MEDIUM)
-    description   String?
-    details       Json?
-    resolved      Boolean       @default(false)
-    createdAt     DateTime      @default(now())
-    updatedAt     DateTime      @updatedAt
+    id              String        @id @default(cuid())
+    userId          String
+    issueType       IssueType
+    issueSeverity   IssueSeverity @default(MEDIUM)
+    description     String?
+    relatedEntityId String?
+    notes           String?
+    resolved        Boolean       @default(false)
+    createdAt       DateTime      @default(now())
+    updatedAt       DateTime      @updatedAt
 
-    // Relation to the user (optional, but helpful for querying)
+    // Relation to the user
     user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
     @@index([userId])
@@ -295,4 +318,5 @@ model AdminWatchlist {
     @@index([resolved])
     @@index([issueSeverity])
     @@index([createdAt])
+    @@index([relatedEntityId])
 }
