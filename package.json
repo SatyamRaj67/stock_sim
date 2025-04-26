@@ -1,6 +1,6 @@
 {
-  "name": "learn_stock_backend",
-  "version": "0.1.0",
+  "name": "stock_sim",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
