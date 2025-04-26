@@ -26,12 +26,14 @@ export const stockAdminRouter = createTRPCRouter({
     .input(stockCreateSchema)
     .mutation(async ({ ctx, input }) => {
       const existingStock = await getStockBySymbol(input.symbol);
+
       if (existingStock) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: `Stock with symbol ${input.symbol} already exists`,
         });
       }
+
       const stock = await ctx.db.stock.create({
         data: {
           ...input,
@@ -71,7 +73,6 @@ export const stockAdminRouter = createTRPCRouter({
         throw new TRPCError({ code: "NOT_FOUND", message: "Stock not found" });
       }
 
-      // Basic check for related transactions (adjust as needed)
       const hasTransactions = await ctx.db.transaction.findFirst({
         where: { stockId },
       });

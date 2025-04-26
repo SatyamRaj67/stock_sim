@@ -1,4 +1,3 @@
-import type { Prisma } from "@prisma/client";
 import Decimal from "decimal.js";
 import { db } from "server/db";
 

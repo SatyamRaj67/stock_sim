@@ -3,19 +3,19 @@ import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { endOfDay, formatISO } from "date-fns";
 import { getEffectiveStartDateForUser } from "@/lib/date";
 import {
-  getAllUserTransactions,
   getCurrentUserPositions,
-} from "@/data/analytics"; // Import data fetching functions
+} from "@/data/analytics";
 import {
   calculateRealizedPnlFIFO,
   calculateAllocationMetrics,
   calculatePerformanceMetrics,
   calculateActivityMetrics,
-} from "@/lib/analytics-calculations"; // Import calculation functions
+} from "@/lib/analytics-calculations";
 import {
   type AnalyticsApiData,
   defaultAnalyticsApiData,
-} from "@/types/analytics"; // Import types and default data
+} from "@/types/analytics";
+import { getAllUserTransactions } from "@/data/transactions";
 
 export const analyticsRouter = createTRPCRouter({
   getAnalyticsData: protectedProcedure
@@ -43,18 +43,13 @@ export const analyticsRouter = createTRPCRouter({
       }
 
       // --- Data Fetching ---
-      const [allUserTransactions, positions] = await Promise.all([
-        getAllUserTransactions(userId),
+      const [periodTransactions, positions] = await Promise.all([
+        getAllUserTransactions(userId, effectiveStartDate),
         getCurrentUserPositions(userId),
       ]);
 
-      // Filter transactions for the specified period
-      const periodTransactions = allUserTransactions.filter(
-        (tx) => tx.timestamp >= effectiveStartDate && tx.timestamp <= endDate,
-      );
-
       // If no relevant data, return default
-      if (allUserTransactions.length === 0 && positions.length === 0) {
+      if (positions.length === 0) {
         console.log(
           `Analytics: No transactions or positions found for user ${userId}, returning default data.`,
         );
@@ -62,12 +57,12 @@ export const analyticsRouter = createTRPCRouter({
       }
 
       console.log(
-        `Analytics: User ${userId}. Processing ${allUserTransactions.length} total transactions, ${periodTransactions.length} in period [${formatISO(effectiveStartDate)} - ${formatISO(endDate)}]. ${positions.length} current positions. Days: ${days}`,
+        `Analytics: User ${userId}, ${periodTransactions.length} in period [${formatISO(effectiveStartDate)} - ${formatISO(endDate)}]. ${positions.length} current positions. Days: ${days}`,
       );
 
       // --- Calculations ---
       const pnlMetrics = calculateRealizedPnlFIFO(
-        allUserTransactions, // Use all transactions for FIFO history
+        periodTransactions,
         effectiveStartDate,
         endDate,
       );
@@ -75,12 +70,12 @@ export const analyticsRouter = createTRPCRouter({
       const allocationMetrics = calculateAllocationMetrics(positions);
 
       const performanceMetrics = calculatePerformanceMetrics(
-        pnlMetrics.closedTradeDetails, // Pass closed trade details from PnL calc
+        pnlMetrics.closedTradeDetails,
         positions,
       );
 
       const activityMetrics = calculateActivityMetrics(
-        periodTransactions, // Use only period transactions for activity
+        periodTransactions,
         effectiveStartDate,
         endDate,
       );
@@ -89,16 +84,16 @@ export const analyticsRouter = createTRPCRouter({
       const formattedData: AnalyticsApiData = {
         overview: {
           totalRealizedPnl: pnlMetrics.totalRealizedPnl.toNumber(),
-          winRate: pnlMetrics.winRate, // Already a number
-          totalTrades: periodTransactions.length, // Total transactions in the period
+          winRate: pnlMetrics.winRate,
+          totalTrades: periodTransactions.length,
           profitableTrades: pnlMetrics.profitableTrades,
           unprofitableTrades: pnlMetrics.unprofitableTrades,
           totalClosedTrades: pnlMetrics.totalClosedTrades,
         },
         allocation: {
-          bySector: allocationMetrics.bySector, // Already { name: string, value: number }[]
-          byAsset: allocationMetrics.byAsset, // Already { name: string, value: number }[]
-          byMarketCap: allocationMetrics.byMarketCap, // Already { name: string, value: number }[]
+          bySector: allocationMetrics.bySector,
+          byAsset: allocationMetrics.byAsset,
+          byMarketCap: allocationMetrics.byMarketCap,
           totalPortfolioValue: allocationMetrics.totalPortfolioValue.toNumber(),
         },
         performance: {
@@ -126,8 +121,8 @@ export const analyticsRouter = createTRPCRouter({
         },
         activity: {
           totalVolumeTraded: activityMetrics.totalVolumeTraded.toNumber(),
-          averageTradesPerDay: activityMetrics.averageTradesPerDay, // Already a number
-          mostTradedStocks: activityMetrics.mostTradedStocks, // Already { symbol: string, count: number }[]
+          averageTradesPerDay: activityMetrics.averageTradesPerDay,
+          mostTradedStocks: activityMetrics.mostTradedStocks,
         },
       };
 

@@ -20,35 +20,6 @@ export const getFirstUserTransactionTimestamp = async (
 };
 
 /**
- * Fetches all completed transactions for a user up to a given end date,
- * selecting only the fields necessary for holdings calculations.
- * Sorted chronologically.
- */
-export const getAllUserTransactionSubsets = async (
-  userId: string,
-  endDate: Date,
-): Promise<TransactionSubset[]> => {
-  return db.transaction.findMany({
-    where: {
-      userId: userId,
-      status: "COMPLETED",
-      timestamp: {
-        lte: endDate, // Fetch all transactions up to the end date
-      },
-    },
-    orderBy: {
-      timestamp: "asc",
-    },
-    select: {
-      stockId: true,
-      quantity: true,
-      type: true,
-      timestamp: true,
-    },
-  });
-};
-
-/**
  * Fetches price history for a given set of stock IDs within a specified date range.
  * Sorted chronologically.
  */
@@ -57,8 +28,9 @@ export const getPriceHistoryForStocks = async (
   startDate: Date,
   endDate: Date,
 ): Promise<PriceHistoryPoint[]> => {
+  
   if (stockIds.length === 0) {
-    return []; // Avoid unnecessary DB query if no stocks
+    return []; 
   }
   return db.priceHistory.findMany({
     where: {

@@ -28,7 +28,7 @@ const ChartLoading = () => (
 );
 
 const SectionLoading = () => (
-  <Card>
+  <Card className="min-h-[200px]">
     <CardHeader>
       <Skeleton className="h-6 w-1/2" />
     </CardHeader>
@@ -202,7 +202,6 @@ const DashboardPage = () => {
   }
 
   const cardData = [
-    // ... card data definitions ...
     {
       description: "Portfolio Value",
       value: formatCurrency(portfolioValue),

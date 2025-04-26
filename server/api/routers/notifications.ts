@@ -1,4 +1,3 @@
-
 import { createTRPCRouter, protectedProcedure } from "server/api/trpc";
 import { subHours } from "date-fns";
 
@@ -8,13 +7,12 @@ export const notificationRouter = createTRPCRouter({
     const now = new Date();
     const twentyFourHoursAgo = subHours(now, 24);
 
-
     // Fetch active verification tokens for the user's email
     const activeVerificationTokens = await ctx.db.verificationToken.findMany({
       where: {
         email: user.email!,
         expires: {
-          gt: now, 
+          gt: now,
         },
       },
       orderBy: {
@@ -40,7 +38,7 @@ export const notificationRouter = createTRPCRouter({
       orderBy: {
         timestamp: "desc",
       },
-      take: 10, 
+      take: 10,
     });
 
     return { activeVerificationTokens, recentTransactions };

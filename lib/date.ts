@@ -33,11 +33,8 @@ export const getEffectiveStartDateForUser = async (
     // "All Time": Start from the day of the first transaction
     return firstTxDateStart;
   } else {
-    // Specific duration: Calculate start date based on days
     const startDateBasedOnDays = startOfDay(subDays(currentDayStart, days - 1));
 
-    // Use the later of the two dates: start date based on days OR first transaction date
-    // This prevents showing data from *before* the first transaction even if the range extends further back.
     return isBefore(startDateBasedOnDays, firstTxDateStart)
       ? firstTxDateStart
       : startDateBasedOnDays;
