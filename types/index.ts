@@ -182,7 +182,6 @@ export interface TwoFactorConfirmation {
   user?: User;
 }
 
-// Update existing UserSettings if needed, or remove if redundant
 export interface UserSettings {
   id: string;
   name: string | null;

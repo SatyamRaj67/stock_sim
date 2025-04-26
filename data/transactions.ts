@@ -1,6 +1,6 @@
 import { db } from "@/server/db";
-import type { TransactionWithStock } from "@/types/analytics";
-import { Prisma, TransactionStatus, TransactionType } from "@prisma/client";
+import { TransactionStatus, TransactionType } from "@prisma/client";
+import { subDays } from "date-fns";
 import Decimal from "decimal.js";
 
 export const createTransactionRecord = async (data: {
@@ -30,11 +30,14 @@ export const createTransactionRecord = async (data: {
 export const getAllUserTransactions = async (
   userId: string,
   range?: Date,
-): Promise<TransactionWithStock[]> => {
+  status?: TransactionStatus,
+) => {
   return db.transaction.findMany({
     where: {
       userId: userId,
-      status: "COMPLETED",
+      ...(status && {
+        status: status,
+      }),
       ...(range && {
         timestamp: {
           gte: range,
@@ -46,4 +49,34 @@ export const getAllUserTransactions = async (
     },
     orderBy: { timestamp: "asc" },
   });
+};
+
+export const getTransactionsByUserId = async (
+  userId: string,
+  take?: number,
+  range?: number,
+  type?: TransactionType,
+) => {
+  try {
+    const transaction = await db.transaction.findMany({
+      take: take,
+      where: {
+        userId,
+        ...(range && {
+          timestamp: {
+            gte: subDays(new Date(), range),
+          },
+        }),
+        ...(type && {
+          type: type,
+        }),
+      },
+      include: {
+        stock: true,
+      },
+    });
+    return transaction;
+  } catch {
+    return null;
+  }
 };

@@ -2,7 +2,6 @@ import * as z from "zod";
 import { UserRole } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, publicProcedure, protectedProcedure } from "../trpc";
-import { subDays } from "date-fns";
 import type { TransactionType } from "@/types";
 import {
   getUserById,
@@ -10,26 +9,14 @@ import {
   getUserByIdWithPortfolioAndPositions,
   updateUserById,
 } from "@/data/user";
+import { getTransactionsByUserId } from "@/data/transactions";
 
 export const userRouter = createTRPCRouter({
   getUserById: publicProcedure.input(z.string()).query(({ input }) => {
     return getUserById(input);
   }),
 
-  getUserByIdWithFinancials: protectedProcedure
-    .input(z.string())
-    .query(async ({ input }) => {
-      const user = await getUserById(input);
-
-      return {
-        balance: user!.balance,
-        totalProfit: user!.totalProfit,
-        portfolioValue: user!.portfolioValue,
-      };
-    }),
-
-  // Procedure to get user's portfolio details
-  getPositions: protectedProcedure
+  getUserByIdWithPortfolioAndPositions: protectedProcedure
     .input(z.string())
     .query(async ({ input }) => {
       const portfolio = await getUserByIdWithPortfolioAndPositions(input);
@@ -37,7 +24,7 @@ export const userRouter = createTRPCRouter({
       return portfolio;
     }),
 
-  getPortfolio: protectedProcedure
+  getUserByIdWithPortfolio: protectedProcedure
     .input(z.string())
     .query(async ({ input }) => {
       const portfolio = await getUserByIdWithPortfolio(input);
@@ -45,57 +32,24 @@ export const userRouter = createTRPCRouter({
       return portfolio;
     }),
 
-  // Procedure to get recent transactions
   getTransactions: protectedProcedure
     .input(
       z.object({
         userId: z.string(),
         limit: z.number().int().positive().optional(),
-        dateRange: z
-          .enum(["all", "7d", "30d", "90d", "1y"])
-          .optional()
-          .default("all"),
+        range: z.number().positive().nullable().optional(),
         type: z.enum(["all", "BUY", "SELL"]).optional().default("all"),
       }),
     )
-    .query(async ({ ctx, input }) => {
+    .query(async ({ input }) => {
       const userId = input.userId;
 
-      let dateFilter = {};
-      const now = new Date();
-      switch (input.dateRange) {
-        case "7d":
-          dateFilter = { timestamp: { gte: subDays(now, 7) } };
-          break;
-        case "30d":
-          dateFilter = { timestamp: { gte: subDays(now, 30) } };
-          break;
-        case "90d":
-          dateFilter = { timestamp: { gte: subDays(now, 90) } };
-          break;
-        case "1y":
-          dateFilter = { timestamp: { gte: subDays(now, 365) } };
-          break;
-        case "all":
-        default:
-          break;
-      }
-
-      let typeFilter = {};
-      if (input.type !== "all") {
-        typeFilter = { type: input.type as TransactionType };
-      }
-
-      const Transactions = await ctx.db.transaction.findMany({
-        where: { userId, ...dateFilter, ...typeFilter },
-        include: {
-          stock: true,
-        },
-        orderBy: {
-          timestamp: "desc",
-        },
-        take: input.limit,
-      });
+      const Transactions = await getTransactionsByUserId(
+        userId,
+        input.limit,
+        input.range !== null ? input.range : undefined,
+        input.type !== "all" ? (input.type as TransactionType) : undefined,
+      );
 
       return Transactions;
     }),

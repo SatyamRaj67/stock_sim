@@ -12,6 +12,30 @@ export const getVerificationTokenByEmail = async (email: string) => {
   }
 };
 
+export const getAllVerificationTokensByEmail = async (
+  email: string,
+  expired?: boolean,
+) => {
+  try {
+    const verificationTokens = await db.verificationToken.findMany({
+      where: {
+        email,
+        ...(expired && {
+          expires: { gt: new Date() },
+          orderBy: { expires: "asc" },
+        }),
+      },
+      select: {
+        identifier: false,
+      },
+    });
+
+    return verificationTokens;
+  } catch {
+    return null;
+  }
+};
+
 export const getVerificationTokenByToken = async (token: string) => {
   try {
     const verificationToken = await db.verificationToken.findUnique({

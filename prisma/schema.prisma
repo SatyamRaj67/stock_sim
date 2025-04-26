@@ -70,7 +70,6 @@ model User {
     createdStocks         Stock[]          @relation("Stock_createdBy") // Stocks this user created
     adminWatchlistEntries AdminWatchlist[] // Issues related to this user
     sessions              Session[]
-    posts                 Post[] // Posts created by this user
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -212,20 +211,6 @@ model WatchlistItem {
     @@unique([watchlistId, stockId]) // Ensures one entry per stock per watchlist
     @@index([watchlistId])
     @@index([stockId])
-}
-
-model Post {
-    id        String   @id @default(cuid()) // Changed to CUID String
-    name      String // Consider changing to 'title'
-    content   String? // Added content field
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    createdBy   User   @relation(fields: [createdById], references: [id])
-    createdById String // References User.id which is String
-
-    @@index([createdById])
-    @@index([createdAt])
 }
 
 // --- Auth Models (NextAuth.js - generally standard) ---

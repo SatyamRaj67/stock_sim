@@ -15,6 +15,7 @@ export const env = createEnv({
     AUTH_GOOGLE_SECRET: z.string(),
     AUTH_GITHUB_ID: z.string(),
     AUTH_GITHUB_SECRET: z.string(),
+    STRIPE_SECRET_API_KEY: z.string(),
     RESEND_API_KEY: z.string(),
     DATABASE_URL: z.string().url(),
     NODE_ENV: z
@@ -29,6 +30,7 @@ export const env = createEnv({
    */
   client: {
     NEXT_PUBLIC_API_URL: z.string(),
+    NEXT_PUBLIC_STRIPE_KEY: z.string(),
     NEXT_PUBLIC_SECRET_KEY: z.string(),
     NEXT_PUBLIC_SUPER_ADMIN_ID: z.string().optional(),
   },
@@ -48,12 +50,15 @@ export const env = createEnv({
     AUTH_GITHUB_ID: process.env.AUTH_GITHUB_ID,
     AUTH_GITHUB_SECRET: process.env.AUTH_GITHUB_SECRET,
 
+    STRIPE_SECRET_API_KEY: process.env.STRIPE_SECRET_API_KEY,
+
     RESEND_API_KEY: process.env.RESEND_API_KEY,
 
     DATABASE_URL: process.env.DATABASE_URL,
 
     // Public variables
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+    NEXT_PUBLIC_STRIPE_KEY: process.env.NEXT_PUBLIC_STRIPE_KEY,
     NEXT_PUBLIC_SECRET_KEY: process.env.NEXT_PUBLIC_SECRET_KEY,
     NEXT_PUBLIC_SUPER_ADMIN_ID: process.env.NEXT_PUBLIC_SUPER_ADMIN_ID,
   },
