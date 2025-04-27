@@ -1,4 +1,5 @@
 import { db } from "@/server/db";
+import { subDays } from "date-fns";
 
 export const createStock = async (data: any, createdById: string) => {
   try {
@@ -63,6 +64,31 @@ export const getStockBySymbol = async (symbol: string) => {
     });
 
     return stock;
+  } catch {
+    return null;
+  }
+};
+
+export const getAllPriceHistoryOfStock = async (
+  stockId: string,
+  range?: number,
+) => {
+  try {
+    const priceHistory = await db.priceHistory.findMany({
+      where: {
+        stockId,
+        ...(range && {
+          timestamp: {
+            gte: subDays(new Date(), range),
+          },
+        }),
+      },
+      orderBy: {
+        timestamp: "asc",
+      },
+    });
+
+    return priceHistory;
   } catch {
     return null;
   }

@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { api } from "@/trpc/react";
-import { TransactionTable } from "./transaction-table"; // Import DisplayTransaction type
+import { TransactionTable } from "./transaction-table";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import type { TransactionStatus, TransactionType } from "@/types";
 import type Decimal from "decimal.js";
@@ -29,40 +29,33 @@ interface DisplayTransaction {
 }
 
 const dateRangeOptions = {
+  "1": "1 Day",
+  "7": "7 Days",
+  "30": "1 Month",
+  "90": "3 Months",
+  "365": "1 Year",
   all: "All Time",
-  "7d": "Last 7 Days",
-  "30d": "Last 30 Days",
-  "90d": "Last 90 Days",
-  "1y": "This Year",
 };
+
 const typeOptions = {
   all: "All Transactions",
   BUY: "Buy",
   SELL: "Sell",
 };
 
-type FilterDateRange = keyof typeof dateRangeOptions;
+type dateRangeKey = keyof typeof dateRangeOptions;
 type FilterType = keyof typeof typeOptions;
 
-const getDateRangeInDays = (rangeKey: FilterDateRange): number | null => {
-  switch (rangeKey) {
-    case "7d":
-      return 7;
-    case "30d":
-      return 30;
-    case "90d":
-      return 90;
-    case "1y":
-      return 365;
-    case "all":
-    default:
-      return null;
+const getDateRangeInDays = (rangeKey: dateRangeKey): number | null => {
+  if (rangeKey === "all") {
+    return null;
   }
+  return parseInt(rangeKey);
 };
 
 export function TransactionTableHelper({}) {
   const [filters, setFilters] = React.useState({
-    dateRange: "all" as FilterDateRange,
+    dateRange: "all" as dateRangeKey,
     type: "all" as FilterType,
   });
 
@@ -125,7 +118,7 @@ export function TransactionTableHelper({}) {
             onValueChange={(value) =>
               setFilters((prev) => ({
                 ...prev,
-                dateRange: value as FilterDateRange,
+                dateRange: value as dateRangeKey,
               }))
             }
           >
@@ -133,13 +126,11 @@ export function TransactionTableHelper({}) {
               <SelectValue placeholder="Select date range" />
             </SelectTrigger>
             <SelectContent>
-              {(Object.keys(dateRangeOptions) as FilterDateRange[]).map(
-                (key) => (
-                  <SelectItem key={key} value={key}>
-                    {dateRangeOptions[key]}
-                  </SelectItem>
-                ),
-              )}
+              {(Object.keys(dateRangeOptions) as dateRangeKey[]).map((key) => (
+                <SelectItem key={key} value={key}>
+                  {dateRangeOptions[key]}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>

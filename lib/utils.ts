@@ -70,3 +70,21 @@ export const calculatePriceChange = (
   // Calculate percentage change
   return currentPrice.minus(previousClose).dividedBy(previousClose).times(100);
 };
+
+// Helper function to calculate change and percentage
+export const calculateChange = (
+  current: Decimal,
+  previous: Decimal | null | undefined,
+) => {
+  const prev = previous ?? current;
+  if (prev.isZero()) {
+    return {
+      change: new Decimal(0),
+      percent: new Decimal(0),
+      isPositive: true,
+    };
+  }
+  const change = current.minus(prev);
+  const percent = change.dividedBy(prev).times(100);
+  return { change, percent, isPositive: change.gte(0) };
+};

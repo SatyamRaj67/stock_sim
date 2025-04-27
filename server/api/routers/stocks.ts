@@ -9,11 +9,13 @@ import { stockCreateSchema, stockUpdateSchema } from "@/schemas";
 import {
   createStock,
   deleteStockById,
+  getAllPriceHistoryOfStock,
   getAllStocks,
   getStockByIdHasTransactions,
   getStockByStockId,
   getStockBySymbol,
 } from "@/data/stocks";
+import { formatISO } from "date-fns";
 
 const idSchema = z.object({ id: z.string().cuid() });
 
@@ -98,5 +100,21 @@ export const stockRouter = createTRPCRouter({
 
       await deleteStockById(stockId);
       return { success: true, message: "Stock deleted successfully." };
+    }),
+
+  getAllPriceHistoryOfStock: protectedProcedure
+    .input(
+      z.object({
+        stockId: z.string(),
+        range: z.number().nullable().optional(),
+      }),
+    )
+    .query(async ({ input }) => {
+      const priceHistory = await getAllPriceHistoryOfStock(input.stockId);
+
+      return priceHistory?.map((item) => ({
+        date: formatISO(item.timestamp),
+        price: item.price.toNumber(),
+      }));
     }),
 });
