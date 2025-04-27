@@ -1,4 +1,3 @@
-// datasource and generator remain the same
 generator client {
     provider = "prisma-client-js"
 }
@@ -43,7 +42,7 @@ enum IssueType {
     ACCOUNT_VERIFICATION_PENDING
     USER_REPORTED_ISSUE
     SYSTEM_ALERT
-    OTHER // Example types, adjust as needed
+    OTHER
 }
 
 // --- Models ---
@@ -60,15 +59,14 @@ model User {
     isTwoFactorEnabled    Boolean                @default(false)
     TwoFactorConfirmation TwoFactorConfirmation?
 
-    // Financial Info (Portfolio value and profit removed - calculate on demand)
     balance Decimal @default(10000.00) @db.Decimal(12, 2)
 
     // Relations
     portfolio             Portfolio?
     transactions          Transaction[]
     watchlist             Watchlist?
-    createdStocks         Stock[]          @relation("Stock_createdBy") // Stocks this user created
-    adminWatchlistEntries AdminWatchlist[] // Issues related to this user
+    createdStocks         Stock[]          @relation("Stock_createdBy")
+    adminWatchlistEntries AdminWatchlist[]
     sessions              Session[]
 
     createdAt DateTime @default(now())
@@ -89,20 +87,20 @@ model Portfolio {
 }
 
 model Position {
-    id              String   @id @default(cuid())
+    id              String  @id @default(cuid())
     portfolioId     String
     stockId         String
     quantity        Int
-    averageBuyPrice Decimal  @db.Decimal(12, 2)
-    // currentValue and profitLoss removed - calculate using Stock.currentPrice and averageBuyPrice/quantity
-    createdAt       DateTime @default(now())
-    updatedAt       DateTime @updatedAt
+    averageBuyPrice Decimal @db.Decimal(12, 2)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 
     // Relations
     portfolio Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
-    stock     Stock     @relation(fields: [stockId], references: [id]) // Don't cascade delete positions if stock is deleted
+    stock     Stock     @relation(fields: [stockId], references: [id])
 
-    @@unique([portfolioId, stockId]) // Ensures one position per stock per portfolio
+    @@unique([portfolioId, stockId])
     @@index([portfolioId])
     @@index([stockId])
 }
@@ -153,13 +151,13 @@ model PriceHistory {
     volume         Int
     timestamp      DateTime @default(now())
     wasJump        Boolean  @default(false)
-    jumpPercentage Decimal? @db.Decimal(6, 2) // If it was a jump, record the percentage
+    jumpPercentage Decimal? @db.Decimal(6, 2)
 
     // Relations
-    stock Stock @relation(fields: [stockId], references: [id], onDelete: Cascade) // History deleted if stock is deleted
+    stock Stock @relation(fields: [stockId], references: [id], onDelete: Cascade)
 
     @@index([stockId])
-    @@index([timestamp]) // Crucial for time-series queries
+    @@index([timestamp])
 }
 
 model Transaction {
@@ -206,9 +204,9 @@ model WatchlistItem {
 
     // Relations
     watchlist Watchlist @relation(fields: [watchlistId], references: [id], onDelete: Cascade)
-    stock     Stock     @relation(fields: [stockId], references: [id], onDelete: Cascade) // If stock is deleted, remove from watchlist
+    stock     Stock     @relation(fields: [stockId], references: [id], onDelete: Cascade)
 
-    @@unique([watchlistId, stockId]) // Ensures one entry per stock per watchlist
+    @@unique([watchlistId, stockId])
     @@index([watchlistId])
     @@index([stockId])
 }
@@ -246,13 +244,11 @@ model Session {
 }
 
 model VerificationToken {
-    identifier String // Changed from String? to String - typically non-null with email
+    identifier String
     token      String   @unique
     expires    DateTime
-    // Removed email field as identifier serves this purpose
-    // Removed @@unique([email, token])
 
-    @@unique([identifier, token]) // identifier is often email or phone
+    @@unique([identifier, token])
 }
 
 model PasswordResetToken {
@@ -275,10 +271,8 @@ model TwoFactorToken {
 
 model TwoFactorConfirmation {
     id     String @id @default(cuid())
-    userId String @unique // Added unique constraint here directly
+    userId String @unique
     user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-    // @@unique([userId]) // Already defined above
 }
 
 // --- Admin Models ---
