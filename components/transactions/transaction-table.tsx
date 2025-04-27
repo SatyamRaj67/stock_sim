@@ -10,18 +10,26 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { Transaction } from "@/types";
-import type { Decimal } from "@prisma/client/runtime/library";
+import type { TransactionType, TransactionStatus } from "@prisma/client";
 import { formatCurrency, formatNumber } from "@/lib/utils";
+import type Decimal from "decimal.js";
+
+interface DisplayTransaction {
+  id: string;
+  timestamp: Date | string;
+  type: TransactionType;
+  stock: {
+    symbol: string;
+    name: string;
+  } | null;
+  quantity: number;
+  price: Decimal | number;
+  totalAmount: Decimal | number;
+  status: TransactionStatus;
+}
 
 interface TransactionTableProps {
-  transactions:
-    | (Omit<Transaction, "price" | "totalAmount"> & {
-        price: Decimal | number;
-        totalAmount: Decimal | number;
-      })[]
-    | undefined; // Allow number or Decimal
-
+  transactions: DisplayTransaction[] | undefined;
   isLoading: boolean;
 }
 
@@ -51,16 +59,23 @@ export function TransactionTable({
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell colSpan={8} className="py-4 text-center">
+              <TableCell colSpan={9} className="py-4 text-center">
+                {" "}
+                {/* Adjusted colSpan to 9 */}
                 Loading transactions...
               </TableCell>
             </TableRow>
           ) : transactions && transactions.length > 0 ? (
             transactions.map((transaction, i) => {
+              // Ensure stock exists before accessing its properties
+              const stockSymbol = transaction.stock?.symbol ?? "N/A";
+              const stockName = transaction.stock?.name ?? "N/A";
+
               return (
                 <TableRow key={transaction.id}>
                   <TableCell className="text-center">{i + 1}</TableCell>
                   <TableCell>
+                    {/* Format date robustly */}
                     {new Date(transaction.timestamp).toLocaleString()}
                   </TableCell>
                   <TableCell>
@@ -70,9 +85,10 @@ export function TransactionTable({
                       {transaction.type}
                     </span>
                   </TableCell>
-                  <TableCell>{transaction.stock?.symbol}</TableCell>
-                  <TableCell>{transaction.stock?.name}</TableCell>
+                  <TableCell>{stockSymbol}</TableCell>
+                  <TableCell>{stockName}</TableCell>
                   <TableCell>{transaction.quantity}</TableCell>
+                  {/* Ensure formatCurrency/Number can handle Decimal */}
                   <TableCell>{formatCurrency(transaction.price)}</TableCell>
                   <TableCell className="font-medium">
                     {formatNumber(transaction.totalAmount)}
@@ -95,7 +111,9 @@ export function TransactionTable({
             })
           ) : (
             <TableRow>
-              <TableCell colSpan={8} className="py-4 text-center">
+              <TableCell colSpan={9} className="py-4 text-center">
+                {" "}
+                {/* Adjusted colSpan to 9 */}
                 No transactions found
               </TableCell>
             </TableRow>

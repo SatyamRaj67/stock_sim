@@ -45,27 +45,117 @@ const calculatePriceChange = (
 
 export function MarketTable() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [quantities, setQuantities] = useState<Record<string, number | "">>({});
   const [processingTrade, setProcessingTrade] = useState<{
     stockId: string;
     type: TransactionType;
   } | null>(null);
   const { data: session } = useSession();
+  const utils = api.useUtils();
 
-  // Use tRPC query for fetching stocks
   const { data: stocks, isLoading: isLoadingStocks } =
-    api.stock.getAllStocks.useQuery(undefined, {
+    api.stocks.getAllStocks.useQuery(undefined, {
       enabled: !!session,
       refetchInterval: 60000,
     });
 
-  // Ensure stocks is an array before filtering
+  const buyMutation = api.trade.buyStocks.useMutation({
+    onSuccess: (data, variables) => {
+      const boughtStock = safeStocks.find((s) => s.id === variables.stockId);
+      toast.success(
+        `Successfully bought ${variables.quantity} shares of ${boughtStock?.symbol ?? "stock"}.`,
+      );
+      // utils.user.getBalance.invalidate();
+      // utils.user.getPortfolio.invalidate();
+      utils.user.getTransactions.invalidate();
+      utils.stocks.getAllStocks.invalidate();
+      setQuantities((prev) => ({ ...prev, [variables.stockId]: "" }));
+    },
+    onError: (error) => {
+      toast.error(`Buy failed: ${error.message}`);
+    },
+    onSettled: (_data, _error, variables) => {
+      if (
+        processingTrade?.stockId === variables.stockId &&
+        processingTrade?.type === "BUY"
+      ) {
+        setProcessingTrade(null);
+      }
+    },
+  });
+
+  const sellMutation = api.trade.sellStocks.useMutation({
+    onSuccess: (data, variables) => {
+      const soldStock = safeStocks.find((s) => s.id === variables.stockId);
+      toast.success(
+        `Successfully sold ${variables.quantity} shares of ${soldStock?.symbol ?? "stock"}.`,
+      );
+      // utils.user.getBalance.invalidate();
+      // utils.user.getPortfolio.invalidate();
+      utils.user.getTransactions.invalidate();
+      utils.stocks.getAllStocks.invalidate();
+      setQuantities((prev) => ({ ...prev, [variables.stockId]: 0 }));
+    },
+    onError: (error) => {
+      toast.error(`Sell failed: ${error.message}`);
+    },
+    onSettled: (_data, _error, variables) => {
+      if (
+        processingTrade?.stockId === variables.stockId &&
+        processingTrade?.type === "SELL"
+      ) {
+        setProcessingTrade(null);
+      }
+    },
+  });
+
+  // Handle changes in the quantity input
+  const handleQuantityChange = (stockId: string, value: string) => {
+    // Allow empty string or positive integers
+    if (value === "" || /^[1-9]\d*$/.test(value) || value === "0") {
+      // Prevent leading zeros unless the value is just "0"
+      if (value.length > 1 && value.startsWith("0")) {
+        return;
+      }
+      const numValue = value === "" ? "" : parseInt(value, 10);
+      setQuantities((prev) => ({
+        ...prev,
+        [stockId]: numValue,
+      }));
+    }
+  };
+
+  const handleBuy = (stockId: string) => {
+    const quantityValue = quantities[stockId] ?? 0;
+    const quantity =
+      quantityValue === "" ? 0 : parseInt(String(quantityValue), 10);
+
+    if (quantity <= 0) {
+      toast.error("Please enter a valid quantity greater than zero.");
+      return;
+    }
+    setProcessingTrade({ stockId, type: "BUY" });
+    buyMutation.mutate({ stockId, quantity });
+  };
+
+  const handleSell = (stockId: string) => {
+    const quantityValue = quantities[stockId] ?? 0;
+    const quantity =
+      quantityValue === "" ? 0 : parseInt(String(quantityValue), 10);
+    if (quantity <= 0) {
+      toast.error("Please enter a valid quantity greater than zero.");
+      return;
+    }
+    setProcessingTrade({ stockId, type: "SELL" });
+    sellMutation.mutate({ stockId, quantity });
+  };
+
   const safeStocks = Array.isArray(stocks) ? stocks : [];
   const activeStocks = safeStocks.filter((stock) => stock.isActive);
   const filteredStocks = activeStocks.filter(
     (stock) =>
-      stock.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ??
-      stock.name.toLowerCase().includes(searchQuery.toLowerCase()) ??
+      stock.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      stock.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (stock.sector &&
         stock.sector.toLowerCase().includes(searchQuery.toLowerCase())),
   );
@@ -107,59 +197,66 @@ export function MarketTable() {
           </TableHeader>
           <TableBody>
             {isLoadingStocks ? (
-              // Display Skeleton rows while loading
-              Array.from({ length: 5 }).map(
-                (
-                  _,
-                  index, // Show 5 skeleton rows
-                ) => (
-                  <TableRow key={`skeleton-${index}`}>
-                    <TableCell>
-                      <Skeleton className="h-4 w-16" />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-4 w-24" />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-4 w-20" />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-4 w-16" />
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      <Skeleton className="h-4 w-24" />
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      <Skeleton className="h-4 w-24" />
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      <Skeleton className="h-4 w-20" />
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col items-start gap-2 md:flex-row md:items-center">
-                        <Skeleton className="h-8 w-20 md:w-16" />
-                        <div className="flex w-full gap-2 md:w-auto">
-                          <Skeleton className="h-8 flex-1 md:w-12 md:flex-none" />
-                          <Skeleton className="h-8 flex-1 md:w-12 md:flex-none" />
-                          <Skeleton className="h-8 flex-1 md:w-12 md:flex-none" />
-                        </div>
+              Array.from({ length: 5 }).map((_, index) => (
+                <TableRow key={`skeleton-${index}`}>
+                  <TableCell>
+                    <Skeleton className="h-4 w-16" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-24" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-20" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-16" />
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    <Skeleton className="h-4 w-24" />
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    <Skeleton className="h-4 w-24" />
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    <Skeleton className="h-4 w-20" />
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col items-start gap-2 md:flex-row md:items-center">
+                      <Skeleton className="h-8 w-20 md:w-16" />
+                      <div className="flex w-full gap-2 md:w-auto">
+                        <Skeleton className="h-8 flex-1 md:w-12 md:flex-none" />
+                        <Skeleton className="h-8 flex-1 md:w-12 md:flex-none" />
+                        <Skeleton className="h-8 flex-1 md:w-12 md:flex-none" />
                       </div>
-                    </TableCell>
-                  </TableRow>
-                ),
-              )
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
             ) : filteredStocks && filteredStocks.length > 0 ? (
               filteredStocks.map((stock) => {
                 const priceChange = calculatePriceChange(
                   stock.currentPrice,
-                  stock.previousClose ?? new Decimal(0),
+                  stock.previousClose,
                 );
-                const isPositiveChange = priceChange >= new Decimal(0);
-                // Check if the *current* stock's BUY action is processing
+                const isPositiveChange = priceChange.gte(0);
+                const isBuyingThisStock =
+                  processingTrade?.stockId === stock.id &&
+                  processingTrade?.type === "BUY";
+                const isSellingThisStock =
+                  processingTrade?.stockId === stock.id &&
+                  processingTrade?.type === "SELL";
+                const isProcessingThisStock =
+                  isBuyingThisStock || isSellingThisStock;
+                const isDisabled =
+                  stock.isFrozen || !stock.isActive || isProcessingThisStock;
 
-                // Check if the *current* stock's SELL action is processing
-
-                // Disable input/buttons if *any* trade is processing for this stock
+                // Get current quantity value (can be number or "")
+                const currentQuantityValue = quantities[stock.id] ?? "";
+                // Parse for button disabling logic (treat "" as 0)
+                const currentQuantityNumber =
+                  currentQuantityValue === ""
+                    ? 0
+                    : parseInt(String(currentQuantityValue), 10);
 
                 return (
                   <TableRow key={stock.id}>
@@ -172,7 +269,9 @@ export function MarketTable() {
                     <TableCell>{formatCurrency(stock.currentPrice)}</TableCell>
                     <TableCell>
                       <div
-                        className={`flex items-center ${isPositiveChange ? "text-green-600" : "text-red-600"}`}
+                        className={`flex items-center ${
+                          isPositiveChange ? "text-green-600" : "text-red-600"
+                        }`}
                       >
                         {isPositiveChange ? (
                           <ArrowUpIcon className="mr-1" size={16} />
@@ -197,35 +296,53 @@ export function MarketTable() {
                           type="number"
                           placeholder="Qty"
                           className="h-8 w-16"
-                          value={quantities[stock.id] ?? ""} // Control the input value
-                          // Disable input if this specific stock is being processed or globally disabled
-
-                          min="0" // Prevent negative numbers
+                          value={quantities[stock.id] ?? ""}
+                          onChange={(e) =>
+                            handleQuantityChange(stock.id, e.target.value)
+                          }
+                          disabled={isDisabled}
+                          min="0"
                         />
 
                         <Button
                           size="sm"
                           variant="outline"
                           className="h-8 bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800"
+                          onClick={() => handleBuy(stock.id)}
+                          disabled={isDisabled || currentQuantityNumber <= 0}
                         >
-                          BUY
+                          {isBuyingThisStock ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            "BUY"
+                          )}
                         </Button>
 
                         <Button
                           size="sm"
                           variant="outline"
                           className="h-8 bg-red-50 text-red-700 hover:bg-red-100 hover:text-red-800"
+                          onClick={() => handleSell(stock.id)}
+                          disabled={isDisabled || currentQuantityNumber <= 0}
                         >
-                          SELL
+                          {isSellingThisStock ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            "SELL"
+                          )}
                         </Button>
                         <Link href={`/market/${stock.symbol}`} passHref>
-                          <Button size="sm" variant="outline">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={isProcessingThisStock}
+                          >
                             Details
                           </Button>
                         </Link>
                       </div>
 
-                      {(stock.isFrozen ?? !stock.isActive) && (
+                      {(stock.isFrozen || !stock.isActive) && (
                         <div className="mt-1">
                           <Badge
                             variant="secondary"

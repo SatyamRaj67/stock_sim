@@ -1,7 +1,8 @@
 import { adminRouter } from "server/api/routers/admin";
+import { stockRouter } from "server/api/routers/stocks";
+import { tradeRouter } from "server/api/routers/trade";
 import { userRouter } from "server/api/routers/user";
 import { createCallerFactory, createTRPCRouter } from "server/api/trpc";
-import { stockRouter } from "./routers/stocks";
 
 /**
  * This is the primary router for your server.
@@ -10,7 +11,8 @@ import { stockRouter } from "./routers/stocks";
  */
 export const appRouter = createTRPCRouter({
   admin: adminRouter,
-  stock: stockRouter,
+  stocks: stockRouter,
+  trade: tradeRouter,
   user: userRouter,
 });
 

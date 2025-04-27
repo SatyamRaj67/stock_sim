@@ -14,7 +14,7 @@ export const formatCurrency = (
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
-    minimumFractionDigits: 2, 
+    minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(numValue);
 };
@@ -53,4 +53,20 @@ export const formatNumber = (
   // For numbers less than 1000, just return the number as a string
   // Optionally use toLocaleString() for commas: numValue.toLocaleString("en-US")
   return `${sign}${absValue.toString()}`;
+};
+
+// Helper function to calculate price change (similar to MarketTable)
+export const calculatePriceChange = (
+  currentPriceInput: Decimal | number | string,
+  previousCloseInput: Decimal | number | string | null | undefined,
+): Decimal => {
+  const currentPrice = new Decimal(currentPriceInput);
+  const previousCloseValue = previousCloseInput ?? 0;
+  const previousClose = new Decimal(previousCloseValue);
+
+  if (previousClose.isZero()) {
+    return new Decimal(0);
+  }
+  // Calculate percentage change
+  return currentPrice.minus(previousClose).dividedBy(previousClose).times(100);
 };

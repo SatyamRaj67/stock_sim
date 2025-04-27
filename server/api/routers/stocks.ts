@@ -1,6 +1,10 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { adminProtectedProcedure, createTRPCRouter } from "server/api/trpc";
+import {
+  adminProtectedProcedure,
+  createTRPCRouter,
+  protectedProcedure,
+} from "server/api/trpc";
 import { stockCreateSchema, stockUpdateSchema } from "@/schemas";
 import {
   createStock,
@@ -15,14 +19,28 @@ const idSchema = z.object({ id: z.string().cuid() });
 
 export const stockRouter = createTRPCRouter({
   /**
-   * Get all stocks (Admin only)
+   * Get all stocks
    */
-  getAllStocks: adminProtectedProcedure.query(async ({}) => {
+  getAllStocks: protectedProcedure.query(async ({}) => {
     const stocks = await getAllStocks();
 
     return stocks;
   }),
-
+  /**
+   * Get stock by symbol
+   */
+  getStockBySymbol: protectedProcedure
+    .input(z.object({ symbol: z.string() }))
+    .query(async ({ input }) => {
+      const stock = await getStockBySymbol(input.symbol);
+      if (!stock) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: `Stock with symbol ${input.symbol} not found`,
+        });
+      }
+      return stock;
+    }),
   /**
    * Create a new stock (Admin only)
    */

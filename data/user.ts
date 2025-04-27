@@ -1,4 +1,3 @@
-import type { TransactionType } from "@/types";
 import { db } from "server/db";
 
 export const getUserByEmail = async (email: string) => {
@@ -23,10 +22,10 @@ export const getUserById = async (id: string) => {
   }
 };
 
-export const getUserByIdWithPortfolio = async (id: string) => {
+export const getUserByIdWithPortfolio = async (userId: string) => {
   try {
     const user = await db.portfolio.findUnique({
-      where: { id },
+      where: { userId },
     });
     return user;
   } catch {
@@ -67,4 +66,3 @@ export const updateUserById = async (id: string, data: any) => {
     return null;
   }
 };
-

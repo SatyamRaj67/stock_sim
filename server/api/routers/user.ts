@@ -12,16 +12,14 @@ import {
 import { getTransactionsByUserId } from "@/data/transactions";
 
 export const userRouter = createTRPCRouter({
-  getUserById: publicProcedure.input(z.string()).query(({ input }) => {
-    return getUserById(input);
+  getUserById: publicProcedure.input(z.string()).query(async ({ input }) => {
+    return await getUserById(input);
   }),
 
   getUserByIdWithPortfolioAndPositions: protectedProcedure
     .input(z.string())
     .query(async ({ input }) => {
-      const portfolio = await getUserByIdWithPortfolioAndPositions(input);
-
-      return portfolio;
+      return await getUserByIdWithPortfolioAndPositions(input);
     }),
 
   getUserByIdWithPortfolio: protectedProcedure
