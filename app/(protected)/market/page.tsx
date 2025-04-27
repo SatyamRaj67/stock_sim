@@ -1,7 +1,6 @@
 "use client";
 
 import dynamic from "next/dynamic";
-// import { MarketTableSkeleton } from "@/components/market/market-table";
 
 // Dynamically import MarketTable
 const MarketTable = dynamic(

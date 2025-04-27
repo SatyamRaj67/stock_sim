@@ -54,79 +54,10 @@ export function MarketTable() {
 
   // Use tRPC query for fetching stocks
   const { data: stocks, isLoading: isLoadingStocks } =
-    api.stock.getStocks.useQuery(undefined, {
+    api.stock.getAllStocks.useQuery(undefined, {
       enabled: !!session,
       refetchInterval: 60000,
     });
-
-  // Use the tRPC mutation hook for trading stocks
-  const tradeMutation = api.stock.tradeStock.useMutation({
-    onSuccess: (data, variables) => {
-      toast.success(data.message ?? "Trade successful!");
-
-      setQuantities((prev) => {
-        const updated = { ...prev };
-        delete updated[variables.stockId];
-        return updated;
-      });
-      setProcessingTrade(null);
-    },
-    onError: (error) => {
-      toast.error(error.message ?? "Trade failed.");
-      setProcessingTrade(null); // Clear processing state on error
-    },
-  });
-
-  const handleQuantityChange = (stockId: string, value: string) => {
-    const quantity = parseInt(value, 10);
-    if (!isNaN(quantity) && quantity >= 0) {
-      setQuantities((prev) => ({
-        ...prev,
-        [stockId]: quantity,
-      }));
-    } else if (value === "") {
-      // Allow clearing the input
-      setQuantities((prev) => {
-        const updated = { ...prev };
-        delete updated[stockId];
-        return updated;
-      });
-    }
-  };
-
-  const handleBuy = (stockId: string) => {
-    const quantity = quantities[stockId] ?? 0;
-    if (quantity <= 0) {
-      toast.error("Please enter a valid quantity");
-      return;
-    }
-    if (tradeMutation.isPending) return; // Prevent multiple simultaneous trades
-
-    setProcessingTrade({ stockId, type: TransactionType.BUY });
-    tradeMutation.mutate({
-      stockId,
-      quantity,
-      type: TransactionType.BUY,
-    });
-  };
-
-  const handleSell = (stockId: string) => {
-    const quantity = quantities[stockId] ?? 0;
-    if (quantity <= 0) {
-      toast.error("Please enter a valid quantity");
-      return;
-    }
-    if (tradeMutation.isPending) return; // Prevent multiple simultaneous trades
-
-    setProcessingTrade({ stockId, type: TransactionType.SELL });
-    tradeMutation.mutate({
-      stockId,
-      quantity,
-      type: TransactionType.SELL,
-    });
-
-    // Don't clear quantity here, do it in onSuccess
-  };
 
   // Ensure stocks is an array before filtering
   const safeStocks = Array.isArray(stocks) ? stocks : [];
@@ -225,18 +156,10 @@ export function MarketTable() {
                 );
                 const isPositiveChange = priceChange >= new Decimal(0);
                 // Check if the *current* stock's BUY action is processing
-                const isProcessingBuy =
-                  tradeMutation.isPending &&
-                  processingTrade?.stockId === stock.id &&
-                  processingTrade?.type === TransactionType.BUY;
+
                 // Check if the *current* stock's SELL action is processing
-                const isProcessingSell =
-                  tradeMutation.isPending &&
-                  processingTrade?.stockId === stock.id &&
-                  processingTrade?.type === TransactionType.SELL;
+
                 // Disable input/buttons if *any* trade is processing for this stock
-                const isProcessingCurrentStock =
-                  isProcessingBuy ?? isProcessingSell;
 
                 return (
                   <TableRow key={stock.id}>
@@ -275,16 +198,8 @@ export function MarketTable() {
                           placeholder="Qty"
                           className="h-8 w-16"
                           value={quantities[stock.id] ?? ""} // Control the input value
-                          onChange={(e) =>
-                            handleQuantityChange(stock.id, e.target.value)
-                          }
                           // Disable input if this specific stock is being processed or globally disabled
-                          disabled={
-                            isProcessingCurrentStock ??
-                            stock.isFrozen ??
-                            !stock.isActive ??
-                            tradeMutation.isPending
-                          }
+
                           min="0" // Prevent negative numbers
                         />
 
@@ -292,41 +207,16 @@ export function MarketTable() {
                           size="sm"
                           variant="outline"
                           className="h-8 bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800"
-                          onClick={() => handleBuy(stock.id)}
-                          disabled={
-                            // Disable if processing this stock, or globally disabled, or any mutation is pending
-                            isProcessingCurrentStock ??
-                            stock.isFrozen ??
-                            !stock.isActive ??
-                            tradeMutation.isPending
-                          }
                         >
-                          {/* Show loader only if this stock's BUY is processing */}
-                          {isProcessingBuy ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            "Buy"
-                          )}
+                          BUY
                         </Button>
 
                         <Button
                           size="sm"
                           variant="outline"
                           className="h-8 bg-red-50 text-red-700 hover:bg-red-100 hover:text-red-800"
-                          onClick={() => handleSell(stock.id)}
-                          disabled={
-                            isProcessingCurrentStock ??
-                            stock.isFrozen ??
-                            !stock.isActive ??
-                            tradeMutation.isPending
-                          }
                         >
-                          {/* Show loader only if this stock's SELL is processing */}
-                          {isProcessingSell ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            "Sell"
-                          )}
+                          SELL
                         </Button>
                         <Link href={`/market/${stock.symbol}`} passHref>
                           <Button size="sm" variant="outline">

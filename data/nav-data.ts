@@ -1,4 +1,5 @@
 import {
+  TbAward,
   TbBuildingStore,
   TbCashRegister,
   TbChartBar,
@@ -33,6 +34,11 @@ export const navData = {
       href: "/transactions",
       icon: TbCashRegister,
     },
+    {
+      title: "Achievements",
+      href: "/achievements",
+      icon: TbAward,
+    }
   ],
   navAdmin: [
     {
