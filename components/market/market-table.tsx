@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -20,38 +20,26 @@ import {
   Loader2,
   ArrowRightFromLine,
 } from "lucide-react";
-import { formatCurrency, formatNumber } from "@/lib/utils";
+import {
+  calculatePriceChange,
+  formatCurrency,
+  formatNumber,
+} from "@/lib/utils";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import { api } from "@/trpc/react";
-import { TransactionType } from "@prisma/client";
 import Decimal from "decimal.js";
 import { Skeleton } from "../ui/skeleton";
 import Link from "next/link";
-
-const calculatePriceChange = (
-  currentPriceInput: Decimal | number | string,
-  previousCloseInput: Decimal | number | string | null | undefined,
-): Decimal => {
-  const currentPrice = new Decimal(currentPriceInput);
-  const previousCloseValue = previousCloseInput ?? 0;
-  const previousClose = new Decimal(previousCloseValue);
-
-  if (previousClose.isZero()) {
-    return new Decimal(0);
-  }
-  return currentPrice.minus(previousClose).dividedBy(previousClose).times(100);
-};
+import { useTradeActions } from "@/hooks/useTradeActions";
 
 export function MarketTable() {
   const [searchQuery, setSearchQuery] = useState("");
   const [quantities, setQuantities] = useState<Record<string, number | "">>({});
-  const [processingTrade, setProcessingTrade] = useState<{
-    stockId: string;
-    type: TransactionType;
-  } | null>(null);
   const { data: session } = useSession();
-  const utils = api.useUtils();
+
+  const { buyStock, sellStock, isBuying, isSelling, isProcessing } =
+    useTradeActions();
 
   const { data: stocks, isLoading: isLoadingStocks } =
     api.stocks.getAllStocks.useQuery(undefined, {
@@ -59,61 +47,8 @@ export function MarketTable() {
       refetchInterval: 60000,
     });
 
-  const buyMutation = api.trade.buyStocks.useMutation({
-    onSuccess: (data, variables) => {
-      const boughtStock = safeStocks.find((s) => s.id === variables.stockId);
-      toast.success(
-        `Successfully bought ${variables.quantity} shares of ${boughtStock?.symbol ?? "stock"}.`,
-      );
-      // utils.user.getBalance.invalidate();
-      // utils.user.getPortfolio.invalidate();
-      utils.user.getTransactions.invalidate();
-      utils.stocks.getAllStocks.invalidate();
-      setQuantities((prev) => ({ ...prev, [variables.stockId]: "" }));
-    },
-    onError: (error) => {
-      toast.error(`Buy failed: ${error.message}`);
-    },
-    onSettled: (_data, _error, variables) => {
-      if (
-        processingTrade?.stockId === variables.stockId &&
-        processingTrade?.type === "BUY"
-      ) {
-        setProcessingTrade(null);
-      }
-    },
-  });
-
-  const sellMutation = api.trade.sellStocks.useMutation({
-    onSuccess: (data, variables) => {
-      const soldStock = safeStocks.find((s) => s.id === variables.stockId);
-      toast.success(
-        `Successfully sold ${variables.quantity} shares of ${soldStock?.symbol ?? "stock"}.`,
-      );
-      // utils.user.getBalance.invalidate();
-      // utils.user.getPortfolio.invalidate();
-      utils.user.getTransactions.invalidate();
-      utils.stocks.getAllStocks.invalidate();
-      setQuantities((prev) => ({ ...prev, [variables.stockId]: 0 }));
-    },
-    onError: (error) => {
-      toast.error(`Sell failed: ${error.message}`);
-    },
-    onSettled: (_data, _error, variables) => {
-      if (
-        processingTrade?.stockId === variables.stockId &&
-        processingTrade?.type === "SELL"
-      ) {
-        setProcessingTrade(null);
-      }
-    },
-  });
-
-  // Handle changes in the quantity input
   const handleQuantityChange = (stockId: string, value: string) => {
-    // Allow empty string or positive integers
     if (value === "" || /^[1-9]\d*$/.test(value) || value === "0") {
-      // Prevent leading zeros unless the value is just "0"
       if (value.length > 1 && value.startsWith("0")) {
         return;
       }
@@ -126,7 +61,7 @@ export function MarketTable() {
   };
 
   const handleBuy = (stockId: string) => {
-    const quantityValue = quantities[stockId] ?? 0;
+    const quantityValue = quantities[stockId] ?? "";
     const quantity =
       quantityValue === "" ? 0 : parseInt(String(quantityValue), 10);
 
@@ -134,30 +69,41 @@ export function MarketTable() {
       toast.error("Please enter a valid quantity greater than zero.");
       return;
     }
-    setProcessingTrade({ stockId, type: "BUY" });
-    buyMutation.mutate({ stockId, quantity });
+    buyStock({ stockId, quantity });
+    setQuantities((prev) => ({ ...prev, [stockId]: "" }));
   };
 
   const handleSell = (stockId: string) => {
-    const quantityValue = quantities[stockId] ?? 0;
+    const quantityValue = quantities[stockId] ?? "";
     const quantity =
       quantityValue === "" ? 0 : parseInt(String(quantityValue), 10);
+
     if (quantity <= 0) {
       toast.error("Please enter a valid quantity greater than zero.");
       return;
     }
-    setProcessingTrade({ stockId, type: "SELL" });
-    sellMutation.mutate({ stockId, quantity });
+    sellStock({ stockId, quantity });
+    setQuantities((prev) => ({ ...prev, [stockId]: "" }));
   };
 
-  const safeStocks = Array.isArray(stocks) ? stocks : [];
-  const activeStocks = safeStocks.filter((stock) => stock.isActive);
-  const filteredStocks = activeStocks.filter(
-    (stock) =>
-      stock.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      stock.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (stock.sector &&
-        stock.sector.toLowerCase().includes(searchQuery.toLowerCase())),
+  const safeStocks = useMemo(
+    () => (Array.isArray(stocks) ? stocks : []),
+    [stocks],
+  );
+  const activeStocks = useMemo(
+    () => safeStocks.filter((stock) => stock.isActive),
+    [safeStocks],
+  );
+  const filteredStocks = useMemo(
+    () =>
+      activeStocks.filter(
+        (stock) =>
+          stock.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          stock.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (stock.sector &&
+            stock.sector.toLowerCase().includes(searchQuery.toLowerCase())),
+      ),
+    [activeStocks, searchQuery],
   );
 
   return (
@@ -202,7 +148,7 @@ export function MarketTable() {
                   <TableCell>
                     <Skeleton className="h-4 w-16" />
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden md:table-cell">
                     <Skeleton className="h-4 w-24" />
                   </TableCell>
                   <TableCell>
@@ -239,20 +185,13 @@ export function MarketTable() {
                   stock.previousClose,
                 );
                 const isPositiveChange = priceChange.gte(0);
-                const isBuyingThisStock =
-                  processingTrade?.stockId === stock.id &&
-                  processingTrade?.type === "BUY";
-                const isSellingThisStock =
-                  processingTrade?.stockId === stock.id &&
-                  processingTrade?.type === "SELL";
-                const isProcessingThisStock =
-                  isBuyingThisStock || isSellingThisStock;
+                const isBuyingThisStock = isBuying(stock.id);
+                const isSellingThisStock = isSelling(stock.id);
+                const isProcessingThisStock = isProcessing(stock.id);
                 const isDisabled =
                   stock.isFrozen || !stock.isActive || isProcessingThisStock;
 
-                // Get current quantity value (can be number or "")
                 const currentQuantityValue = quantities[stock.id] ?? "";
-                // Parse for button disabling logic (treat "" as 0)
                 const currentQuantityNumber =
                   currentQuantityValue === ""
                     ? 0
@@ -303,7 +242,6 @@ export function MarketTable() {
                           disabled={isDisabled}
                           min="0"
                         />
-
                         <Button
                           size="sm"
                           variant="outline"
@@ -317,7 +255,6 @@ export function MarketTable() {
                             "BUY"
                           )}
                         </Button>
-
                         <Button
                           size="sm"
                           variant="outline"
@@ -341,7 +278,6 @@ export function MarketTable() {
                           </Button>
                         </Link>
                       </div>
-
                       {(stock.isFrozen || !stock.isActive) && (
                         <div className="mt-1">
                           <Badge

@@ -216,20 +216,13 @@ export const tradeRouter = createTRPCRouter({
           });
         }
 
-        if (user!.balance < totalProceeds) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "Insufficient balance.",
-          });
-        }
-
         // 4. Add proceeds to user balance
         await updateUserById(userId!, {
-          balance: user!.balance.sub(totalProceeds),
+          balance: user!.balance.add(totalProceeds),
         });
 
         // 5. Create transaction record
-        const transaction = await createTransactionRecord({
+        await createTransactionRecord({
           userId: userId!,
           stockId: stockId,
           type: "SELL",
