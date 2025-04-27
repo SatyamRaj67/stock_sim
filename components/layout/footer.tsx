@@ -1,7 +1,7 @@
 import { TrendingUp } from "lucide-react";
 import Link from "next/link";
 import React from "react";
-import { Skeleton } from "../ui/skeleton"; // Import Skeleton
+import { Skeleton } from "../ui/skeleton";
 
 const Footer = () => {
   return (
@@ -75,23 +75,29 @@ export const FooterSkeleton = () => (
   <footer className="py-12">
     <div className="container mx-auto">
       <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
-        {[...Array(4)].map((_, i) => (
+        {[...Array(4)].map((i: number) => (
           <div key={i}>
-            <Skeleton className="h-6 w-24 mb-4" /> {/* Title */}
+            <Skeleton className="mb-4 h-6 w-24" />
             <ul className="space-y-2">
-              <li><Skeleton className="h-4 w-20" /></li> {/* Link */}
-              <li><Skeleton className="h-4 w-16" /></li> {/* Link */}
-              <li><Skeleton className="h-4 w-24" /></li> {/* Link */}
+              <li>
+                <Skeleton className="h-4 w-20" />
+              </li>
+              <li>
+                <Skeleton className="h-4 w-16" />
+              </li>
+              <li>
+                <Skeleton className="h-4 w-24" />
+              </li>
             </ul>
           </div>
         ))}
       </div>
       <div className="border-foreground mt-12 flex flex-col items-center justify-between border-t pt-6 md:flex-row">
-        <Skeleton className="h-5 w-48" /> {/* Copyright */}
+        <Skeleton className="h-5 w-48" />
         <div className="mt-4 flex gap-4 md:mt-0">
-          <Skeleton className="h-5 w-12" /> {/* Link */}
-          <Skeleton className="h-5 w-12" /> {/* Link */}
-          <Skeleton className="h-5 w-12" /> {/* Link */}
+          <Skeleton className="h-5 w-12" />
+          <Skeleton className="h-5 w-12" />
+          <Skeleton className="h-5 w-12" />
         </div>
       </div>
     </div>

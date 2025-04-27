@@ -63,7 +63,7 @@ const StockDetailSkeleton = () => (
             <Skeleton className="h-6 w-40" />
           </CardHeader>
           <CardContent className="space-y-4">
-            {[...Array(6)].map((_, i) => (
+            {[...Array(6)].map((i: number) => (
               <div key={i} className="flex justify-between">
                 <Skeleton className="h-4 w-24" />
                 <Skeleton className="h-4 w-20" />

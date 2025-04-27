@@ -28,7 +28,6 @@ import {
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import { api } from "@/trpc/react";
-import Decimal from "decimal.js";
 import { Skeleton } from "../ui/skeleton";
 import Link from "next/link";
 import { useTradeActions } from "@/hooks/useTradeActions";

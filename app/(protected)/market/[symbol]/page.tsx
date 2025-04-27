@@ -5,7 +5,6 @@ import { useParams } from "next/navigation";
 import { api } from "@/trpc/react";
 import { PriceHistoryChart } from "@/components/charts/price-history-chart";
 import { StockTradeForm } from "@/components/market/stock/stock-trade-form";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { calculateChange, formatCurrency, formatNumber } from "@/lib/utils";

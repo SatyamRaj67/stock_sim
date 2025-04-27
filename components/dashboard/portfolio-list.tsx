@@ -24,11 +24,11 @@ export function PortfolioList() {
   const { data: session } = useSession();
 
   const { data: userData, isLoading } =
-    api.user.getUserByIdWithPortfolioAndPositions.useQuery(session?.user?.id!, {
-      enabled: !!session?.user?.id,
+    api.user.getUserByIdWithPortfolioAndPositions.useQuery(session!.user.id!, {
+      enabled: !!session!.user.id,
     });
 
-  const positions = userData?.portfolio?.positions || [];
+  const positions = userData?.portfolio?.positions ?? [];
 
   return (
     <Card>

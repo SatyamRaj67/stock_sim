@@ -11,7 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Loader2, PlusCircle, Edit, Trash2 } from "lucide-react";
+import { PlusCircle, Edit, Trash2 } from "lucide-react";
 import { formatCurrency, formatNumber } from "@/lib/utils";
 import { StockEditDialog } from "./stock-edit-dialog";
 import { StockDeleteDialog } from "./stock-delete-dialog";

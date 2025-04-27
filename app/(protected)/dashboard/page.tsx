@@ -11,7 +11,7 @@ export default function DashboardPage() {
   const { data: session } = useSession();
 
   const { data: user, isLoading } = api.user.getUserById.useQuery(
-    session?.user?.id!,
+    session!.user.id!,
   );
 
   const portfolioValue = "$11,500.75";

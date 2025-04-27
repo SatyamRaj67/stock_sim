@@ -25,7 +25,7 @@ const HomePage = () => {
         <CardContent className="space-y-4">
           <p>
             Learn the ropes of stock trading, test your strategies, and track
-            your virtual portfolio's performance.
+            your virtual portfolio&apos;s performance.
           </p>
           <Button asChild size="lg">
             <Link href="/dashboard">Go to Dashboard</Link>
