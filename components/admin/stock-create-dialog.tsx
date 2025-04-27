@@ -87,10 +87,10 @@ export function CreateStockDialog({
     }
   }, [open, form]);
 
-  const createStockMutation = api.stockAdmin.createStock.useMutation({
+  const createStockMutation = api.stocks.createStock.useMutation({
     onSuccess: (data) => {
-      toast.success(`Stock ${data.symbol} created successfully.`);
-      onSuccess(); // Call the success callback (e.g., invalidate query, close dialog)
+      toast.success(`Stock ${data?.symbol} created successfully.`);
+      onSuccess();
     },
     onError: (error) => {
       toast.error(`Failed to create stock: ${error.message}`);
@@ -112,7 +112,8 @@ export function CreateStockDialog({
         <DialogHeader>
           <DialogTitle>Create New Stock</DialogTitle>
           <DialogDescription>
-            Enter the details for the new stock. Click save when you&apos;re done.
+            Enter the details for the new stock. Click save when you&apos;re
+            done.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>

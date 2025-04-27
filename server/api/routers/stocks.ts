@@ -58,7 +58,8 @@ export const stockRouter = createTRPCRouter({
         });
       }
 
-      await createStock(input, ctx.session.user.id!);
+      const stock = await createStock(input, ctx.session.user.id!);
+      return stock
     }),
   /**
    * Update an existing stock (Admin only)

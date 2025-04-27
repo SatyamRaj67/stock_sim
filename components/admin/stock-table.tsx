@@ -19,7 +19,13 @@ import type { Stock } from "@prisma/client";
 import { CreateStockDialog } from "./stock-create-dialog";
 import { Badge } from "../ui/badge";
 import { Skeleton } from "../ui/skeleton";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "../ui/card";
 
 export function AdminStockTable() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -29,11 +35,7 @@ export function AdminStockTable() {
 
   const utils = api.useUtils();
 
-  const {
-    data: stocks,
-    isLoading,
-    error,
-  } = api.stockAdmin.getAllStocks.useQuery();
+  const { data: stocks, isLoading, error } = api.stocks.getAllStocks.useQuery();
 
   const handleOpenEdit = (stock: Stock) => {
     setSelectedStock(stock);
@@ -174,7 +176,7 @@ export function AdminStockTable() {
                     {stock.isFrozen && (
                       <Badge
                         variant="outline"
-                        className="bg-blue-800 text-blue-100 text-xs"
+                        className="bg-blue-800 text-xs text-blue-100"
                       >
                         Frozen
                       </Badge>
@@ -182,14 +184,16 @@ export function AdminStockTable() {
                     {stock.isActive && !stock.isFrozen && (
                       <Badge
                         variant="outline"
-                        className="bg-green-800 text-green-100 text-xs"
+                        className="bg-green-800 text-xs text-green-100"
                       >
                         Active
                       </Badge>
                     )}
                   </div>
                 </CardTitle>
-                <div className="text-sm text-muted-foreground">{stock.name}</div>
+                <div className="text-muted-foreground text-sm">
+                  {stock.name}
+                </div>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
                 <div>
@@ -199,7 +203,8 @@ export function AdminStockTable() {
                   <strong>Volume:</strong> {formatNumber(stock.volume ?? 0)}
                 </div>
                 <div>
-                  <strong>Market Cap:</strong> {formatNumber(stock.marketCap ?? 0)}
+                  <strong>Market Cap:</strong>{" "}
+                  {formatNumber(stock.marketCap ?? 0)}
                 </div>
                 <div>
                   <strong>Sector:</strong> {stock.sector ?? "-"}
@@ -224,7 +229,7 @@ export function AdminStockTable() {
             </Card>
           ))
         ) : (
-          <div className="py-10 text-center text-muted-foreground">
+          <div className="text-muted-foreground py-10 text-center">
             No stocks found.
           </div>
         )}
@@ -235,7 +240,7 @@ export function AdminStockTable() {
         open={isCreateDialogOpen}
         onClose={handleCloseDialogs}
         onSuccess={() => {
-          void utils.stockAdmin.getAllStocks.invalidate();
+          void utils.stocks.getAllStocks.invalidate();
           void handleCloseDialogs();
         }}
       />
@@ -247,7 +252,7 @@ export function AdminStockTable() {
           open={isEditDialogOpen}
           onClose={handleCloseDialogs}
           onSuccess={() => {
-            void utils.stockAdmin.getAllStocks.invalidate();
+            void utils.stocks.getAllStocks.invalidate();
             void handleCloseDialogs();
           }}
         />
@@ -261,7 +266,7 @@ export function AdminStockTable() {
           open={isDeleteDialogOpen}
           onClose={handleCloseDialogs}
           onSuccess={() => {
-            void utils.stockAdmin.getAllStocks.invalidate();
+            void utils.stocks.getAllStocks.invalidate();
             void handleCloseDialogs();
           }}
         />

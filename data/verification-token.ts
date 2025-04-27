@@ -26,7 +26,7 @@ export const getAllVerificationTokensByEmail = async (
         }),
       },
       select: {
-        identifier: false,
+        id: false,
       },
     });
 

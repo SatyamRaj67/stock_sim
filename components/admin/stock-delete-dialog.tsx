@@ -32,7 +32,7 @@ export function StockDeleteDialog({
 }: StockDeleteDialogProps) {
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const deleteStockMutation = api.stockAdmin.deleteStock.useMutation({
+  const deleteStockMutation = api.stocks.deleteStock.useMutation({
     onSuccess: (data) => {
       toast.success(
         data.message || `Stock ${stockSymbol} deleted successfully.`,

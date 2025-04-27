@@ -83,10 +83,10 @@ export function StockEditDialog({
     }
   }, [stock, open, form]);
 
-  const updateStockMutation = api.stockAdmin.updateStock.useMutation({
+  const updateStockMutation = api.stocks.updateStock.useMutation({
     onSuccess: () => {
       toast.success(`Stock ${stock.symbol} updated successfully.`);
-      onSuccess(); // Call the success callback (e.g., invalidate query, close dialog)
+      onSuccess(); 
     },
     onError: (error) => {
       toast.error(`Failed to update stock: ${error.message}`);
