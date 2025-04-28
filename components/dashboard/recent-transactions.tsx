@@ -8,11 +8,35 @@ import {
   CardHeader,
   CardTitle,
 } from "../ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { api } from "@/trpc/react";
 import { Skeleton } from "../ui/skeleton";
 import { Badge } from "../ui/badge";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
+import { ArrowDownLeft, ArrowUpRight, CheckCircle2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { formatDate } from "date-fns";
+
+const getStatusVariant = (
+  status: string,
+): "default" | "secondary" | "outline" | "destructive" => {
+  switch (status) {
+    case "PENDING":
+      return "secondary";
+    case "FAILED":
+      return "destructive";
+    default:
+      return "outline";
+  }
+};
 
 export function RecentTransactions() {
   const { data: session } = useSession();
@@ -32,79 +56,121 @@ export function RecentTransactions() {
     <Card>
       <CardHeader>
         <CardTitle>Recent Transactions</CardTitle>
-        <CardDescription>Last 5 transactions</CardDescription>
+        <CardDescription>Your last 5 transactions</CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <ul className="space-y-4">
-            {Array.from({ length: 5 }).map((_, index) => (
-              <li
-                key={index}
-                className="flex items-center justify-between text-sm"
-              >
-                <div className="flex flex-col space-y-1">
-                  <Skeleton className="h-4 w-[120px]" />
-                  <Skeleton className="h-3 w-[60px]" />
-                </div>
-                <Skeleton className="h-4 w-[70px]" />
-              </li>
-            ))}
-          </ul>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[100px]">Type</TableHead>
+                <TableHead>Stock</TableHead>
+                <TableHead>Qty</TableHead>
+                <TableHead>Price</TableHead>
+                <TableHead>Total</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {Array.from({ length: 5 }).map((_, index) => (
+                <TableRow key={`skel-${index}`}>
+                  <TableCell>
+                    <Skeleton className="h-6 w-16" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-5 w-20" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-5 w-10" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-5 w-16" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-5 w-20" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-5 w-24" />
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Skeleton className="h-5 w-16" />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         ) : transactions && transactions.length > 0 ? (
-          <ul className="space-y-4">
-            {transactions.map((transaction) => {
-              return (
-                <li
-                  key={transaction.id}
-                  className="flex items-center justify-between border-b pb-3 last:border-b-0 last:pb-0"
-                >
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <Badge
-                        variant={
-                          transaction.type === "BUY" ? "success" : "destructive"
-                        }
-                      >
-                        {transaction.type}
-                      </Badge>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[100px]">Type</TableHead>
+                <TableHead>Stock</TableHead>
+                <TableHead>Qty</TableHead>
+                <TableHead>Price</TableHead>
+                <TableHead>Total</TableHead>
+                <TableHead>Date</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {transactions.map((transaction) => {
+                const isBuy = transaction.type === "BUY";
+                const Icon = isBuy ? ArrowDownLeft : ArrowUpRight;
+                const amountColor = isBuy ? "text-destructive" : "text-success";
+                const typeBadgeVariant = isBuy ? "destructive" : "success";
+
+                return (
+                  <TableRow key={transaction.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Icon
+                          className={cn("h-4 w-4 flex-shrink-0", amountColor)}
+                        />
+                        <Badge variant={typeBadgeVariant} className="text-xs">
+                          {isBuy ? "BUY" : "SELL"}
+                        </Badge>
+                      </div>
+                    </TableCell>
+                    <TableCell>
                       <Link
                         href={`/market/${transaction.stock.symbol}`}
-                        className="font-medium hover:underline"
+                        className="text-primary font-medium hover:underline"
                       >
                         {transaction.stock.symbol}
                       </Link>
-                    </div>
-                    <p className="text-muted-foreground text-sm">
-                      {transaction.quantity} shares @{" "}
-                      {formatCurrency(transaction.price)}
-                    </p>
-                    <p className="text-muted-foreground text-xs">
-                      {transaction.timestamp.toLocaleString()}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p
-                      className={`font-medium ${transaction.type === "BUY" ? "text-red-600" : "text-emerald-600"}`}
+                    </TableCell>
+                    <TableCell>{transaction.quantity}</TableCell>
+                    <TableCell>{formatCurrency(transaction.price)}</TableCell>
+                    <TableCell
+                      className={cn("text-right font-medium", amountColor)}
                     >
-                      {transaction.type === "BUY" ? "-" : "+"}
+                      {isBuy ? "-" : "+"}
                       {formatCurrency(transaction.totalAmount)}
-                    </p>
-                    <Badge
-                      variant={
-                        transaction.status === "COMPLETED"
-                          ? "outline"
-                          : "secondary"
-                      }
-                    >
-                      {transaction.status}
-                    </Badge>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-right text-xs">
+                      {formatDate(transaction.timestamp, "d-m-yyyy")}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {transaction.status === "COMPLETED" ? (
+                        <CheckCircle2 className="text-success mx-auto h-5 w-5" />
+                      ) : (
+                        <Badge
+                          variant={getStatusVariant(transaction.status)}
+                          className="text-xs"
+                        >
+                          {transaction.status}
+                        </Badge>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
         ) : (
-          <p>No recent transactions found.</p>
+          <p className="text-muted-foreground py-4 text-center">
+            No recent transactions found.
+          </p>
         )}
       </CardContent>
     </Card>

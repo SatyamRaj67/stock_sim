@@ -94,6 +94,19 @@ export const getAllPriceHistoryOfStock = async (
   }
 };
 
+export const updateStockById = async (id: string, data: any) => {
+  try {
+    const stock = await db.stock.update({
+      where: { id },
+      data,
+    });
+
+    return stock;
+  } catch {
+    return null;
+  }
+};
+
 export const deleteStockById = async (id: string) => {
   try {
     const stock = await db.stock.delete({

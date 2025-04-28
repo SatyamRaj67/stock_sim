@@ -63,8 +63,12 @@ const StockDetailSkeleton = () => (
             <Skeleton className="h-6 w-40" />
           </CardHeader>
           <CardContent className="space-y-4">
-            {[...Array(6)].map((i: number) => (
-              <div key={i} className="flex justify-between">
+            {/* FIX: Use the index from map as the key */}
+            {[...Array(6)].map((_, index) => (
+              <div
+                key={`stat-skeleton-${index}`}
+                className="flex justify-between"
+              >
                 <Skeleton className="h-4 w-24" />
                 <Skeleton className="h-4 w-20" />
               </div>

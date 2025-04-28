@@ -88,3 +88,38 @@ export const calculateChange = (
   const percent = change.dividedBy(prev).times(100);
   return { change, percent, isPositive: change.gte(0) };
 };
+
+/**
+ * Formats a number as a percentage string.
+ * @param value - The number (e.g., 0.05 for 5%).
+ * @param options - Formatting options.
+ * @param options.minimumFractionDigits - Minimum decimal places.
+ * @param options.maximumFractionDigits - Maximum decimal places.
+ * @param options.addPrefix - Whether to add '+' for positive numbers.
+ * @returns Formatted percentage string.
+ */
+export function formatPercentage(
+  value: number | null | undefined,
+  options: {
+    minimumFractionDigits?: number;
+    maximumFractionDigits?: number;
+    addPrefix?: boolean;
+  } = {},
+): string {
+  if (value === null || value === undefined || isNaN(value)) {
+    return "-"; // Or however you want to display null/NaN
+  }
+
+  const {
+    minimumFractionDigits = 2,
+    maximumFractionDigits = 2,
+    addPrefix = false,
+  } = options;
+
+  const prefix = addPrefix && value > 0 ? "+" : "";
+
+  return `${prefix}${(value * 100).toLocaleString(undefined, {
+    minimumFractionDigits,
+    maximumFractionDigits,
+  })}%`;
+}

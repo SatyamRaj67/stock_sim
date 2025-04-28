@@ -14,6 +14,7 @@ import {
   getStockByIdHasTransactions,
   getStockByStockId,
   getStockBySymbol,
+  updateStockById,
 } from "@/data/stocks";
 import { formatISO } from "date-fns";
 
@@ -66,16 +67,15 @@ export const stockRouter = createTRPCRouter({
    */
   updateStock: adminProtectedProcedure
     .input(stockUpdateSchema)
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ input }) => {
       const { id, ...updateData } = input;
       const existingStock = await getStockByStockId(id);
+
       if (!existingStock) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Stock not found" });
       }
-      const updatedStock = await ctx.db.stock.update({
-        where: { id },
-        data: updateData,
-      });
+
+      const updatedStock = await updateStockById(id, updateData);
       return updatedStock;
     }),
   /**
@@ -116,7 +116,10 @@ export const stockRouter = createTRPCRouter({
       }),
     )
     .query(async ({ input }) => {
-      const priceHistory = await getAllPriceHistoryOfStock(input.stockId);
+      const priceHistory = await getAllPriceHistoryOfStock(
+        input.stockId,
+        input.range ?? undefined,
+      );
 
       return priceHistory?.map((item) => ({
         date: formatISO(item.timestamp),

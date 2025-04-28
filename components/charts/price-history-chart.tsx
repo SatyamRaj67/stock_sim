@@ -5,7 +5,6 @@ import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 import { format } from "date-fns";
 import { api } from "@/trpc/react";
 import { Skeleton } from "@/components/ui/skeleton";
-
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Card,
@@ -19,7 +18,6 @@ import {
   type ChartConfig,
   ChartContainer,
   ChartTooltip,
-  ChartTooltipContent,
 } from "@/components/ui/chart";
 import {
   Select,
@@ -29,7 +27,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatPercentage } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 const timeRangeOptions = {
   "1": "1 Day",
@@ -39,22 +38,23 @@ const timeRangeOptions = {
   "365": "1 Year",
   all: "All Time",
 };
-
 type TimeRangeKey = keyof typeof timeRangeOptions;
 
-// Helper function to get number of days (or null for 'all')
 const getDateRangeInDays = (rangeKey: TimeRangeKey): number | null => {
-  if (rangeKey === "all") {
-    return null;
-  }
+  if (rangeKey === "all") return null;
   return parseInt(rangeKey, 10);
 };
 
 interface PriceHistoryChartProps {
-  stockId: string; // Expect stockId instead of data
+  stockId: string;
   title: React.ReactNode;
   description: React.ReactNode;
-  initialTimeRange?: TimeRangeKey; // Optional initial range
+  initialTimeRange?: TimeRangeKey;
+}
+
+interface ChartDataPoint {
+  date: string;
+  price: number;
 }
 
 const chartConfig = {
@@ -64,34 +64,104 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
+// --- Custom Tooltip Content Component ---
+const CustomTooltipContent = ({ active, payload, data }: any) => {
+  if (active && payload && payload.length && data) {
+    const currentData = payload[0].payload as ChartDataPoint;
+    const currentIndex = data.findIndex(
+      (d: ChartDataPoint) => d.date === currentData.date,
+    );
+    const currentPrice = currentData.price;
+    let previousPrice: number = 0;
+    let priceChange: number = 0;
+    let percentageChange: number = 0;
+
+    if (currentIndex > 0 && data[currentIndex - 1]) {
+      previousPrice = data[currentIndex - 1].price;
+      priceChange = currentPrice - previousPrice;
+      if (previousPrice !== 0) {
+        percentageChange = priceChange / previousPrice;
+      }
+    }
+
+    const date = new Date(currentData.date);
+    const formattedDate = !isNaN(date.getTime())
+      ? format(date, "MMM d, yyyy")
+      : "Invalid Date";
+
+    const changeColor =
+      priceChange === null || priceChange === 0
+        ? "text-muted-foreground"
+        : priceChange > 0
+          ? "text-emerald-600 dark:text-emerald-500"
+          : "text-red-600 dark:text-red-500";
+
+    return (
+      <div className="bg-background min-w-[150px] rounded-lg border p-2 text-sm shadow-sm">
+        <div className="mb-1 font-medium">{formattedDate}</div>
+        <div className="flex items-center justify-between">
+          <span className="text-muted-foreground">Price:</span>
+          <span className="font-semibold">{formatCurrency(currentPrice)}</span>
+        </div>
+        {
+          <div className="mt-1 flex items-center justify-between">
+            <span className="text-muted-foreground">Change:</span>
+            <span className={cn("font-semibold", changeColor)}>
+              {priceChange >= 0 ? "+" : ""}
+              {formatCurrency(priceChange)}
+            </span>
+          </div>
+        }
+        {percentageChange !== null && (
+          <div className="mt-1 flex items-center justify-between">
+            <span className="text-muted-foreground">Change %:</span>
+            <span className={cn("font-semibold", changeColor)}>
+              {formatPercentage(percentageChange, { addPrefix: true })}
+            </span>
+          </div>
+        )}
+        {priceChange === null && (
+          <div className="text-muted-foreground mt-1 text-xs">
+            (No previous day data)
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return null;
+};
+// --- End Custom Tooltip ---
+
 export function PriceHistoryChart({
   stockId,
   title,
   description,
-  initialTimeRange = "90", // Default initial range (e.g., 90 days)
+  initialTimeRange = "90",
 }: PriceHistoryChartProps) {
   const isMobile = useIsMobile();
-  // State for the selected time range
   const [timeRange, setTimeRange] =
     React.useState<TimeRangeKey>(initialTimeRange);
 
-  // Fetch data within the component using useQuery
   const {
-    data: chartData, // Fetched data
+    data: chartData,
     isLoading: isLoadingChart,
     error: errorChart,
   } = api.stocks.getAllPriceHistoryOfStock.useQuery(
     {
-      stockId: stockId, // Use the stockId prop
-      range: getDateRangeInDays(timeRange), // Use local state for range
+      stockId: stockId,
+      range: getDateRangeInDays(timeRange),
     },
     {
-      enabled: !!stockId, // Enable query only if stockId is provided
+      enabled: !!stockId,
       retry: false,
+      select: (data) =>
+        data?.sort(
+          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+        ),
     },
   );
 
-  // Adjust initial range for mobile if needed (can run after initial fetch setup)
   React.useEffect(() => {
     if (isMobile) {
       setTimeRange("all");
@@ -100,7 +170,6 @@ export function PriceHistoryChart({
     }
   }, [isMobile, initialTimeRange]);
 
-  // Get the current label based on local state
   const currentLabel = timeRangeOptions[timeRange];
 
   return (
@@ -114,14 +183,12 @@ export function PriceHistoryChart({
           <span className="@[540px]/card:hidden">{currentLabel}</span>
         </CardDescription>
         <CardAction>
-          {/* Desktop Toggle Group - Uses local state */}
           <ToggleGroup
             type="single"
-            value={timeRange} // Use local state
-            onValueChange={(value) =>
-              // Update local state
-              value && setTimeRange(value as TimeRangeKey)
-            }
+            value={timeRange}
+            onValueChange={(value) => {
+              if (value) setTimeRange(value as TimeRangeKey);
+            }}
             variant="outline"
             className="hidden *:data-[slot=toggle-group-item]:!px-4 @[767px]/card:flex"
             aria-label="Select time range (Desktop)"
@@ -138,10 +205,9 @@ export function PriceHistoryChart({
             </ToggleGroupItem>
           </ToggleGroup>
 
-          {/* Mobile Select - Uses local state */}
           <Select
-            value={timeRange} // Use local state
-            onValueChange={(value) => setTimeRange(value as TimeRangeKey)} // Update local state
+            value={timeRange}
+            onValueChange={(value) => setTimeRange(value as TimeRangeKey)}
           >
             <SelectTrigger
               className="flex w-40 *:data-[slot=select-value]:block *:data-[slot=select-value]:truncate @[767px]/card:hidden"
@@ -161,7 +227,6 @@ export function PriceHistoryChart({
         </CardAction>
       </CardHeader>
       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
-        {/* Handle Loading/Error/Display based on internal query state */}
         {isLoadingChart ? (
           <Skeleton className="aspect-auto h-[250px] w-full" />
         ) : errorChart || !chartData ? (
@@ -173,7 +238,6 @@ export function PriceHistoryChart({
             No price history available for the selected range.
           </div>
         ) : (
-          // Render chart with fetched data
           <ChartContainer
             config={chartConfig}
             className="aspect-auto h-[250px] w-full"
@@ -211,22 +275,7 @@ export function PriceHistoryChart({
               />
               <ChartTooltip
                 cursor={false}
-                content={
-                  <ChartTooltipContent
-                    labelFormatter={(value: string) => {
-                      try {
-                        const date = new Date(value);
-                        return !isNaN(date.getTime())
-                          ? format(date, "MMM d, yyyy")
-                          : "Invalid Date";
-                      } catch (e) {
-                        return "Invalid Date";
-                      }
-                    }}
-                    indicator="dot"
-                    formatter={(value: any) => formatCurrency(value)}
-                  />
-                }
+                content={<CustomTooltipContent data={chartData} />}
               />
               <Area
                 dataKey="price"
