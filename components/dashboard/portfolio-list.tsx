@@ -31,7 +31,7 @@ export function PortfolioList() {
   const positions = userData?.portfolio?.positions ?? [];
 
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
         <CardTitle>My Holdings</CardTitle>
         <CardDescription>Overview of your holdings</CardDescription>

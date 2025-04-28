@@ -14,6 +14,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 
 import { NavMain } from "@/components/layout/nav-main";
@@ -26,9 +27,20 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { navData } from "@/data/nav-data";
 import { RoleGate } from "../auth/role-gate";
 import { UserRole } from "@prisma/client";
+import { usePathname } from "next/navigation";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const user = useCurrentUser();
+
+  const pathname = usePathname();
+  const { isMobile, setOpenMobile } = useSidebar();
+
+  const handleLinkClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -36,6 +48,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
+              onClick={handleLinkClick}
+              isActive={pathname === "/"}
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
               <Link href="/">

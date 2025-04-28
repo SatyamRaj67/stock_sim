@@ -7,11 +7,11 @@ import {
 } from "../ui/card";
 
 export const PortfolioChart = () => (
-  <Card className="col-span-1 md:col-span-2 lg:col-span-3">
+  <Card>
     <CardHeader>
       <CardTitle>Portfolio Value Trend</CardTitle>
       <CardDescription>Last 30 days performance</CardDescription>
-    </CardHeader>
+    </CardHeader> 
     <CardContent>
       {/* Placeholder for chart */}
       <div className="bg-secondary flex h-60 items-center justify-center rounded">

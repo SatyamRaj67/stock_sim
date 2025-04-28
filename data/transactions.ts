@@ -74,6 +74,9 @@ export const getTransactionsByUserId = async (
       include: {
         stock: true,
       },
+      orderBy:{
+        timestamp: "desc",
+      }
     });
     return transaction;
   } catch {

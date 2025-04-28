@@ -17,13 +17,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { api } from "@/trpc/react";
-import { Skeleton } from "../ui/skeleton";
 import { Badge } from "../ui/badge";
 import Link from "next/link";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, cn } from "@/lib/utils";
 import { ArrowDownLeft, ArrowUpRight, CheckCircle2 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { formatDate } from "date-fns";
+import RecentTransactionsSkeleton from "./recent-transactions-skeleton";
 
 const getStatusVariant = (
   status: string,
@@ -60,46 +59,7 @@ export function RecentTransactions() {
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[100px]">Type</TableHead>
-                <TableHead>Stock</TableHead>
-                <TableHead>Qty</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {Array.from({ length: 5 }).map((_, index) => (
-                <TableRow key={`skel-${index}`}>
-                  <TableCell>
-                    <Skeleton className="h-6 w-16" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-5 w-20" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-5 w-10" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-5 w-16" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-5 w-20" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-5 w-24" />
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Skeleton className="h-5 w-16" />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <RecentTransactionsSkeleton />
         ) : transactions && transactions.length > 0 ? (
           <Table>
             <TableHeader>
