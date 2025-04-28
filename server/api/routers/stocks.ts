@@ -59,7 +59,7 @@ export const stockRouter = createTRPCRouter({
       }
 
       const stock = await createStock(input, ctx.session.user.id!);
-      return stock
+      return stock;
     }),
   /**
    * Update an existing stock (Admin only)
@@ -91,7 +91,12 @@ export const stockRouter = createTRPCRouter({
         throw new TRPCError({ code: "NOT_FOUND", message: "Stock not found" });
       }
 
-      if (await getStockByIdHasTransactions(stockId)) {
+      const stockExists = await getStockByIdHasTransactions(stockId);
+
+      if (
+        stockExists?.transactions.length === undefined ||
+        stockExists?.transactions.length > 0
+      ) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message:
