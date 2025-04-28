@@ -8,18 +8,28 @@ import { StockTradeForm } from "@/components/market/stock/stock-trade-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { calculateChange, formatCurrency, formatNumber } from "@/lib/utils";
-import { ArrowDownIcon, ArrowUpIcon } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowDownIcon,
+  ArrowLeft,
+  ArrowUpIcon,
+} from "lucide-react";
 import Decimal from "decimal.js";
 import StockDetailSkeleton from "@/components/market/stock/stock-detail-skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/router";
 
 const StockDetailPage = () => {
   const params = useParams();
+  const router = useRouter();
   const symbol = params.symbol as string;
 
   // Fetch Stock Details
   const {
     data: stockDetails,
     isLoading: isLoadingDetails,
+    isError: isErrorDetails,
     error: errorDetails,
   } = api.stocks.getStockBySymbol.useQuery(
     { symbol },
@@ -31,24 +41,42 @@ const StockDetailPage = () => {
   );
 
   if (isLoadingDetails) {
-    return <StockDetailSkeleton />; // Show skeleton while loading initial details
+    return <StockDetailSkeleton />;
   }
 
-  if (errorDetails || !stockDetails) {
+  if (!symbol || isErrorDetails || (!isLoadingDetails && !stockDetails)) {
+    let title = "Error";
+    let message = "An unexpected error occurred while fetching stock details.";
+
+    if (!symbol) {
+      title = "Invalid Request";
+      message = "No stock symbol provided in the URL.";
+    } else if (errorDetails?.data?.code === "NOT_FOUND" || !stockDetails) {
+      title = "Stock Not Found";
+      message = `The stock with symbol "${symbol}" could not be found.`;
+    } else if (errorDetails) {
+      message = errorDetails.message ?? message;
+    }
     return (
-      <div className="container mx-auto py-8 text-center">
-        <h1 className="text-destructive text-2xl font-bold">
-          Error loading stock details for {symbol}.
-        </h1>
-        <p className="text-muted-foreground">{errorDetails?.message}</p>
+      <div className="container mx-auto flex max-w-4xl flex-col items-center space-y-4 p-8 text-center">
+        <Alert variant="destructive" className="w-full max-w-md">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>{title}</AlertTitle>
+          <AlertDescription>{message}</AlertDescription>
+        </Alert>
+        <Button variant="outline" onClick={() => router.push("//market")}>
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Market
+        </Button>
       </div>
     );
   }
 
   // Calculate change based on fetched details
   const { change, percent, isPositive } = calculateChange(
-    new Decimal(stockDetails.currentPrice),
-    stockDetails.previousClose ? new Decimal(stockDetails.previousClose) : null,
+    new Decimal(stockDetails!.currentPrice),
+    stockDetails!.previousClose
+      ? new Decimal(stockDetails!.previousClose)
+      : null,
   );
 
   return (
@@ -57,15 +85,15 @@ const StockDetailPage = () => {
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div>
           <h1 className="text-3xl font-bold">
-            {stockDetails.name} ({stockDetails.symbol})
+            {stockDetails!.name} ({stockDetails!.symbol})
           </h1>
           <p className="text-muted-foreground">
-            {stockDetails.sector ?? "N/A"}
+            {stockDetails!.sector ?? "N/A"}
           </p>
         </div>
         <div className="flex items-baseline gap-2">
           <span className="text-3xl font-bold">
-            {formatCurrency(stockDetails.currentPrice)}
+            {formatCurrency(stockDetails!.currentPrice)}
           </span>
           <span
             className={`flex items-center text-lg font-medium ${isPositive ? "text-green-600" : "text-red-600"}`}
@@ -91,7 +119,7 @@ const StockDetailPage = () => {
             </CardHeader>
             <CardContent>
               <PriceHistoryChart
-                stockId={stockDetails.id}
+                stockId={stockDetails!.id}
                 title=""
                 description=""
               />
@@ -99,14 +127,14 @@ const StockDetailPage = () => {
           </Card>
 
           {/* Description */}
-          {stockDetails.description && (
+          {stockDetails!.description && (
             <Card>
               <CardHeader>
-                <CardTitle>About {stockDetails.name}</CardTitle>
+                <CardTitle>About {stockDetails!.name}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  {stockDetails.description}
+                  {stockDetails!.description}
                 </p>
               </CardContent>
             </Card>
@@ -117,11 +145,11 @@ const StockDetailPage = () => {
         <div className="space-y-6 lg:col-span-1">
           {/* Trade Form */}
           <StockTradeForm
-            stockId={stockDetails.id} // Pass the actual ID
-            symbol={stockDetails.symbol}
-            currentPrice={stockDetails.currentPrice}
-            isFrozen={stockDetails.isFrozen}
-            isActive={stockDetails.isActive}
+            stockId={stockDetails!.id} // Pass the actual ID
+            symbol={stockDetails!.symbol}
+            currentPrice={stockDetails!.currentPrice}
+            isFrozen={stockDetails!.isFrozen}
+            isActive={stockDetails!.isActive}
           />
 
           {/* Key Statistics */}
@@ -132,36 +160,36 @@ const StockDetailPage = () => {
             <CardContent className="space-y-3">
               <StatItem
                 label="Previous Close"
-                value={formatCurrency(stockDetails.previousClose)}
+                value={formatCurrency(stockDetails!.previousClose)}
               />
               <StatItem
                 label="Open"
-                value={formatCurrency(stockDetails.openPrice)}
+                value={formatCurrency(stockDetails!.openPrice)}
               />
               <StatItem
                 label="Day's High"
-                value={formatCurrency(stockDetails.highPrice)}
+                value={formatCurrency(stockDetails!.highPrice)}
               />
               <StatItem
                 label="Day's Low"
-                value={formatCurrency(stockDetails.lowPrice)}
+                value={formatCurrency(stockDetails!.lowPrice)}
               />
               <StatItem
                 label="Volume"
-                value={formatNumber(stockDetails.volume)}
+                value={formatNumber(stockDetails!.volume)}
               />
               <StatItem
                 label="Market Cap"
-                value={formatCurrency(stockDetails.marketCap)}
+                value={formatCurrency(stockDetails!.marketCap)}
               />
-              {(stockDetails.isFrozen || !stockDetails.isActive) && (
+              {(stockDetails!.isFrozen || !stockDetails!.isActive) && (
                 <div className="pt-2">
                   <Badge
                     variant={
-                      stockDetails.isFrozen ? "destructive" : "secondary"
+                      stockDetails!.isFrozen ? "destructive" : "secondary"
                     }
                   >
-                    {stockDetails.isFrozen ? "Trading Frozen" : "Inactive"}
+                    {stockDetails!.isFrozen ? "Trading Frozen" : "Inactive"}
                   </Badge>
                 </div>
               )}
