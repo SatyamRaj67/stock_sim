@@ -1,3 +1,4 @@
+import { IssueSeverity, IssueType } from "@prisma/client";
 import Decimal from "decimal.js";
 import * as z from "zod";
 
@@ -87,21 +88,6 @@ const decimalSchema = z.preprocess(
   },
   z.instanceof(Decimal, { message: "Invalid Decimal value" }),
 );
-export const stockUpdateSchema = z.object({
-  id: z.string(),
-  symbol: z.string().min(1).max(10).optional(), // Symbol might be updatable? If not, remove.
-  name: z.string().min(1).max(100).optional(),
-  description: z.string().optional().nullable(),
-  logoUrl: z.string().url().optional().nullable(),
-  sector: z.string().optional().nullable(),
-  currentPrice: z.coerce.number().min(0),
-  previousClose: z.coerce.number().min(0).optional().nullable(),
-  volume: z.coerce.number().min(0),
-  marketCap: z.coerce.number().min(0).optional().nullable(),
-  isActive: z.boolean().optional(),
-  isFrozen: z.boolean().optional(),
-  priceChangeDisabled: z.boolean().optional(),
-});
 
 export const stockSchema = z.object({
   name: z.string().min(1).max(100),
@@ -126,3 +112,43 @@ export const stockCreateSchema = z.object({
   isActive: z.boolean(),
   isFrozen: z.boolean(),
 });
+
+export const stockUpdateSchema = z.object({
+  id: z.string(),
+  symbol: z.string().min(1).max(10).optional(), // Symbol might be updatable? If not, remove.
+  name: z.string().min(1).max(100).optional(),
+  description: z.string().optional().nullable(),
+  logoUrl: z.string().url().optional().nullable(),
+  sector: z.string().optional().nullable(),
+  currentPrice: z.coerce.number().min(0),
+  previousClose: z.coerce.number().min(0).optional().nullable(),
+  volume: z.coerce.number().min(0),
+  marketCap: z.coerce.number().min(0).optional().nullable(),
+  isActive: z.boolean().optional(),
+  isFrozen: z.boolean().optional(),
+  priceChangeDisabled: z.boolean().optional(),
+});
+
+export const flagUserSchema = z.object({
+  // userId will be added in the mutation, not part of the form data shape
+  issueType: z.nativeEnum(IssueType, {
+    // Added field
+    errorMap: () => ({ message: "Please select an issue type." }),
+  }),
+  issueSeverity: z.nativeEnum(IssueSeverity, {
+    // Renamed from 'severity'
+    errorMap: () => ({ message: "Please select a severity level." }),
+  }),
+  description: z
+    .string() // Renamed from 'reason', made optional
+    .min(5, { message: "Description must be at least 5 characters." })
+    .max(255, { message: "Description cannot exceed 255 characters." })
+    .optional(), // Optional as per Prisma model
+  relatedEntityId: z.string().optional(), // Added optional field
+  notes: z
+    .string()
+    .max(1024, { message: "Notes cannot exceed 1024 characters." })
+    .optional(), // Optional as per Prisma model
+});
+
+export type FlagUserInput = z.infer<typeof flagUserSchema>;

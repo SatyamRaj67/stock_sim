@@ -291,6 +291,7 @@ model AdminWatchlist {
     relatedEntityId String?
     notes           String?
     resolved        Boolean       @default(false)
+    createdBy       String
     createdAt       DateTime      @default(now())
     updatedAt       DateTime      @updatedAt
 

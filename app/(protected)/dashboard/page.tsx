@@ -75,12 +75,14 @@ export default function DashboardPage() {
       },
     );
 
-  let currentPortfolioValue: number = 0;
-  let portfolioTrend: { value: string; direction: "up" | "down" | "neutral" } =
-    {
-      value: "",
-      direction: "neutral",
-    };
+  let currentPortfolioValue = 0;
+  const portfolioTrend: {
+    value: string;
+    direction: "up" | "down" | "neutral";
+  } = {
+    value: "",
+    direction: "neutral",
+  };
 
   if (portfolioHistory && portfolioHistory.length > 0) {
     currentPortfolioValue =

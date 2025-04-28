@@ -72,9 +72,9 @@ const CustomTooltipContent = ({ active, payload, data }: any) => {
       (d: ChartDataPoint) => d.date === currentData.date,
     );
     const currentPrice = currentData.price;
-    let previousPrice: number = 0;
-    let priceChange: number = 0;
-    let percentageChange: number = 0;
+    let previousPrice = 0;
+    let priceChange = 0;
+    let percentageChange = 0;
 
     if (currentIndex > 0 && data[currentIndex - 1]) {
       previousPrice = data[currentIndex - 1].price;

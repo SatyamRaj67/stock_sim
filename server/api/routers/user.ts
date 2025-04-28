@@ -5,6 +5,7 @@ import { createTRPCRouter, publicProcedure, protectedProcedure } from "../trpc";
 import type { TransactionType } from "@/types";
 import {
   getUserById,
+  getUserByIdWithAdminWatchlist,
   getUserByIdWithPortfolio,
   getUserByIdWithPortfolioAndPositions,
   updateUserById,
@@ -31,6 +32,21 @@ export const userRouter = createTRPCRouter({
       const portfolio = await getUserByIdWithPortfolio(input);
 
       return portfolio;
+    }),
+
+  getUserByIdWithAdminWatchlist: protectedProcedure
+    .input(z.string())
+    .query(async ({ input }) => {
+      const user = await getUserByIdWithAdminWatchlist(input);
+
+      if (!user) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "User not found",
+        });
+      }
+
+      return user;
     }),
 
   getTransactions: protectedProcedure
