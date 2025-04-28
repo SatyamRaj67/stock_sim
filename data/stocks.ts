@@ -98,7 +98,7 @@ export const updateStockById = async (id: string, data: any) => {
   try {
     const stock = await db.stock.update({
       where: { id },
-      data,
+    data,
     });
 
     return stock;

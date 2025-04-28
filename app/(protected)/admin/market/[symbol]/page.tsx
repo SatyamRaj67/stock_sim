@@ -68,6 +68,7 @@ const AdminStockDetailPage = () => {
       retry: false,
     },
   );
+
   // --- Mutations for Admin Actions ---
   const updateStockStatus = api.stocks.updateStock.useMutation({
     onSuccess: async (data) => {
@@ -98,6 +99,8 @@ const AdminStockDetailPage = () => {
     if (!stockDetails || updateStockStatus.isPending) return;
     updateStockStatus.mutate({
       id: stockDetails.id,
+      currentPrice: Number(stockDetails.currentPrice),
+      volume: stockDetails.volume,
       isFrozen: !stockDetails.isFrozen,
     });
   };
@@ -106,6 +109,8 @@ const AdminStockDetailPage = () => {
     if (!stockDetails || updateStockStatus.isPending) return;
     updateStockStatus.mutate({
       id: stockDetails.id,
+      currentPrice: Number(stockDetails.currentPrice),
+      volume: stockDetails.volume,
       isActive: !stockDetails.isActive,
     });
   };
