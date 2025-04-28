@@ -108,7 +108,7 @@ export function RecentTransactions() {
                       {formatCurrency(transaction.totalAmount)}
                     </TableCell>
                     <TableCell className="text-muted-foreground text-right text-xs">
-                      {formatDate(transaction.timestamp, "d-m-yyyy")}
+                      {formatDate(transaction.timestamp, "MM/dd/yyyy")}
                     </TableCell>
                     <TableCell className="text-center">
                       {transaction.status === "COMPLETED" ? (
