@@ -10,6 +10,9 @@ import {
   updateUserById,
 } from "@/data/user";
 import { getTransactionsByUserId } from "@/data/transactions";
+import { startOfDay, subDays } from "date-fns";
+import { calculateDailyPortfolioValue } from "@/lib/portfolioUtils";
+import { getMultipleStockPriceHistories } from "@/data/stocks";
 
 export const userRouter = createTRPCRouter({
   getUserById: publicProcedure.input(z.string()).query(async ({ input }) => {
@@ -78,5 +81,59 @@ export const userRouter = createTRPCRouter({
       });
 
       return updatedUser;
+    }),
+
+  /**
+   * Get calculated daily portfolio value history for the logged-in user.
+   */
+  getPortfolioHistory: protectedProcedure
+    .input(
+      z.object({
+        range: z.number().int().positive().default(30), // Range in days (e.g., 7, 30, 90)
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const days = input.range;
+
+      // 1. Get user's current positions
+      const userWithPositions = await getUserByIdWithPortfolioAndPositions(
+        userId!,
+      );
+
+      if (!userWithPositions?.portfolio?.positions) {
+        // Handle case where user or portfolio/positions don't exist
+        return []; // Return empty array if no positions
+      }
+      const positions = userWithPositions.portfolio.positions;
+      if (positions.length === 0) {
+        return []; // Return empty array if no positions
+      }
+
+      // 2. Get unique stock IDs from positions
+      const stockIds = [...new Set(positions.map((p) => p.stockId))];
+
+      // 3. Fetch relevant price history for all held stocks
+      const startDate = startOfDay(subDays(new Date(), days - 1)); // Fetch data starting from 'days' ago
+      const priceHistories = await getMultipleStockPriceHistories(
+        stockIds,
+        startDate,
+      );
+
+      if (!priceHistories) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch stock price history.",
+        });
+      }
+
+      // 4. Calculate daily values using the helper function
+      const dailyValues = calculateDailyPortfolioValue(
+        positions,
+        priceHistories,
+        days,
+      );
+
+      return dailyValues;
     }),
 });

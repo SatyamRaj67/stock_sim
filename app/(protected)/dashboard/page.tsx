@@ -12,7 +12,8 @@ import {
   TrendingUp,
   Wallet,
 } from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatPercentage } from "@/lib/utils";
+import { parseISO } from "date-fns";
 
 const PortfolioChart = dynamic(
   () =>
@@ -31,10 +32,8 @@ const PortfolioList = dynamic(
       (mod) => mod.PortfolioList,
     ),
   {
-    loading: () => (
-      <Skeleton className="h-[300px] w-full" /> // List skeleton
-    ),
-    ssr: false, // Optional: Disable SSR if list relies on client-side data
+    loading: () => <Skeleton className="h-[300px] w-full" />,
+    ssr: false,
   },
 );
 
@@ -50,19 +49,64 @@ const RecentTransactions = dynamic(
 );
 
 interface GainLossData {
-  value: string; // e.g., "+$150.25"
-  trendValue: string; // e.g., "+1.32%"
+  value: string;
+  trendValue: string;
   direction: "up" | "down" | "neutral";
 }
 
 export default function DashboardPage() {
   const { data: session } = useSession();
+  const userId = session?.user?.id;
 
-  const { data: user, isLoading } = api.user.getUserById.useQuery(
-    session!.user.id!,
-  );
+  const { data: user, isLoading: isLoadingUser } =
+    api.user.getUserById.useQuery(userId!, {
+      enabled: !!userId,
+    });
 
-  const portfolioValue = 11500.75;
+  const { data: portfolioHistory, isLoading: isLoadingHistory } =
+    api.user.getPortfolioHistory.useQuery(
+      { range: 3 },
+      {
+        enabled: !!userId,
+        select: (data) =>
+          data?.sort(
+            (a, b) => parseISO(a.date).getTime() - parseISO(b.date).getTime(),
+          ),
+      },
+    );
+
+  let currentPortfolioValue: number = 0;
+  let portfolioTrend: { value: string; direction: "up" | "down" | "neutral" } =
+    {
+      value: "",
+      direction: "neutral",
+    };
+
+  if (portfolioHistory && portfolioHistory.length > 0) {
+    currentPortfolioValue =
+      portfolioHistory[portfolioHistory.length - 1]!.value;
+
+    if (portfolioHistory.length > 1) {
+      const previousValue =
+        portfolioHistory[portfolioHistory.length - 2]!.value;
+      const change = currentPortfolioValue - previousValue;
+      if (previousValue !== 0) {
+        const percentageChange = change / previousValue;
+        portfolioTrend.value = formatPercentage(percentageChange, {
+          addPrefix: true,
+        });
+      } else if (currentPortfolioValue > 0) {
+        portfolioTrend.value = "+∞%";
+      } else {
+        portfolioTrend.value = "0.00%";
+      }
+      portfolioTrend.direction =
+        change > 0 ? "up" : change < 0 ? "down" : "neutral";
+    } else {
+      portfolioTrend.value = "N/A";
+    }
+  }
+
   const todaysGainData: GainLossData = {
     value: "+$200.00",
     direction: "up",
@@ -76,28 +120,37 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
+    <div className="flex-1 space-y-4 p-2 pt-6 md:p-8">
       <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
 
-      {/* Enhanced Info Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {/* Portfolio Value Card */}
         <InfoCard
           title="Portfolio Value"
-          value={formatCurrency(portfolioValue)}
+          value={
+            isLoadingHistory ? (
+              <Skeleton className="h-6 w-28" />
+            ) : currentPortfolioValue !== null ? (
+              formatCurrency(currentPortfolioValue)
+            ) : (
+              "N/A"
+            )
+          }
           icon={<Wallet className="text-muted-foreground h-4 w-4" />}
-          trend={{ value: "+0.5%", direction: "up" }}
-          footer="Based on current market prices"
+          trend={
+            isLoadingHistory
+              ? { value: "", direction: "neutral" }
+              : portfolioTrend
+          }
+          footer="Based on latest calculated value"
         />
 
-        {/* Available Balance Card */}
         <InfoCard
           title="Available Balance"
           value={
-            isLoading ? (
-              <Skeleton className="h-6 w-24" /> // Skeleton for loading value
+            isLoadingUser ? (
+              <Skeleton className="h-6 w-24" />
             ) : user?.balance ? (
-              formatCurrency(user.balance) // Use formatCurrency
+              formatCurrency(user.balance)
             ) : (
               "N/A"
             )
@@ -105,7 +158,6 @@ export default function DashboardPage() {
           icon={<DollarSign className="text-muted-foreground h-4 w-4" />}
         />
 
-        {/* Today's Gain/Loss Card */}
         <InfoCard
           title="Today's Gain/Loss"
           value={todaysGainData.value}
@@ -114,7 +166,7 @@ export default function DashboardPage() {
               <TrendingUp className="text-muted-foreground h-4 w-4" />
             ) : todaysGainData.direction === "down" ? (
               <TrendingDown className="text-muted-foreground h-4 w-4" />
-            ) : null // Or a neutral icon
+            ) : null
           }
           trend={{
             value: todaysGainData.trendValue,
@@ -122,7 +174,6 @@ export default function DashboardPage() {
           }}
         />
 
-        {/* Total Gain/Loss Card */}
         <InfoCard
           title="Total Gain/Loss"
           value={totalGainData.value}
@@ -135,10 +186,8 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* Chart Section */}
       <PortfolioChart />
 
-      {/* Lists Section */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <PortfolioList />
         <RecentTransactions />

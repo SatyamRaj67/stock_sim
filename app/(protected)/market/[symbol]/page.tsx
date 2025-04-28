@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { api } from "@/trpc/react";
 import { PriceHistoryChart } from "@/components/charts/price-history-chart";
 import { StockTradeForm } from "@/components/market/stock/stock-trade-form";
@@ -18,7 +18,6 @@ import Decimal from "decimal.js";
 import StockDetailSkeleton from "@/components/market/stock/stock-detail-skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/router";
 
 const StockDetailPage = () => {
   const params = useParams();

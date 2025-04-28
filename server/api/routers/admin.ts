@@ -1,5 +1,6 @@
+import { getStockByStockId, updateStockById } from "@/data/stocks";
 import { generatePriceHistoryData } from "@/lib/price-simulation";
-import { subDays, startOfDay } from "date-fns";
+import { subDays } from "date-fns";
 import { adminProtectedProcedure, createTRPCRouter } from "server/api/trpc";
 import { z } from "zod";
 
@@ -21,29 +22,18 @@ export const adminRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const { stockId, days } = input;
 
-      // 1. Validate Stock Existence using Prisma context
-      const stock = await ctx.db.stock.findUnique({
-        where: { id: stockId },
-      });
+      const stock = await getStockByStockId(stockId);
 
       if (!stock) {
-        // Consider using TRPCError for better client feedback
         throw new Error(`Stock with ID ${stockId} not found.`);
       }
-
-      // 2. Determine Date Range (needed for deletion)
-      const today = startOfDay(new Date());
-      const endDate = today; // Delete up to yesterday
-      const startDate = subDays(today, days);
 
       // 3. Delete existing history in the specified range
       await ctx.db.priceHistory.deleteMany({
         where: {
           stockId: stockId,
           timestamp: {
-            // Assuming 'timestamp' is the correct field name
-            gte: startDate,
-            lt: endDate,
+            gte: subDays(new Date(), days),
           },
         },
       });
@@ -62,6 +52,16 @@ export const adminRouter = createTRPCRouter({
           })),
           skipDuplicates: true,
         });
+
+        const latestHistoryPoint = historyData[historyData.length - 1];
+
+        if (latestHistoryPoint) {
+          await updateStockById(stockId, {
+            currentPrice: latestHistoryPoint.price,
+            volume: latestHistoryPoint.volume,
+          });
+        }
+
         return { count: result.count };
       }
 
