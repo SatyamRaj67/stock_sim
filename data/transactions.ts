@@ -3,6 +3,17 @@ import { TransactionStatus, TransactionType } from "@prisma/client";
 import { subDays } from "date-fns";
 import Decimal from "decimal.js";
 
+export const getTransactionById = async (id: string) => {
+  try {
+    const transaction = await db.transaction.findUnique({
+      where: { id },
+    });
+    return transaction;
+  } catch (error) {
+    return null;
+  }
+};
+
 export const createTransactionRecord = async (data: {
   userId: string;
   stockId: string;
@@ -74,12 +85,44 @@ export const getTransactionsByUserId = async (
       include: {
         stock: true,
       },
-      orderBy:{
+      orderBy: {
         timestamp: "desc",
-      }
+      },
     });
     return transaction;
   } catch {
+    return null;
+  }
+};
+
+export const getTransactionsByUserIdAndStockId = async (
+  userId: string,
+  stockId: string
+) => {
+  try {
+    const transactions = await db.transaction.findMany({
+      where: {
+        userId,
+        stockId,
+      },
+      orderBy: {
+        timestamp: "asc",
+      },
+    });
+    return transactions;
+  } catch (error) {
+    return null;
+  }
+}
+
+
+export const deleteTransactionById = async (id: string) => {
+  try {
+    const transaction = await db.transaction.delete({
+      where: { id },
+    });
+    return transaction;
+  } catch (error) {
     return null;
   }
 };

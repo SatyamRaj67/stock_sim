@@ -18,6 +18,7 @@ import {
   ArrowUpDown,
   ChevronLeft,
   ChevronRight,
+  Trash2,
 } from "lucide-react";
 import type { Transaction, Stock } from "@prisma/client";
 import { formatCurrency, formatNumber } from "@/lib/utils";
@@ -34,20 +35,18 @@ import {
   type PaginationState,
 } from "@tanstack/react-table";
 
-// Define the expected data shape (Transaction with nested Stock)
+import { DeleteTransactionDialog } from "./delete-transaction-dialog";
+
 type TransactionWithStock = Transaction & { stock: Stock | null };
 
 interface UserTransactionsTableProps {
   userId: string;
 }
 
-// --- TanStack Table Column Definitions (similar to your previous TransactionTable) ---
+// --- TanStack Table Column Definitions ---
 const columnHelper = createColumnHelper<TransactionWithStock>();
 
-const columns = [
-  // Re-use column definitions from your TransactionTable component
-  // Ensure they match the TransactionWithStock type
-  // Example:
+const existingColumns = [
   columnHelper.accessor("timestamp", {
     header: ({ column }) => (
       <Button
@@ -70,11 +69,12 @@ const columns = [
       </Button>
     ),
     cell: (info) => {
-      /* ... type rendering ... */
       const type = info.getValue();
       return (
         <span
-          className={`font-medium ${type === "BUY" ? "text-green-600" : "text-red-600"}`}
+          className={`font-medium ${
+            type === "BUY" ? "text-green-600" : "text-red-600"
+          }`}
         >
           {type}
         </span>
@@ -95,7 +95,6 @@ const columns = [
     cell: (info) => info.getValue() ?? "N/A",
     enableSorting: true,
   }),
-  // ... Add other columns: Quantity, Price, Total Amount, Status ...
   columnHelper.accessor("quantity", {
     header: ({ column }) => (
       <Button
@@ -144,11 +143,16 @@ const columns = [
       </Button>
     ),
     cell: (info) => {
-      /* ... status rendering ... */
       const status = info.getValue();
       return (
         <span
-          className={`rounded-full px-2 py-1 text-xs ${status === "COMPLETED" ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" : status === "PENDING" ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200" : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"}`}
+          className={`rounded-full px-2 py-1 text-xs ${
+            status === "COMPLETED"
+              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+              : status === "PENDING"
+                ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+          }`}
         >
           {status}
         </span>
@@ -157,7 +161,6 @@ const columns = [
     enableSorting: true,
   }),
 ];
-// --- End TanStack Table Column Definitions ---
 
 export const UserTransactionsTable: React.FC<UserTransactionsTableProps> = ({
   userId,
@@ -165,21 +168,60 @@ export const UserTransactionsTable: React.FC<UserTransactionsTableProps> = ({
   const [sorting, setSorting] = useState<SortingState>([]);
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
-    pageSize: 10, // Adjust page size if needed
+    pageSize: 10,
   });
 
-  // Fetch transactions for the specific user
+  // State for the delete confirmation dialog
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [transactionToDelete, setTransactionToDelete] = useState<string | null>(
+    null,
+  );
+
   const {
     data: transactionsData,
     isLoading,
     isError,
     error,
+    refetch,
   } = api.user.getTransactions.useQuery(
-    { userId: userId, limit: 100 }, // Pass userId and optional limit
+    { userId: userId, limit: 100 },
     { enabled: !!userId },
   );
 
-  const transactions = transactionsData ?? []; // Extract transactions
+  // Function to open the dialog
+  const handleDeleteClick = (transactionId: string) => {
+    setTransactionToDelete(transactionId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const columns = React.useMemo(
+    () => [
+      ...existingColumns,
+      columnHelper.display({
+        id: "actions",
+        header: () => <span className="text-right">Actions</span>,
+        cell: ({ row }) => {
+          const transaction = row.original;
+          return (
+            <div className="text-right">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleDeleteClick(transaction.id)}
+                className="text-red-500 hover:text-red-700"
+              >
+                <Trash2 className="h-4 w-4" />
+                <span className="sr-only">Delete Transaction</span>
+              </Button>
+            </div>
+          );
+        },
+      }),
+    ],
+    [],
+  );
+
+  const transactions = transactionsData ?? [];
 
   const table = useReactTable({
     data: transactions,
@@ -200,13 +242,11 @@ export const UserTransactionsTable: React.FC<UserTransactionsTableProps> = ({
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            <Skeleton className="h-8 w-full" /> {/* Header row */}
+            <Skeleton className="h-8 w-full" />
             {[...Array(5)].map((_, i: number) => (
               <Skeleton key={i} className="h-10 w-full" />
-            ))}{" "}
-            {/* Rows */}
-            <Skeleton className="mt-4 h-8 w-1/2 self-end" />{" "}
-            {/* Pagination placeholder */}
+            ))}
+            <Skeleton className="mt-4 h-8 w-1/2 self-end" />
           </div>
         </CardContent>
       </Card>
@@ -233,87 +273,93 @@ export const UserTransactionsTable: React.FC<UserTransactionsTableProps> = ({
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Recent Transactions</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="rounded-md border">
-          <Table>
-            {/* Table Header */}
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              ))}
-            </TableHeader>
-            {/* Table Body */}
-            <TableBody>
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </TableCell>
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Transactions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <TableHead key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
+                      </TableHead>
                     ))}
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
-                    No transactions found.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-        {/* Pagination Controls */}
-        <div className="flex items-center justify-between space-x-2 p-4">
-          <span className="text-muted-foreground text-sm">
-            Page {table.getState().pagination.pageIndex + 1} of{" "}
-            {table.getPageCount()}
-          </span>
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-            >
-              <ChevronLeft className="mr-1 h-4 w-4" /> Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-            >
-              Next <ChevronRight className="ml-1 h-4 w-4" />
-            </Button>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {table.getRowModel().rows?.length ? (
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow
+                      key={row.id}
+                      data-state={row.getIsSelected() && "selected"}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={columns.length}
+                      className="h-24 text-center"
+                    >
+                      No transactions found.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+          <div className="flex items-center justify-between space-x-2 p-4">
+            <span className="text-muted-foreground text-sm">
+              Page {table.getState().pagination.pageIndex + 1} of{" "}
+              {table.getPageCount()}
+            </span>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => table.previousPage()}
+                disabled={!table.getCanPreviousPage()}
+              >
+                <ChevronLeft className="mr-1 h-4 w-4" /> Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => table.nextPage()}
+                disabled={!table.getCanNextPage()}
+              >
+                Next <ChevronRight className="ml-1 h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <DeleteTransactionDialog
+        isOpen={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        transactionId={transactionToDelete}
+        userId={userId}
+      />
+    </>
   );
 };

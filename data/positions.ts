@@ -60,6 +60,38 @@ export const updatePositionById = async (
   }
 };
 
+export const upsertPosition = async (
+  portfolioId: string,
+  stockId: string,
+  quantity: number,
+  averageBuyPrice: Decimal,
+) => {
+  try {
+    const position = await db.position.upsert({
+      where: {
+        portfolioId_stockId: {
+          portfolioId,
+          stockId,
+        },
+      },
+      update: {
+        quantity,
+        averageBuyPrice,
+      },
+      create: {
+        portfolioId,
+        stockId,
+        quantity,
+        averageBuyPrice,
+      },
+    });
+    return position;
+  } catch (error) {
+    console.error("Error upserting position:", error);
+    return null;
+  }
+};
+
 export const deletePositionById = async (id: string) => {
   try {
     const position = await db.position.delete({

@@ -15,7 +15,11 @@ import {
   getUserByIdWithPortfolioAndPositions,
   updateUserById,
 } from "@/data/user";
-import { getTransactionsByUserId } from "@/data/transactions";
+import {
+  deleteTransactionById,
+  getTransactionById,
+  getTransactionsByUserId,
+} from "@/data/transactions";
 import { startOfDay, subDays } from "date-fns";
 import { calculateDailyPortfolioValue } from "@/lib/portfolioUtils";
 import { getMultipleStockPriceHistories } from "@/data/stocks";
@@ -179,5 +183,40 @@ export const userRouter = createTRPCRouter({
       );
 
       return dailyValues;
+    }),
+
+  deleteTransaction: adminProtectedProcedure
+    .input(z.object({ transactionId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const { transactionId } = input;
+
+      // 1. Fetch the transaction to get details (userId, amount, type)
+      const transaction = await getTransactionById(transactionId);
+
+      if (!transaction) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Transaction not found.",
+        });
+      }
+
+      // 2. Delete the transaction
+      await deleteTransactionById(transactionId); // Use your data layer function
+
+      // 3. Adjust user balance
+      let balanceAdjustment = 0;
+      if (transaction.type === "BUY") {
+        // If a BUY is deleted, give the money back
+        balanceAdjustment = transaction.totalAmount.toNumber();
+      } else if (transaction.type === "SELL") {
+        // If a SELL is deleted, take the money back
+        balanceAdjustment = -transaction.totalAmount.toNumber();
+      }
+
+      await updateUserById(transaction.userId, {
+        balance: {
+          increment: balanceAdjustment,
+        },
+      });
     }),
 });
