@@ -163,23 +163,20 @@ const UserWatchlistDetailPage = () => {
       <UserInfoCard userId={userId} />
       <UserWatchlistIssues
         userId={userId}
-        setRefetchWatchlist={setRefetchWatchlistCallback} // Pass callback to get refetch
+        setRefetchWatchlist={setRefetchWatchlistCallback} 
       />
       <UserPositionsTable userId={userId} />
       <UserTransactionsTable userId={userId} />
 
-      {/* Render Flag User Dialog (conditionally) */}
-      {/* Ensure userId is valid before rendering */}
       {userId && (
         <FlagUserDialog
-          userId={userId} // Pass the ID of the user being viewed/flagged
-          isOpen={isFlagDialogOpen} // Control visibility with state
-          onClose={() => setIsFlagDialogOpen(false)} // Close handler
+          userId={userId}
+          isOpen={isFlagDialogOpen}
+          onClose={() => setIsFlagDialogOpen(false)} 
           onSuccess={() => {
-            setIsFlagDialogOpen(false); // Close the dialog on success
-            // Trigger the refetch function stored from UserWatchlistIssues
+            setIsFlagDialogOpen(false); 
             watchlistRefetchRef.current?.();
-            console.log("Watchlist refetch triggered after flagging."); // Optional logging
+            console.log("Watchlist refetch triggered after flagging."); 
           }}
         />
       )}

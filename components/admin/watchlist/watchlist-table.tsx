@@ -51,18 +51,12 @@ import {
   type SortingState,
   type VisibilityState,
 } from "@tanstack/react-table"; // Import TanStack Table hooks and types
+import { api } from "@/trpc/react";
 
 // Define the type for the user data we expect
 type UserWithWatchlist = User & {
   adminWatchlistEntries: AdminWatchlist[];
 };
-
-interface AdminWatchlistTableProps {
-  users: UserWithWatchlist[] | undefined;
-  isLoading: boolean;
-  isError: boolean;
-  error: any;
-}
 
 // --- TanStack Table Column Definitions ---
 const columnHelper = createColumnHelper<UserWithWatchlist>();
@@ -201,23 +195,19 @@ const columns = [
             <BadgeInfo className="h-4 w-4" />
           </Button>
         </Link>
-        {/* <Link href={`/admin/users/${row.original.id}`} passHref>
-          <Button variant="outline" size="sm" title="View Details">
-            <BadgeInfo className="h-4 w-4" />
-          </Button>
-        </Link> */}
       </div>
     ),
   }),
 ];
 // --- End TanStack Table Column Definitions ---
 
-export const AdminWatchlistTable: React.FC<AdminWatchlistTableProps> = ({
-  users = [], // Default to empty array if undefined
-  isLoading,
-  isError,
-  error,
-}) => {
+export const AdminWatchlistTable = ({}) => {
+  const {
+    data: users,
+    isLoading,
+    isError,
+    error,
+  } = api.admin.getAllUsersWithAdminWatchlist.useQuery();
   // TanStack Table State
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -230,7 +220,7 @@ export const AdminWatchlistTable: React.FC<AdminWatchlistTableProps> = ({
   });
 
   const table = useReactTable({
-    data: users,
+    data: users ?? [],
     columns,
     state: {
       sorting,

@@ -1,7 +1,12 @@
 import * as z from "zod";
 import { UserRole } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
-import { createTRPCRouter, publicProcedure, protectedProcedure } from "../trpc";
+import {
+  createTRPCRouter,
+  publicProcedure,
+  protectedProcedure,
+  adminProtectedProcedure,
+} from "../trpc";
 import type { TransactionType } from "@/types";
 import {
   getUserById,
@@ -69,6 +74,29 @@ export const userRouter = createTRPCRouter({
       );
 
       return Transactions;
+    }),
+
+  updateUserById: adminProtectedProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+        name: z.string().min(1, "Name is required").optional(),
+        image: z.string().optional(),
+        role: z.enum([UserRole.USER, UserRole.ADMIN, UserRole.SUPER_ADMIN]),
+        balance: z.coerce.number().min(0, "Balance must be positive"),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const userId = input.userId;
+
+      const updatedUser = await updateUserById(userId, {
+        name: input.name,
+        image: input.image,
+        role: input.role,
+        balance: input.balance,
+      });
+
+      return updatedUser;
     }),
 
   updateUserByAdmin: protectedProcedure
