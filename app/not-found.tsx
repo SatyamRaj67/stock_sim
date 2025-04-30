@@ -16,15 +16,10 @@ import { TrendingDown } from "lucide-react"; // Using lucide-react icon
 // Define the NotFound component
 export default function NotFound() {
   return (
-    // Main container, centers content vertically and horizontally, takes full screen height
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-red-50 via-orange-50 to-amber-50 p-4 font-sans">
-      {/* Card component from shadcn/ui for styling the content box */}
+    <div className="flex flex-col items-center justify-center p-4 font-sans">
       <Card className="w-full max-w-md border-red-200 text-center shadow-lg">
-        {/* Card Header */}
         <CardHeader>
-          {/* Animated Icon Container */}
           <div className="mx-auto mb-4 flex h-20 w-20 animate-pulse items-center justify-center rounded-full bg-red-100">
-            {/* Simple SVG downward trend line animation */}
             <svg
               width="60"
               height="60"
@@ -36,7 +31,6 @@ export default function NotFound() {
               strokeLinejoin="round"
               className="h-12 w-12 text-red-500"
             >
-              {/* Static part of the graph line */}
               <polyline points="22 12 18 12 15 21 9 3 6 18 2 18"></polyline>
               {/* Animated "crashing" part */}
               <style>
@@ -64,14 +58,14 @@ export default function NotFound() {
             404 - Market Correction!
           </CardTitle>
           {/* Card Description - Explanatory text with a pun */}
-          <CardDescription className="mt-2 text-lg text-gray-600">
+          <CardDescription className="text-foreground mt-2 text-lg">
             Oops! This page seems to have taken a sharp downturn.
           </CardDescription>
         </CardHeader>
 
         {/* Card Content - More details or context */}
         <CardContent>
-          <p className="text-gray-500">
+          <p className="text-background-muted">
             Looks like the asset you were searching for is off the charts... or
             maybe it just doesn't exist. Don't worry, your portfolio is safe (we
             hope!).
@@ -96,7 +90,7 @@ export default function NotFound() {
       </Card>
 
       {/* Optional: Add a subtle footer */}
-      <footer className="mt-8 text-sm text-gray-400">
+      <footer className="text-foreground-500 mt-8 text-sm">
         Stock Market Simulator Inc. - Always Read the Prospectus (or the URL)!
       </footer>
     </div>
