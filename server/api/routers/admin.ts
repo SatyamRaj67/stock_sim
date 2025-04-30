@@ -50,7 +50,7 @@ export const adminRouter = createTRPCRouter({
         relatedEntityId,
         notes,
       } = input;
-      const adminUserId = ctx.session.user.id!; 
+      const adminUserId = ctx.session.user.id!;
 
       try {
         const newEntry = await ctx.db.adminWatchlist.create({
@@ -87,7 +87,7 @@ export const adminRouter = createTRPCRouter({
       try {
         const issue = await ctx.db.adminWatchlist.findUnique({
           where: { id: issueId },
-          select: { resolved: true }, // Only select the field we need
+          select: { resolved: true },
         });
 
         if (!issue) {
@@ -122,21 +122,40 @@ export const adminRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const { issueId } = input;
       try {
-        // Optional: Check if issue exists first if needed, though delete won't fail if not found
-        // const issue = await ctx.db.adminWatchlist.findUnique({ where: { id: issueId } });
-        // if (!issue) { throw new TRPCError({ code: 'NOT_FOUND', message: `Entry ${issueId} not found.` }); }
-
-        const deletedIssue = await ctx.db.adminWatchlist.delete({
+        await ctx.db.adminWatchlist.delete({
           where: { id: issueId },
         });
         // Return something simple to indicate success
         return { success: true, deletedId: issueId };
       } catch (error) {
         console.error("Failed to delete watchlist entry:", error);
-        // Handle potential Prisma errors like foreign key constraints if necessary
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Could not delete watchlist entry.",
+        });
+      }
+    }),
+
+  deleteAllUserTransactions: adminProtectedProcedure
+    .input(z.object({ userId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const { userId } = input;
+      try {
+        // Delete all transactions for the user
+        const result = await ctx.db.transaction.deleteMany({
+          where: { userId },
+        });
+
+        await ctx.db.portfolio.deleteMany({
+          where: { userId },
+        });
+
+        return { count: result.count };
+      } catch (error) {
+        console.error("Failed to delete all transactions:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Could not delete transactions.",
         });
       }
     }),

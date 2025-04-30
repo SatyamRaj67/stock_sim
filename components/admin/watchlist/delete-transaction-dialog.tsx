@@ -17,22 +17,23 @@ interface DeleteTransactionDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   transactionId: string | null;
-  userId: string; // Add userId for invalidation
+  userId: string;
+  onSuccess?: () => void;
 }
 
 export const DeleteTransactionDialog: React.FC<
   DeleteTransactionDialogProps
-> = ({ isOpen, onOpenChange, transactionId, userId }) => {
+> = ({ isOpen, onOpenChange, transactionId, userId, onSuccess }) => {
   const utils = api.useUtils(); // Get tRPC utils
 
   // --- Delete Mutation ---
   const deleteMutation = api.user.deleteTransaction.useMutation({
     onSuccess: async () => {
+      onSuccess?.();
       toast.success("Transaction deleted successfully.");
-      // Invalidate queries to refetch data
       await utils.user.getTransactions.invalidate({ userId });
-      await utils.user.getUserById.invalidate(userId); // To update balance display elsewhere
-      onOpenChange(false); // Close dialog on success
+      await utils.user.getUserById.invalidate(userId);
+      onOpenChange(false);
     },
     onError: (error) => {
       toast.error("Failed to delete transaction", {

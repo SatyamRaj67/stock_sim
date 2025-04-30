@@ -36,6 +36,7 @@ import {
 } from "@tanstack/react-table";
 
 import { DeleteTransactionDialog } from "./delete-transaction-dialog";
+import { DeleteAllTransactionsDialog } from "./delete-all-transactions-dialog";
 
 type TransactionWithStock = Transaction & { stock: Stock | null };
 
@@ -150,8 +151,8 @@ const existingColumns = [
             status === "COMPLETED"
               ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
               : status === "PENDING"
-                ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+              ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+              : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
           }`}
         >
           {status}
@@ -177,6 +178,9 @@ export const UserTransactionsTable: React.FC<UserTransactionsTableProps> = ({
     null,
   );
 
+  // State for the delete all confirmation dialog
+  const [isDeleteAllDialogOpen, setIsDeleteAllDialogOpen] = useState(false);
+
   const {
     data: transactionsData,
     isLoading,
@@ -188,10 +192,15 @@ export const UserTransactionsTable: React.FC<UserTransactionsTableProps> = ({
     { enabled: !!userId },
   );
 
-  // Function to open the dialog
+  // Function to open the single delete dialog
   const handleDeleteClick = (transactionId: string) => {
     setTransactionToDelete(transactionId);
     setIsDeleteDialogOpen(true);
+  };
+
+  // Function to open the delete all dialog
+  const handleDeleteAllClick = () => {
+    setIsDeleteAllDialogOpen(true);
   };
 
   const columns = React.useMemo(
@@ -275,8 +284,16 @@ export const UserTransactionsTable: React.FC<UserTransactionsTableProps> = ({
   return (
     <>
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Recent Transactions</CardTitle>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleDeleteAllClick}
+            disabled={isLoading || !transactionsData || transactionsData.length === 0}
+          >
+            <Trash2 className="mr-2 h-4 w-4" /> Delete All
+          </Button>
         </CardHeader>
         <CardContent>
           <div className="rounded-md border">
@@ -359,6 +376,13 @@ export const UserTransactionsTable: React.FC<UserTransactionsTableProps> = ({
         onOpenChange={setIsDeleteDialogOpen}
         transactionId={transactionToDelete}
         userId={userId}
+        onSuccess={refetch}
+      />
+      <DeleteAllTransactionsDialog
+        isOpen={isDeleteAllDialogOpen}
+        onOpenChange={setIsDeleteAllDialogOpen}
+        userId={userId}
+        onSuccess={refetch}
       />
     </>
   );
