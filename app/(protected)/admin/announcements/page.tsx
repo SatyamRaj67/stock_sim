@@ -6,11 +6,11 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
-import { Wrench } from "lucide-react";
+import { Wrench } from "lucide-react"; // Or use Construction icon if preferred
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
-const AdminDashboardPage = () => {
+const AnnouncementsPage = () => {
   return (
     <div className="flex flex-1 items-center justify-center p-4 md:p-8">
       <Card className="w-full max-w-md text-center">
@@ -19,7 +19,7 @@ const AdminDashboardPage = () => {
             <Wrench className="h-8 w-8" />
           </div>
           <CardTitle className="text-2xl font-semibold">
-            Admin Dashboard Coming Soon!
+            Announcements Coming Soon!
           </CardTitle>
           <CardDescription className="text-muted-foreground pt-1">
             This section is currently under construction.
@@ -27,7 +27,7 @@ const AdminDashboardPage = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <p>
-            I&apos;m working hard to create the Dashboard for all Admins to view stats and growth along with system healths and all.. <br />
+            I&apos;m working hard to bring you exciting Announcements <br />
             <br />
             Please check back later!
           </p>
@@ -40,4 +40,4 @@ const AdminDashboardPage = () => {
   );
 };
 
-export default AdminDashboardPage;
+export default AnnouncementsPage;

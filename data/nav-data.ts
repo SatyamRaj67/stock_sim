@@ -1,5 +1,6 @@
 import {
   TbAward,
+  TbBroadcast,
   TbBuildingStore,
   TbCashRegister,
   TbChartBar,
@@ -52,9 +53,9 @@ export const navData = {
       icon: TbFileDescription,
     },
     {
-      title: "Reports",
-      href: "/admin/reports",
-      icon: TbReport,
+      title: "Announcements",
+      href: "/admin/announcements",
+      icon: TbBroadcast,
     },
     {
       title: "Market",
