@@ -16,6 +16,15 @@ export const env = createEnv({
     AUTH_GITHUB_ID: z.string(),
     AUTH_GITHUB_SECRET: z.string(),
     STRIPE_SECRET_API_KEY: z.string(),
+    // Add Stripe Price IDs
+    STRIPE_PRICE_ID_OT_BASIC: z.string(),
+    STRIPE_PRICE_ID_OT_PRO: z.string(),
+    STRIPE_PRICE_ID_MO_STARTER: z.string(),
+    STRIPE_PRICE_ID_MO_BUSINESS: z.string(),
+    STRIPE_PRICE_ID_MO_ENTERPRISE: z.string(), 
+    STRIPE_PRICE_ID_YR_STARTER: z.string(),
+    STRIPE_PRICE_ID_YR_BUSINESS: z.string(),
+    STRIPE_PRICE_ID_YR_ENTERPRISE: z.string(), 
     RESEND_API_KEY: z.string(),
     DATABASE_URL: z.string().url(),
     NODE_ENV: z
@@ -51,6 +60,15 @@ export const env = createEnv({
     AUTH_GITHUB_SECRET: process.env.AUTH_GITHUB_SECRET,
 
     STRIPE_SECRET_API_KEY: process.env.STRIPE_SECRET_API_KEY,
+    // Add Stripe Price IDs to runtime env
+    STRIPE_PRICE_ID_OT_BASIC: process.env.STRIPE_PRICE_ID_OT_BASIC,
+    STRIPE_PRICE_ID_OT_PRO: process.env.STRIPE_PRICE_ID_OT_PRO,
+    STRIPE_PRICE_ID_MO_STARTER: process.env.STRIPE_PRICE_ID_MO_STARTER,
+    STRIPE_PRICE_ID_MO_BUSINESS: process.env.STRIPE_PRICE_ID_MO_BUSINESS,
+    STRIPE_PRICE_ID_MO_ENTERPRISE: process.env.STRIPE_PRICE_ID_MO_ENTERPRISE,
+    STRIPE_PRICE_ID_YR_STARTER: process.env.STRIPE_PRICE_ID_YR_STARTER,
+    STRIPE_PRICE_ID_YR_BUSINESS: process.env.STRIPE_PRICE_ID_YR_BUSINESS,
+    STRIPE_PRICE_ID_YR_ENTERPRISE: process.env.STRIPE_PRICE_ID_YR_ENTERPRISE,
 
     RESEND_API_KEY: process.env.RESEND_API_KEY,
 
