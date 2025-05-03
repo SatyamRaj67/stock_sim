@@ -31,6 +31,23 @@ export const getAllStocks = async () => {
   }
 };
 
+export const getAllActiveStocks = async () => {
+  try {
+    const stocks = await db.stock.findMany({
+      where: {
+        isActive: true,
+      },
+      orderBy: {
+        symbol: "asc",
+      },
+    });
+
+    return stocks;
+  } catch {
+    return null;
+  }
+};
+
 export const getStockByStockId = async (stockId: string) => {
   try {
     const stock = await db.stock.findUnique({

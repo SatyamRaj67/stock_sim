@@ -1,7 +1,6 @@
 import { getStockByStockId, updateStockById } from "@/data/stocks";
 import { getAllUsersWithAdminWatchlist } from "@/data/user";
 import { generatePriceHistoryData } from "@/lib/price-simulation";
-import { flagUserSchema } from "@/schemas";
 import { IssueSeverity, IssueType } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { subDays } from "date-fns";

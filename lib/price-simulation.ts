@@ -117,3 +117,52 @@ export function generatePriceHistoryData(
 
   return historyData;
 }
+
+/**
+ * Simulates the next day's stock price and volume based on volatility and jump probability.
+ * @param stock - The stock object containing current price, volatility, etc.
+ * @returns An object with the simulated next price and volume, or null if simulation fails.
+ */
+export const simulateNextDayPrice = (
+  stock: Stock,
+): { price: Decimal; volume: number } | null => {
+  try {
+    const currentPrice = new Decimal(stock.currentPrice);
+    const volatility = new Decimal(stock.volatility);
+    const jumpProbability = new Decimal(stock.jumpProbability);
+    const maxJumpMultiplier = new Decimal(stock.maxJumpMultiplier);
+
+    // Basic Brownian motion simulation for normal drift
+    const drift = volatility.mul(new Decimal(Math.random() * 2 - 1)); // Random change based on volatility
+
+    let nextPrice = currentPrice.add(drift);
+
+    // Simulate potential jump
+    if (Math.random() < jumpProbability.toNumber()) {
+      const jumpMultiplier = new Decimal(1).add(
+        new Decimal(Math.random() * 2 - 1).mul(maxJumpMultiplier),
+      );
+      nextPrice = nextPrice.mul(jumpMultiplier);
+      console.log(`Jump simulated for ${stock.symbol}: Multiplier ${jumpMultiplier.toFixed(4)}`);
+    }
+
+    // Ensure price doesn't go below a minimum (e.g., $0.01)
+    if (nextPrice.lessThan(0.01)) {
+      nextPrice = new Decimal(0.01);
+    }
+
+    // Simulate volume (simple example: base volume + random variation)
+    // You might want a more sophisticated volume simulation based on price change, etc.
+    const baseVolume = 1000; // Example base
+    const volumeVariation = Math.random() * 500 - 250; // Example variation
+    const simulatedVolume = Math.max(0, Math.round(baseVolume + volumeVariation));
+
+    return {
+      price: nextPrice,
+      volume: simulatedVolume,
+    };
+  } catch (error) {
+    console.error(`Error simulating price for stock ${stock.symbol}:`, error);
+    return null; // Return null if simulation fails for any reason
+  }
+};

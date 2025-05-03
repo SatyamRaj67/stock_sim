@@ -49,6 +49,15 @@ export interface Portfolio {
   positions?: Position[];
 }
 
+export interface PortfolioHistory {
+  id: string;
+  portfolioId: string;
+  date: string; // ISO Date string
+  value: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface Position {
   id: string;
   portfolioId: string;
