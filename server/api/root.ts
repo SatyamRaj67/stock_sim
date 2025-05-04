@@ -15,7 +15,7 @@ export const appRouter = createTRPCRouter({
   stocks: stockRouter,
   trade: tradeRouter,
   user: userRouter,
-  billing: billingRouter, // Add the billing router here
+  billing: billingRouter,
 });
 
 // export type definition of API

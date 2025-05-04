@@ -1,9 +1,11 @@
+import { deletePortfolioByUserId } from "@/data/portfolio";
+import { deletePriceHistoryByStockId } from "@/data/priceHistory";
 import { getStockByStockId, updateStockById } from "@/data/stocks";
+import { deleteAllTransactionsByUserId } from "@/data/transactions";
 import { getAllUsersWithAdminWatchlist } from "@/data/user";
 import { generatePriceHistoryData } from "@/lib/price-simulation";
 import { IssueSeverity, IssueType } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
-import { subDays } from "date-fns";
 import { adminProtectedProcedure, createTRPCRouter } from "server/api/trpc";
 import { z } from "zod";
 
@@ -61,7 +63,7 @@ export const adminRouter = createTRPCRouter({
             description: description,
             relatedEntityId: relatedEntityId,
             notes: notes,
-            resolved: false, // New entries are always unresolved initially
+            resolved: false, 
           },
         });
         return newEntry; // Return the created entry
@@ -141,15 +143,11 @@ export const adminRouter = createTRPCRouter({
       const { userId } = input;
       try {
         // Delete all transactions for the user
-        const result = await ctx.db.transaction.deleteMany({
-          where: { userId },
-        });
+        const result = await deleteAllTransactionsByUserId(userId);
 
-        await ctx.db.portfolio.deleteMany({
-          where: { userId },
-        });
+        await deletePortfolioByUserId(userId);
 
-        return { count: result.count };
+        return { count: result?.count };
       } catch (error) {
         console.error("Failed to delete all transactions:", error);
         throw new TRPCError({
@@ -167,7 +165,7 @@ export const adminRouter = createTRPCRouter({
           .number()
           .int()
           .positive()
-          .max(365 * 5), // Max 5 years
+          .max(365 * 5),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -180,14 +178,7 @@ export const adminRouter = createTRPCRouter({
       }
 
       // 3. Delete existing history in the specified range
-      await ctx.db.priceHistory.deleteMany({
-        where: {
-          stockId: stockId,
-          timestamp: {
-            gte: subDays(new Date(), days),
-          },
-        },
-      });
+      await deletePriceHistoryByStockId(stockId, days);
 
       // 4. Generate Fake Data Points using the utility function
       const historyData = generatePriceHistoryData(stock, days);

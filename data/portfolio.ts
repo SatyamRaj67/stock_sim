@@ -42,3 +42,14 @@ export const getPortfolioByUserIdAndStockId = async (
     return null;
   }
 };
+
+export const deletePortfolioByUserId = async (userId: string) => {
+  try {
+    const portfolio = await db.portfolio.delete({
+      where: { userId },
+    });
+    return portfolio;
+  } catch (error) {
+    return null;
+  }
+}

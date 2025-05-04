@@ -126,3 +126,14 @@ export const deleteTransactionById = async (id: string) => {
     return null;
   }
 };
+
+export const deleteAllTransactionsByUserId = async (userId: string) => {
+  try {
+    const transactions = await db.transaction.deleteMany({
+      where: { userId },
+    });
+    return transactions;
+  } catch (error) {
+    return null;
+  }
+};

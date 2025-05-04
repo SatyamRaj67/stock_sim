@@ -1,10 +1,10 @@
-import { env } from "@/env"; // Import env for server-side access
-import { BillingClient } from "@/components/billing/billing-client"; // Import the new client component
+import { env } from "@/env";
+import { BillingClient } from "@/components/billing/billing-client"; 
 import { plans } from "@/data/plans";
 
 // Main Billing Page Component (Now a Server Component)
 function BillingPage() {
-  const stripePublicKey = env.NEXT_PUBLIC_STRIPE_KEY; // Get public key on server
+  const stripePublicKey = env.NEXT_PUBLIC_STRIPE_KEY; 
 
   return (
     <div className="container mx-auto px-4 py-12 md:px-6">
