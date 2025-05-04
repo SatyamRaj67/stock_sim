@@ -204,3 +204,22 @@ export interface UserSettings {
   isTwoFactorEnabled: boolean;
   createdAt: Date;
 }
+
+// Add Billing Plan Types
+export interface Plan {
+  id: string;
+  priceId: string; // Stripe Price ID (Server-side)
+  title: string;
+  description: string;
+  price: string; // Display price
+  features: string[];
+  cta: string;
+  period?: string;
+  popular?: boolean;
+}
+
+export interface PlansData {
+  oneTime: Plan[];
+  monthly: Plan[];
+  annual: Plan[];
+}

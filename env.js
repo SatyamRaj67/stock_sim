@@ -25,6 +25,7 @@ export const env = createEnv({
     STRIPE_PRICE_ID_YR_STARTER: z.string(),
     STRIPE_PRICE_ID_YR_BUSINESS: z.string(),
     STRIPE_PRICE_ID_YR_ENTERPRISE: z.string(), 
+    
     RESEND_API_KEY: z.string(),
     DATABASE_URL: z.string().url(),
     NODE_ENV: z

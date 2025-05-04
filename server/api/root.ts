@@ -2,6 +2,7 @@ import { adminRouter } from "server/api/routers/admin";
 import { stockRouter } from "server/api/routers/stocks";
 import { tradeRouter } from "server/api/routers/trade";
 import { userRouter } from "server/api/routers/user";
+import { billingRouter } from "./routers/billing"; // Import the new billing router
 import { createCallerFactory, createTRPCRouter } from "server/api/trpc";
 
 /**
@@ -14,6 +15,7 @@ export const appRouter = createTRPCRouter({
   stocks: stockRouter,
   trade: tradeRouter,
   user: userRouter,
+  billing: billingRouter, // Add the billing router here
 });
 
 // export type definition of API
