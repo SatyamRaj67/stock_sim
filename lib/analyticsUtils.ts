@@ -1,5 +1,5 @@
-import type { Position, Stock } from "@prisma/client";
 import Decimal from "decimal.js";
+import type { PositionWithSelectedStock } from "./portfolioUtils"; // Import the correct type
 import { formatCurrency, formatPercentage } from "./utils";
 
 export interface SectorAllocationData {
@@ -7,10 +7,6 @@ export interface SectorAllocationData {
   value: number;
   percentage: number;
 }
-
-type PositionWithStock = Position & {
-  stock: Stock | null;
-};
 
 export interface PnlData {
   symbol: string;
@@ -48,7 +44,7 @@ export interface TopMoversData {
  *          Returns an empty array if no positions or no value.
  */
 export const calculateSectorAllocation = (
-  positions: PositionWithStock[] | undefined | null,
+  positions: PositionWithSelectedStock[] | undefined | null,
 ): SectorAllocationData[] => {
   if (!positions || positions.length === 0) {
     return [];
@@ -99,7 +95,7 @@ export const calculateSectorAllocation = (
  *          Returns an empty array if no positions.
  */
 export const calculatePnlByStock = (
-  positions: PositionWithStock[] | undefined | null,
+  positions: PositionWithSelectedStock[] | undefined | null,
 ): PnlData[] => {
   if (!positions || positions.length === 0) {
     return [];
@@ -176,7 +172,7 @@ export const calculatePnlByStock = (
  */
 export const calculatePnlSummary = (
   pnlData: PnlData[],
-  positions: PositionWithStock[] | undefined | null,
+  positions: PositionWithSelectedStock[] | undefined | null,
 ): PnlSummaryData | null => {
   if (
     !pnlData ||

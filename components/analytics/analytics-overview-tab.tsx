@@ -1,23 +1,19 @@
 "use client";
 
 import React from "react";
-import type { Position, Stock } from "@prisma/client";
 import { SectorAllocationChart } from "@/components/analytics/sector-allocation-chart";
 import {
   calculateSectorAllocation,
-  calculatePnlByStock, // Import PnL calculation
-  calculatePnlSummary, // Import PnL summary calculation
-  getTopMovers,      // Import top movers calculation
+  calculatePnlByStock,
+  calculatePnlSummary,
+  getTopMovers,
 } from "@/lib/analyticsUtils";
-import { PnlSummaryCard } from "@/components/analytics/pnl-summary-card"; // Import new card
-import { TopMoversCard } from "@/components/analytics/top-movers-card";   // Import new card
-
-type PositionWithStock = Position & {
-  stock: Stock | null;
-};
+import { PnlSummaryCard } from "@/components/analytics/pnl-summary-card";
+import { TopMoversCard } from "@/components/analytics/top-movers-card";
+import type { PositionWithSelectedStock } from "@/lib/portfolioUtils";
 
 interface AnalyticsOverviewTabProps {
-  positions: PositionWithStock[] | undefined | null;
+  positions: PositionWithSelectedStock[] | undefined | null;
   isLoading: boolean;
 }
 
@@ -25,21 +21,22 @@ export const AnalyticsOverviewTab: React.FC<AnalyticsOverviewTabProps> = ({
   positions,
   isLoading,
 }) => {
-  // Calculate necessary data within the tab using useMemo
+  const validPositions = positions ?? [];
+
   const sectorData = React.useMemo(() => {
-    return calculateSectorAllocation(positions);
-  }, [positions]);
+    return calculateSectorAllocation(validPositions);
+  }, [validPositions]);
 
   const pnlData = React.useMemo(() => {
-    return calculatePnlByStock(positions);
-  }, [positions]);
+    return calculatePnlByStock(validPositions);
+  }, [validPositions]);
 
   const pnlSummaryData = React.useMemo(() => {
-    return calculatePnlSummary(pnlData, positions);
-  }, [pnlData, positions]);
+    return calculatePnlSummary(pnlData, validPositions);
+  }, [pnlData, validPositions]);
 
   const topMoversData = React.useMemo(() => {
-    return getTopMovers(pnlData); // Default count is 3
+    return getTopMovers(pnlData);
   }, [pnlData]);
 
   return (

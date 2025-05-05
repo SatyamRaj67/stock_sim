@@ -43,7 +43,6 @@ export function MarketTable() {
   const { data: stocks, isLoading: isLoadingStocks } =
     api.stocks.getAllStocks.useQuery(undefined, {
       enabled: !!session,
-      refetchInterval: 60000,
     });
 
   const handleQuantityChange = (stockId: string, value: string) => {

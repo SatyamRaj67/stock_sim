@@ -34,7 +34,6 @@ const StockDetailPage = () => {
     { symbol },
     {
       enabled: !!symbol,
-      refetchInterval: 30000,
       retry: false,
     },
   );
