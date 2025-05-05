@@ -21,8 +21,13 @@ import {
   getTransactionsByUserId,
 } from "@/data/transactions";
 import { startOfDay, subDays } from "date-fns";
-import { calculateDailyPortfolioValue } from "@/lib/portfolioUtils";
+import {
+  calculateDailyPortfolioValue,
+  type PositionWithSelectedStock,
+  type SelectedPriceHistory,
+} from "@/lib/portfolioUtils";
 import { getMultipleStockPriceHistories } from "@/data/stocks";
+import Decimal from "decimal.js";
 
 export const userRouter = createTRPCRouter({
   getUserById: publicProcedure.input(z.string()).query(async ({ input }) => {
@@ -153,7 +158,7 @@ export const userRouter = createTRPCRouter({
         // Handle case where user or portfolio/positions don't exist
         return []; // Return empty array if no positions
       }
-      const positions = userWithPositions.portfolio.positions;
+      const positions = userWithPositions.portfolio.positions as PositionWithSelectedStock[];
       if (positions.length === 0) {
         return []; // Return empty array if no positions
       }
@@ -178,7 +183,7 @@ export const userRouter = createTRPCRouter({
       // 4. Calculate daily values using the helper function
       const dailyValues = calculateDailyPortfolioValue(
         positions,
-        priceHistories,
+        priceHistories as SelectedPriceHistory[],
         days,
       );
 
@@ -190,7 +195,7 @@ export const userRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const { transactionId } = input;
 
-      // 1. Fetch the transaction to get details (userId, amount, type)
+      // 1. Fetch the transaction
       const transaction = await getTransactionById(transactionId);
 
       if (!transaction) {
@@ -200,23 +205,39 @@ export const userRouter = createTRPCRouter({
         });
       }
 
-      // 2. Delete the transaction
-      await deleteTransactionById(transactionId); // Use your data layer function
+      // --- Start Balance Adjustment Logic ---
+      // Fetch the user to get their current Decimal balance
+      const user = await getUserById(transaction.userId);
 
-      // 3. Adjust user balance
-      let balanceAdjustment = 0;
+      let newBalance: Decimal;
+      const currentBalance = new Decimal(user!.balance);
+      const transactionAmount = transaction.totalAmount; 
+
       if (transaction.type === "BUY") {
-        // If a BUY is deleted, give the money back
-        balanceAdjustment = transaction.totalAmount.toNumber();
+        newBalance = currentBalance.add(transactionAmount);
       } else if (transaction.type === "SELL") {
-        // If a SELL is deleted, take the money back
-        balanceAdjustment = -transaction.totalAmount.toNumber();
+        newBalance = currentBalance.sub(transactionAmount);
+      } else {
+        await deleteTransactionById(transactionId);
+        console.warn(
+          `Transaction ${transactionId} has unknown type ${transaction.type}. Transaction deleted, but balance not adjusted.`,
+        );
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Unknown transaction type encountered.",
+        });
       }
 
       await updateUserById(transaction.userId, {
-        balance: {
-          increment: balanceAdjustment,
-        },
+        balance: newBalance, 
       });
+
+      await deleteTransactionById(transactionId);
+
+      console.log(
+        `Admin ${ctx.session.user.id} deleted transaction ${transactionId} and adjusted user ${transaction.userId} balance.`,
+      );
+
+      return { success: true };
     }),
 });

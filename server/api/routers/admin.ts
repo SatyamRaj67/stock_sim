@@ -9,6 +9,7 @@ import { TRPCError } from "@trpc/server";
 import { adminProtectedProcedure, createTRPCRouter } from "server/api/trpc";
 import { z } from "zod";
 import { StockSimulationSettingsSchema } from "@/schemas";
+import Decimal from "decimal.js"; // Import Decimal
 
 export const adminRouter = createTRPCRouter({
   adminTest: adminProtectedProcedure.query(() => {
@@ -64,7 +65,7 @@ export const adminRouter = createTRPCRouter({
             description: description,
             relatedEntityId: relatedEntityId,
             notes: notes,
-            resolved: false, 
+            resolved: false,
           },
         });
         return newEntry; // Return the created entry
@@ -227,19 +228,27 @@ export const adminRouter = createTRPCRouter({
         });
       }
 
+      // Convert numbers back to Decimal before updating
+      const dataToUpdate = {
+        volatility: new Decimal(settingsData.volatility),
+        jumpProbability: new Decimal(settingsData.jumpProbability),
+        maxJumpMultiplier: new Decimal(settingsData.maxJumpMultiplier),
+        priceCap:
+          settingsData.priceCap != null
+            ? new Decimal(settingsData.priceCap)
+            : null,
+        priceChangeDisabled: settingsData.priceChangeDisabled,
+        updatedAt: new Date(),
+      };
+
       const updatedStock = await ctx.db.stock.update({
         where: { id },
-        data: {
-          volatility: settingsData.volatility,
-          jumpProbability: settingsData.jumpProbability,
-          maxJumpMultiplier: settingsData.maxJumpMultiplier,
-          priceCap: settingsData.priceCap,
-          priceChangeDisabled: settingsData.priceChangeDisabled,
-          updatedAt: new Date(),
-        },
+        data: dataToUpdate,
       });
 
-      console.log(`Admin ${ctx.session.user.id} updated simulation settings for stock ${id}`);
+      console.log(
+        `Admin ${ctx.session.user.id} updated simulation settings for stock ${id}`,
+      );
 
       return updatedStock;
     }),

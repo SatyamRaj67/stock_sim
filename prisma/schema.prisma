@@ -158,6 +158,7 @@ model PriceHistory {
 
     @@index([stockId])
     @@index([timestamp])
+    @@index([stockId, timestamp]) 
 }
 
 model Transaction {

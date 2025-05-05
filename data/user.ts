@@ -41,8 +41,29 @@ export const getUserByIdWithPortfolioAndPositions = async (id: string) => {
         portfolio: {
           include: {
             positions: {
-              include: {
-                stock: true,
+              select: {
+                id: true,
+                portfolioId: true,
+                stockId: true,
+                quantity: true,
+                averageBuyPrice: true,
+                createdAt: true,
+                updatedAt: true,
+                stock: {
+                  select: {
+                    id: true,
+                    symbol: true,
+                    name: true,
+                    currentPrice: true,
+                    sector: true,
+                    logoUrl: true,
+                  },
+                },
+              },
+              orderBy: {
+                stock: {
+                  symbol: "asc",
+                },
               },
             },
           },
