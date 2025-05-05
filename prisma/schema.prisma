@@ -121,9 +121,9 @@ model Stock {
     marketCap           Decimal? @db.Decimal(16, 2)
     isActive            Boolean  @default(true) // Can be traded
     isFrozen            Boolean  @default(false) // Trading temporarily halted
-    priceChangeDisabled Boolean  @default(false) // Price won't update via simulation
-    priceCap            Decimal? @db.Decimal(12, 2) // Max price allowed
-    createdById         String? // User who created this stock (optional)
+    priceChangeDisabled Boolean  @default(false) 
+    priceCap            Decimal? @db.Decimal(12, 2) 
+    createdById         String? 
     createdAt           DateTime @default(now())
     updatedAt           DateTime @updatedAt
 
@@ -167,10 +167,10 @@ model Transaction {
     type        TransactionType
     status      TransactionStatus @default(COMPLETED)
     quantity    Int
-    price       Decimal           @db.Decimal(12, 2) // Price per share at time of transaction
-    totalAmount Decimal           @db.Decimal(12, 2) // quantity * price
-    timestamp   DateTime          @default(now()) // Time transaction occurred/was recorded
-    createdAt   DateTime          @default(now()) // Time record was created
+    price       Decimal           @db.Decimal(12, 2)
+    totalAmount Decimal           @db.Decimal(12, 2) 
+    timestamp   DateTime          @default(now()) 
+    createdAt   DateTime          @default(now()) 
 
     // Relations
     user  User  @relation(fields: [userId], references: [id])

@@ -35,6 +35,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { StockSimulationSettingsForm } from "@/components/admin/stock-simulation-settings-form";
 
 const historyGenerationDaysOptions = {
   "1": "1 Day",
@@ -324,6 +325,14 @@ const AdminStockDetailPage = () => {
               affected depending on the backend logic.
             </p>
           </div>
+
+          <StockSimulationSettingsForm
+            stock={{
+              ...stockDetails!,
+              createdById: stockDetails!.createdById ?? "",
+            }}
+            onSuccess={refetchStockDetails}
+          />
 
           <div className="space-y-2">
             <h3 className="text-lg font-semibold">Other Actions</h3>

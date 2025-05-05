@@ -1,4 +1,4 @@
-import { IssueSeverity, IssueType } from "@prisma/client";
+import { IssueSeverity, IssueType} from "@prisma/client";
 import Decimal from "decimal.js";
 import * as z from "zod";
 
@@ -164,6 +164,94 @@ export const ContactSchema = z.object({
   message: z.string().min(10, {
     message: "Message must be at least 10 characters long",
   }),
+});
+
+export const StockSchema = z.object({
+  id: z.string().cuid().optional(),
+  symbol: z
+    .string()
+    .min(1, "Symbol is required")
+    .max(10, "Symbol must be 10 characters or less")
+    .regex(/^[A-Z0-9.-]+$/, "Symbol can only contain uppercase letters, numbers, dots, and hyphens")
+    .transform((val) => val.toUpperCase()),
+  name: z.string().min(1, "Name is required").max(100),
+  description: z.string().max(500).optional().nullable(),
+  logoUrl: z.string().url("Invalid URL format").optional().nullable(),
+  sector: z.string().max(50).optional().nullable(),
+  currentPrice: z.coerce
+    .number({ invalid_type_error: "Price must be a number" })
+    .positive("Price must be positive")
+    .finite("Price must be finite")
+    .safe("Price value is too large"),
+  volume: z.coerce
+    .number({ invalid_type_error: "Volume must be a number" })
+    .int("Volume must be an integer")
+    .nonnegative("Volume cannot be negative")
+    .safe("Volume value is too large"),
+  isActive: z.boolean().default(true),
+  isFrozen: z.boolean().default(false),
+  priceChangeDisabled: z.boolean().default(false),
+  priceCap: z.coerce
+    .number({ invalid_type_error: "Price cap must be a number" })
+    .positive("Price cap must be positive")
+    .finite("Price cap must be finite")
+    .safe("Price cap value is too large")
+    .optional()
+    .nullable(),
+  volatility: z.coerce
+    .number({ invalid_type_error: "Volatility must be a number" })
+    .min(0.0001, "Volatility must be at least 0.0001")
+    .max(0.9999, "Volatility must be less than 1")
+    .finite("Volatility must be finite")
+    .safe("Volatility value is too large"),
+  jumpProbability: z.coerce
+    .number({ invalid_type_error: "Jump probability must be a number" })
+    .min(0.0001, "Jump probability must be at least 0.0001")
+    .max(0.9999, "Jump probability must be less than 1")
+    .finite("Jump probability must be finite")
+    .safe("Jump probability value is too large"),
+  maxJumpMultiplier: z.coerce
+    .number({ invalid_type_error: "Max jump multiplier must be a number" })
+    .min(1.0001, "Max jump multiplier must be greater than 1")
+    .max(2.0, "Max jump multiplier cannot exceed 2.0")
+    .finite("Max jump multiplier must be finite")
+    .safe("Max jump multiplier value is too large"),
+});
+
+export const StockSimulationSettingsSchema = z.object({
+  id: z.string().cuid("Invalid stock ID"),
+  volatility: z.coerce
+    .number({ invalid_type_error: "Volatility must be a number" })
+    .min(0.0001, "Volatility must be at least 0.0001")
+    .max(0.9999, "Volatility must be less than 1 (e.g., 0.02 for 2%)")
+    .finite("Volatility must be finite")
+    .safe("Volatility value is too large"),
+  jumpProbability: z.coerce
+    .number({ invalid_type_error: "Jump probability must be a number" })
+    .min(0.0001, "Jump probability must be at least 0.0001")
+    .max(0.9999, "Jump probability must be less than 1 (e.g., 0.01 for 1%)")
+    .finite("Jump probability must be finite")
+    .safe("Jump probability value is too large"),
+  maxJumpMultiplier: z.coerce
+    .number({ invalid_type_error: "Max jump multiplier must be a number" })
+    .min(1.0001, "Max jump multiplier must be greater than 1 (e.g., 1.10 for +/- 10%)")
+    .max(2.0, "Max jump multiplier cannot exceed 2.0")
+    .finite("Max jump multiplier must be finite")
+    .safe("Max jump multiplier value is too large"),
+  priceCap: z.coerce
+    .number({ invalid_type_error: "Price cap must be a number" })
+    .positive("Price cap must be positive")
+    .finite("Price cap must be finite")
+    .safe("Price cap value is too large")
+    .optional()
+    .nullable()
+    .transform(val => val === null ? null : val),
+  priceChangeDisabled: z.boolean(),
+});
+
+export const GenerateHistorySchema = z.object({
+  stockId: z.string().cuid(),
+  days: z.coerce.number().int().positive("Days must be a positive integer").min(1).max(365 * 5), // Limit to 5 years
 });
 
 export type FlagUserInput = z.infer<typeof flagUserSchema>;

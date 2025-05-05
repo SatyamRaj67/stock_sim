@@ -24,7 +24,6 @@ function BillingPage() {
           <a href="/contact" className="text-primary hover:underline">
             Contact our support team
           </a>
-          .
         </p>
       </div>
     </div>

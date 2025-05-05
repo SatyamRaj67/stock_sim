@@ -8,6 +8,7 @@ import { IssueSeverity, IssueType } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { adminProtectedProcedure, createTRPCRouter } from "server/api/trpc";
 import { z } from "zod";
+import { StockSimulationSettingsSchema } from "@/schemas";
 
 export const adminRouter = createTRPCRouter({
   adminTest: adminProtectedProcedure.query(() => {
@@ -208,5 +209,38 @@ export const adminRouter = createTRPCRouter({
       }
 
       return { count: 0 };
+    }),
+
+  updateStockSimulationSettings: adminProtectedProcedure
+    .input(StockSimulationSettingsSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { id, ...settingsData } = input;
+
+      const stock = await ctx.db.stock.findUnique({
+        where: { id },
+      });
+
+      if (!stock) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Stock not found.",
+        });
+      }
+
+      const updatedStock = await ctx.db.stock.update({
+        where: { id },
+        data: {
+          volatility: settingsData.volatility,
+          jumpProbability: settingsData.jumpProbability,
+          maxJumpMultiplier: settingsData.maxJumpMultiplier,
+          priceCap: settingsData.priceCap,
+          priceChangeDisabled: settingsData.priceChangeDisabled,
+          updatedAt: new Date(),
+        },
+      });
+
+      console.log(`Admin ${ctx.session.user.id} updated simulation settings for stock ${id}`);
+
+      return updatedStock;
     }),
 });
