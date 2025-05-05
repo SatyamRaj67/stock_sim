@@ -14,7 +14,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { Position, Stock } from "@prisma/client";
 import { formatCurrency, formatNumber } from "@/lib/utils";
 import { api } from "@/trpc/react";
 import {
@@ -25,16 +24,15 @@ import {
   flexRender,
   type SortingState,
 } from "@tanstack/react-table";
-
-// Define the expected data shape (Position with nested Stock)
-type PositionWithStock = Position & { stock: Stock };
+import type { PositionWithSelectedStock } from "@/lib/portfolioUtils";
+import Decimal from "decimal.js";
 
 interface UserPositionsTableProps {
   userId: string;
 }
 
 // --- TanStack Table Column Definitions ---
-const columnHelper = createColumnHelper<PositionWithStock>();
+const columnHelper = createColumnHelper<PositionWithSelectedStock>();
 
 const columns = [
   columnHelper.accessor("stock.symbol", {
@@ -68,7 +66,6 @@ const columns = [
     cell: (info) => formatNumber(info.getValue()),
   }),
   columnHelper.accessor("stock.currentPrice", {
-    // Assuming currentPrice is on Stock model
     id: "currentPrice",
     header: ({ column }) => (
       <Button
@@ -87,10 +84,8 @@ const columns = [
     cell: ({ row }) => {
       const quantity = row.original.quantity;
       const price = row.original.stock.currentPrice;
-      // Ensure price is a number for calculation
-      const numericPrice =
-        typeof price === "number" ? price : parseInt(price.toString(), 10);
-      return formatCurrency(quantity * numericPrice);
+      const numericPrice = new Decimal(price);
+      return formatCurrency(numericPrice.mul(quantity));
     },
   }),
 ];
@@ -111,7 +106,8 @@ export const UserPositionsTable: React.FC<UserPositionsTableProps> = ({
     enabled: !!userId,
   });
 
-  const positions = userData?.portfolio?.positions ?? []; // Extract positions or default to empty array
+  const positions: PositionWithSelectedStock[] =
+    (userData?.portfolio?.positions as PositionWithSelectedStock[]) ?? [];
 
   const table = useReactTable({
     data: positions,
