@@ -1,6 +1,11 @@
 import Decimal from "decimal.js";
-import type { PositionWithSelectedStock } from "./portfolioUtils"; // Import the correct type
-import { formatCurrency, formatPercentage } from "./utils";
+import type { PositionWithSelectedStock } from "./portfolioUtils";
+import { formatCurrency, formatPercentage, formatNumber } from "./utils";
+import type { Transaction, Prisma } from "@prisma/client";
+import { TransactionType, TransactionStatus } from "@prisma/client";
+import { db } from "@/server/db";
+import { getUserByIdWithPortfolioAndPositions } from "@/data/user";
+import { getAllUserTransactions } from "@/data/transactions";
 
 export interface SectorAllocationData {
   name: string;
@@ -36,13 +41,21 @@ export interface TopMoversData {
   topLosers: PnlData[];
 }
 
-/**
- * Calculates the value allocation across different stock sectors in a portfolio.
- * @param positions - An array of user positions, including stock details.
- * @returns An array of objects, each containing sector name, total value in that sector,
- *          and the percentage of the total portfolio value it represents.
- *          Returns an empty array if no positions or no value.
- */
+export interface RealizedPnlDetail {
+  sellTransactionId: string;
+  sellDate: Date;
+  sellQuantity: number;
+  sellPrice: Decimal;
+  totalProceeds: Decimal;
+  costBasis: Decimal;
+  realizedPnl: Decimal;
+}
+
+export interface RealizedPnlSummary {
+  totalRealizedPnl: Decimal;
+  details: RealizedPnlDetail[];
+}
+
 export const calculateSectorAllocation = (
   positions: PositionWithSelectedStock[] | undefined | null,
 ): SectorAllocationData[] => {
@@ -54,46 +67,34 @@ export const calculateSectorAllocation = (
   let totalPortfolioValue = new Decimal(0);
 
   positions.forEach((position) => {
-    // Ensure position has a stock, a current price, and a sector
     if (position.stock?.currentPrice && position.stock.sector) {
       const quantity = new Decimal(position.quantity);
       const currentPrice = new Decimal(position.stock.currentPrice);
       const positionValue = quantity.mul(currentPrice);
       const sector = position.stock.sector;
 
-      // Aggregate value by sector
       sectorValues[sector] = (sectorValues[sector] || new Decimal(0)).add(
         positionValue,
       );
-      // Accumulate total portfolio value
       totalPortfolioValue = totalPortfolioValue.add(positionValue);
     }
-    // Positions without sector/price are ignored in allocation calculation
   });
 
-  // If total value is zero, return empty array
   if (totalPortfolioValue.isZero()) {
     return [];
   }
 
-  // Calculate percentage for each sector and format the output
   const allocationData: SectorAllocationData[] = Object.entries(sectorValues)
     .map(([name, value]) => ({
       name,
-      value: value.toNumber(), // Convert Decimal to number for charting
-      percentage: value.div(totalPortfolioValue).mul(100).toNumber(), // Calculate percentage
+      value: value.toNumber(),
+      percentage: value.div(totalPortfolioValue).mul(100).toNumber(),
     }))
-    .sort((a, b) => b.value - a.value); // Sort sectors by value descending
+    .sort((a, b) => b.value - a.value);
 
   return allocationData;
 };
 
-/**
- * Calculates the Profit and Loss (P&L) for each position in the portfolio.
- * @param positions - An array of user positions, including stock details.
- * @returns An array of objects, each containing P&L details for a stock.
- *          Returns an empty array if no positions.
- */
 export const calculatePnlByStock = (
   positions: PositionWithSelectedStock[] | undefined | null,
 ): PnlData[] => {
@@ -104,7 +105,6 @@ export const calculatePnlByStock = (
   const pnlData: PnlData[] = positions
     .map((position) => {
       if (!position.stock?.currentPrice) {
-        // Skip positions without current price data
         return null;
       }
 
@@ -120,17 +120,15 @@ export const calculatePnlByStock = (
       if (costBasis.gt(0)) {
         totalPnlPercentage = totalPnl.div(costBasis).mul(100);
       } else if (currentValue.gt(0)) {
-        // Handle cases with zero cost basis but positive value
-        totalPnlPercentage = new Decimal(Infinity); // Represent as Infinity
+        totalPnlPercentage = new Decimal(Infinity);
       }
 
       const pnlDirection = totalPnl.gt(0)
         ? "up"
         : totalPnl.lt(0)
-          ? "down"
-          : "neutral";
+        ? "down"
+        : "neutral";
 
-      // Format percentage carefully, handling Infinity
       let formattedPercentage: string;
       if (!totalPnlPercentage.isFinite()) {
         formattedPercentage = "+∞%";
@@ -152,24 +150,18 @@ export const calculatePnlByStock = (
         totalPnl: totalPnl.toNumber(),
         totalPnlPercentage: totalPnlPercentage.isFinite()
           ? totalPnlPercentage.toNumber()
-          : Infinity, // Store raw percentage or Infinity
+          : Infinity,
         formattedTotalPnl: formatCurrency(totalPnl),
         formattedTotalPnlPercentage: formattedPercentage,
         pnlDirection: pnlDirection,
       };
     })
-    .filter((item): item is PnlData => item !== null) // Remove null entries
-    .sort((a, b) => b.totalPnl - a.totalPnl); // Sort by P&L amount descending
+    .filter((item): item is PnlData => item !== null)
+    .sort((a, b) => b.totalPnl - a.totalPnl);
 
   return pnlData;
 };
 
-/**
- * Calculates the overall P&L summary for the portfolio.
- * @param pnlData - Pre-calculated P&L data for each stock.
- * @param positions - The raw positions data to calculate total cost basis.
- * @returns An object containing the P&L summary.
- */
 export const calculatePnlSummary = (
   pnlData: PnlData[],
   positions: PositionWithSelectedStock[] | undefined | null,
@@ -187,7 +179,6 @@ export const calculatePnlSummary = (
   let totalPortfolioCostBasis = new Decimal(0);
   let totalPortfolioCurrentValue = new Decimal(0);
 
-  // Calculate total cost basis and current value from raw positions
   positions.forEach((pos) => {
     if (pos.stock?.currentPrice) {
       const quantity = new Decimal(pos.quantity);
@@ -216,10 +207,9 @@ export const calculatePnlSummary = (
   const pnlDirection = totalPortfolioPnl.gt(0)
     ? "up"
     : totalPortfolioPnl.lt(0)
-      ? "down"
-      : "neutral";
+    ? "down"
+    : "neutral";
 
-  // Find best and worst performers from pre-calculated PnlData
   const sortedByPnlValue = [...pnlData].sort((a, b) => b.totalPnl - a.totalPnl);
   const bestPerformer = sortedByPnlValue[0] || null;
   const worstPerformer = sortedByPnlValue[sortedByPnlValue.length - 1] || null;
@@ -249,26 +239,18 @@ export const calculatePnlSummary = (
   };
 };
 
-/**
- * Identifies the top gainers and losers from P&L data.
- * @param pnlData - Pre-calculated P&L data for each stock.
- * @param count - The number of top movers to return for each category (gainers/losers).
- * @returns An object containing arrays of top gainers and losers.
- */
 export const getTopMovers = (pnlData: PnlData[], count = 3): TopMoversData => {
   if (!pnlData || pnlData.length === 0) {
     return { topGainers: [], topLosers: [] };
   }
 
-  // Sort by absolute P&L value for gainers (positive P&L)
   const sortedGainers = pnlData
     .filter((p) => p.totalPnl > 0)
     .sort((a, b) => b.totalPnl - a.totalPnl);
 
-  // Sort by absolute P&L value for losers (negative P&L)
   const sortedLosers = pnlData
     .filter((p) => p.totalPnl < 0)
-    .sort((a, b) => a.totalPnl - b.totalPnl); // Ascending sort for losers (most negative first)
+    .sort((a, b) => a.totalPnl - b.totalPnl);
 
   return {
     topGainers: sortedGainers.slice(0, count),
@@ -276,4 +258,147 @@ export const getTopMovers = (pnlData: PnlData[], count = 3): TopMoversData => {
   };
 };
 
-// Future analytics utility functions (e.g., calculatePnl, calculatePerformance) can be added here.
+export const calculateRealizedPnlFifo = (
+  transactions: Transaction[],
+): RealizedPnlSummary => {
+  let totalRealizedPnl = new Decimal(0);
+  const realizedDetails: RealizedPnlDetail[] = [];
+  const buyLots: { price: Decimal; remainingQuantity: number }[] = [];
+
+  for (const tx of transactions) {
+    if (tx.type === TransactionType.BUY) {
+      buyLots.push({
+        price: new Decimal(tx.price),
+        remainingQuantity: tx.quantity,
+      });
+    } else if (tx.type === TransactionType.SELL) {
+      let quantityToMatch = tx.quantity;
+      let costBasisForSell = new Decimal(0);
+      const sellPrice = new Decimal(tx.price);
+      const totalProceeds = sellPrice.mul(tx.quantity);
+
+      while (quantityToMatch > 0 && buyLots.length > 0) {
+        const earliestLot = buyLots[0]!;
+
+        const matchQuantity = Math.min(
+          quantityToMatch,
+          earliestLot.remainingQuantity,
+        );
+
+        costBasisForSell = costBasisForSell.add(
+          earliestLot.price.mul(matchQuantity),
+        );
+
+        earliestLot.remainingQuantity -= matchQuantity;
+        quantityToMatch -= matchQuantity;
+
+        if (earliestLot.remainingQuantity === 0) {
+          buyLots.shift();
+        }
+      }
+
+      if (quantityToMatch > 0) {
+        console.warn(
+          `Sell transaction ${tx.id} quantity ${tx.quantity} exceeds available buy lots. Calculation might be incomplete.`,
+        );
+      }
+
+      const realizedPnlForSell = totalProceeds.sub(costBasisForSell);
+      totalRealizedPnl = totalRealizedPnl.add(realizedPnlForSell);
+
+      realizedDetails.push({
+        sellTransactionId: tx.id,
+        sellDate: tx.timestamp,
+        sellQuantity: tx.quantity,
+        sellPrice: sellPrice,
+        totalProceeds: totalProceeds,
+        costBasis: costBasisForSell,
+        realizedPnl: realizedPnlForSell,
+      });
+    }
+  }
+
+  return {
+    totalRealizedPnl,
+    details: realizedDetails,
+  };
+};
+
+export async function calculateTotalProfit(userId: string): Promise<number> {
+  const allTransactions = await getAllUserTransactions(
+    userId,
+    undefined,
+    TransactionStatus.COMPLETED,
+  );
+
+  if (!allTransactions || allTransactions.length === 0) {
+    return 0;
+  }
+
+  const transactionsByStock: Record<string, Prisma.TransactionGetPayload<{}>[]> =
+    {};
+  for (const tx of allTransactions) {
+    if (tx.type === TransactionType.BUY || tx.type === TransactionType.SELL) {
+      if (!transactionsByStock[tx.stockId]) {
+        transactionsByStock[tx.stockId] = [];
+      }
+      transactionsByStock[tx.stockId]!.push(tx);
+    }
+  }
+
+  let overallRealizedPnl = new Decimal(0);
+
+  for (const stockId in transactionsByStock) {
+    const stockTransactions = transactionsByStock[stockId]!;
+    stockTransactions.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+
+    const pnlSummary = calculateRealizedPnlFifo(stockTransactions);
+    overallRealizedPnl = overallRealizedPnl.add(pnlSummary.totalRealizedPnl);
+  }
+
+  console.log(
+    `[AnalyticsUtils] Calculated total realized profit for ${userId}: ${overallRealizedPnl.toNumber()}`,
+  );
+  return overallRealizedPnl.toNumber();
+}
+
+export async function calculateTotalStocksOwned(userId: string): Promise<number> {
+  const userWithPortfolio = await getUserByIdWithPortfolioAndPositions(userId);
+  if (!userWithPortfolio?.portfolio?.positions) {
+    return 0;
+  }
+  const totalShares = userWithPortfolio.portfolio.positions.reduce(
+    (sum, position) => sum + position.quantity,
+    0,
+  );
+  console.log(
+    `[AnalyticsUtils] Calculated total stocks owned for ${userId}: ${totalShares}`,
+  );
+  return totalShares;
+}
+
+export async function getSpecificStockQuantity(
+  userId: string,
+  stockId: string,
+): Promise<number> {
+  const userWithPortfolio = await getUserByIdWithPortfolioAndPositions(userId);
+  const position = userWithPortfolio?.portfolio?.positions.find(
+    (p) => p.stockId === stockId,
+  );
+  const quantity = position?.quantity ?? 0;
+  console.log(
+    `[AnalyticsUtils] Calculated quantity for stock ${stockId} for user ${userId}: ${quantity}`,
+  );
+  return quantity;
+}
+
+export async function countTotalTrades(userId: string): Promise<number> {
+  const count = await db.transaction.count({
+    where: {
+      userId: userId,
+      status: TransactionStatus.COMPLETED,
+    },
+  });
+  console.log(`[AnalyticsUtils] Calculated total trades for ${userId}: ${count}`);
+  return count;
+}

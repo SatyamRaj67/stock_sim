@@ -15,6 +15,8 @@ import {
 import { TRPCError } from "@trpc/server";
 import Decimal from "decimal.js";
 import type { Stock, User, Portfolio, Position } from "@prisma/client"; // Assuming Prisma client types
+import { checkAndAwardAchievements } from "@/actions/achievements"; // Import the achievement checker
+import { revalidatePath } from "next/cache";
 
 /**
  * Fetches a stock and validates if it's available for trading.
@@ -219,3 +221,167 @@ export async function updateOrDeleteSellPosition(
     return { deleted: false, updatedPosition };
   }
 }
+
+/**
+ * Executes a buy order, updating user balance, portfolio, and creating a transaction.
+ */
+export const executeBuyOrder = async (
+    userId: string, // Add userId as a parameter
+    stockId: string,
+    quantity: number,
+    // Add other necessary parameters here (e.g., expected price, etc.)
+) => {
+    // --- Validation and Data Fetching ---
+    const stock = await validateStockForTrading(stockId);
+    const purchasePrice = new Decimal(stock.currentPrice);
+    const totalCost = purchasePrice.mul(quantity);
+    const user = await verifyUserBalance(userId, totalCost);
+    const portfolio = await findOrCreatePortfolio(userId);
+
+    try {
+        // --- Database Transaction for Buy Order --- 
+        await db.$transaction(async (tx) => {
+            // 1. Update User Balance (using Prisma methods within transaction)
+            await tx.user.update({
+                where: { id: userId },
+                data: { balance: user.balance.sub(totalCost) },
+            });
+
+            // 2. Update or Create Position (using Prisma methods within transaction)
+            const existingPosition = await tx.position.findUnique({
+                where: { portfolioId_stockId: { portfolioId: portfolio.id, stockId } },
+            });
+
+            if (existingPosition) {
+                const oldTotalValue = existingPosition.averageBuyPrice.mul(existingPosition.quantity);
+                const newTotalValue = totalCost;
+                const totalQuantity = existingPosition.quantity + quantity;
+                const newAveragePrice = oldTotalValue.add(newTotalValue).div(totalQuantity);
+                await tx.position.update({
+                    where: { id: existingPosition.id },
+                    data: {
+                        quantity: totalQuantity,
+                        averageBuyPrice: newAveragePrice,
+                    },
+                });
+            } else {
+                await tx.position.create({
+                    data: {
+                        portfolioId: portfolio.id,
+                        stockId: stockId,
+                        quantity: quantity,
+                        averageBuyPrice: purchasePrice,
+                    },
+                });
+            }
+
+            // 3. Create Transaction Record (using Prisma methods within transaction)
+            await tx.transaction.create({
+                data: {
+                    userId: userId,
+                    stockId: stockId,
+                    type: "BUY",
+                    status: "COMPLETED",
+                    quantity: quantity,
+                    price: purchasePrice,
+                    totalAmount: totalCost,
+                },
+            });
+        });
+
+        // --- Post-Transaction Actions ---
+        revalidatePath('/dashboard');
+        revalidatePath('/market');
+        revalidatePath(`/market/${stockId}`);
+        revalidatePath('/transactions');
+
+        // Check for achievements AFTER the transaction is successful
+        await checkAndAwardAchievements(userId);
+
+        return { success: true, message: "Buy order executed successfully." };
+
+    } catch (error) {
+        console.error("[TradeUtils] Error executing buy order:", error);
+        if (error instanceof TRPCError) {
+            return { success: false, error: error.message };
+        }
+        return { success: false, error: "An unexpected error occurred during the buy transaction." };
+    }
+};
+
+/**
+ * Executes a sell order, updating user balance, portfolio, and creating a transaction.
+ */
+export const executeSellOrder = async (
+    userId: string, // Add userId as a parameter
+    stockId: string,
+    quantityToSell: number,
+    // Add other necessary parameters here (e.g., expected price, etc.)
+) => {
+    // --- Validation and Data Fetching ---
+    const stock = await validateStockForTrading(stockId);
+    const sellPrice = new Decimal(stock.currentPrice);
+    const totalProceeds = sellPrice.mul(quantityToSell);
+    const user = await getUserById(userId); // Fetch user for balance update
+    if (!user) {
+        return { success: false, error: "User not found." };
+    }
+    const position = await getPositionForUserAndStock(userId, stockId);
+
+    // Verify sufficient shares (already done in getPositionForUserAndStock implicitly, but double-check quantity)
+    if (position.quantity < quantityToSell) {
+         return { success: false, error: `Insufficient shares. You only own ${position.quantity}.` };
+    }
+
+    try {
+        // --- Database Transaction for Sell Order ---
+        await db.$transaction(async (tx) => {
+            // 1. Update User Balance
+            await tx.user.update({
+                where: { id: userId },
+                data: { balance: user.balance.add(totalProceeds) },
+            });
+
+            // 2. Update or Delete Position
+            if (position.quantity === quantityToSell) {
+                await tx.position.delete({ where: { id: position.id } });
+            } else {
+                await tx.position.update({
+                    where: { id: position.id },
+                    data: { quantity: position.quantity - quantityToSell },
+                });
+            }
+
+            // 3. Create Transaction Record
+            await tx.transaction.create({
+                data: {
+                    userId: userId,
+                    stockId: stockId,
+                    type: "SELL",
+                    status: "COMPLETED",
+                    quantity: quantityToSell,
+                    price: sellPrice,
+                    totalAmount: totalProceeds,
+                },
+            });
+        });
+
+        // --- Post-Transaction Actions ---
+        revalidatePath('/dashboard');
+        revalidatePath('/market');
+        revalidatePath(`/market/${stockId}`);
+        revalidatePath('/transactions');
+
+        // Check for achievements AFTER the transaction is successful
+        await checkAndAwardAchievements(userId);
+
+        return { success: true, message: "Sell order executed successfully." };
+
+    } catch (error) {
+        console.error("[TradeUtils] Error executing sell order:", error);
+         if (error instanceof TRPCError) {
+            return { success: false, error: error.message };
+        }
+        return { success: false, error: "An unexpected error occurred during the sell transaction." };
+    }
+};

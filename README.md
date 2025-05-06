@@ -121,13 +121,9 @@ Contributions are welcome! Please follow standard Git workflow (fork, branch, co
 
 ## License
 
-[Specify License Here - e.g., MIT]
+Currently None
 
 ## TODO
-[ ] Develop Cron Apps
-[ ] Develop Admin Functionalities
-[ ] Develop Watchlist
+
 [ ] Develop Notifications
-[ ] Develop Super_Admin Functionalities
 [ ] Develop Watchlist for Users
-[ ] Develop Watchlist for Admins

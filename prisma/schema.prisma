@@ -45,6 +45,15 @@ enum IssueType {
     OTHER
 }
 
+// Added Enum for Achievement Types
+enum AchievementType {
+    TOTAL_PROFIT
+    PORTFOLIO_VALUE
+    TOTAL_STOCKS_OWNED 
+    SPECIFIC_STOCK_OWNED
+    TOTAL_TRADES 
+}
+
 // --- Models ---
 
 model User {
@@ -68,6 +77,7 @@ model User {
     createdStocks         Stock[]          @relation("Stock_createdBy")
     adminWatchlistEntries AdminWatchlist[]
     sessions              Session[]
+    userAchievements      UserAchievement[] 
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -138,6 +148,7 @@ model Stock {
     transactions   Transaction[]
     priceHistory   PriceHistory[]
     watchlistItems WatchlistItem[]
+    achievements   Achievement[] 
 
     @@index([symbol])
     @@index([createdById])
@@ -305,4 +316,40 @@ model AdminWatchlist {
     @@index([issueSeverity])
     @@index([createdAt])
     @@index([relatedEntityId])
+}
+
+// --- Achievement Models ---
+
+model Achievement {
+    id            String          @id @default(cuid())
+    name          String
+    description   String
+    type          AchievementType
+    level         Int             @default(1) // Level of the achievement (e.g., Profit Level 1, Profit Level 2)
+    targetValue   Decimal         @db.Decimal(16, 2) // The value needed to unlock (e.g., 1000 profit, 100 shares)
+    targetStockId String?         // Optional: Link to a specific stock for SPECIFIC_STOCK_OWNED type
+    icon          String?         // Optional: Icon identifier
+    createdAt     DateTime        @default(now())
+    updatedAt     DateTime        @updatedAt
+
+    targetStock   Stock?          @relation(fields: [targetStockId], references: [id])
+    userAchievements UserAchievement[]
+
+    @@unique([type, level]) // Ensure only one achievement of a type exists per level
+    @@index([type])
+    @@index([targetStockId])
+}
+
+model UserAchievement {
+    id            String      @id @default(cuid())
+    userId        String
+    achievementId String
+    achievedAt    DateTime    @default(now())
+
+    user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+    achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+    @@unique([userId, achievementId])
+    @@index([userId])
+    @@index([achievementId])
 }

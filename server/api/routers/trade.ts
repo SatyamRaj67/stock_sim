@@ -13,6 +13,7 @@ import {
   updateOrDeleteSellPosition,
 } from "@/lib/tradeUtils";
 import Decimal from "decimal.js";
+import { checkAndAwardAchievements } from "@/actions/achievements";
 
 export const tradeRouter = createTRPCRouter({
   buyStocks: protectedProcedure
@@ -27,7 +28,7 @@ export const tradeRouter = createTRPCRouter({
       const { stockId, quantity } = input;
 
       // Use Prisma transaction
-      return db.$transaction(async (tx) => {
+      const result = await db.$transaction(async (tx) => {
         // 1. Validate Stock
         const stock = await validateStockForTrading(stockId);
         const currentPrice = new Decimal(stock.currentPrice);
@@ -74,6 +75,12 @@ export const tradeRouter = createTRPCRouter({
           positionId: position.id,
         };
       });
+
+      if (result.success) {
+        await checkAndAwardAchievements(userId);
+      }
+
+      return result;
     }),
 
   sellStocks: protectedProcedure
@@ -87,7 +94,7 @@ export const tradeRouter = createTRPCRouter({
       const userId = ctx.session.user.id!;
       const { stockId, quantity } = input;
 
-      return db.$transaction(async (tx) => {
+      const result = await db.$transaction(async (tx) => {
         // 1. Validate Stock
         const stock = await validateStockForTrading(stockId);
         const currentPrice = new Decimal(stock.currentPrice);
@@ -127,5 +134,11 @@ export const tradeRouter = createTRPCRouter({
           updatedPositionId: sellResult.updatedPosition?.id,
         };
       });
+
+      if (result.success) {
+        await checkAndAwardAchievements(userId);
+      }
+
+      return result;
     }),
 });
