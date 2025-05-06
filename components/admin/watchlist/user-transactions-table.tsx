@@ -151,8 +151,8 @@ const existingColumns = [
             status === "COMPLETED"
               ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
               : status === "PENDING"
-              ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-              : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
           }`}
         >
           {status}
@@ -196,11 +196,13 @@ export const UserTransactionsTable: React.FC<UserTransactionsTableProps> = ({
   const handleDeleteClick = (transactionId: string) => {
     setTransactionToDelete(transactionId);
     setIsDeleteDialogOpen(true);
+    refetch();
   };
 
   // Function to open the delete all dialog
   const handleDeleteAllClick = () => {
     setIsDeleteAllDialogOpen(true);
+    refetch();
   };
 
   const columns = React.useMemo(
@@ -290,7 +292,9 @@ export const UserTransactionsTable: React.FC<UserTransactionsTableProps> = ({
             variant="destructive"
             size="sm"
             onClick={handleDeleteAllClick}
-            disabled={isLoading || !transactionsData || transactionsData.length === 0}
+            disabled={
+              isLoading || !transactionsData || transactionsData.length === 0
+            }
           >
             <Trash2 className="mr-2 h-4 w-4" /> Delete All
           </Button>

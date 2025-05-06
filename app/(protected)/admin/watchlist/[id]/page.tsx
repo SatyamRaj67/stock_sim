@@ -52,6 +52,15 @@ const FlagUserDialog = dynamic(
   { ssr: false },
 );
 
+// Dynamically import UserAchievementsManager
+const UserAchievementsManager = dynamic(
+  () =>
+    import("@/components/admin/watchlist/user-achievements-manager").then(
+      (mod) => mod.UserAchievementsManager,
+    ),
+  { loading: () => <AchievementsManagerSkeleton />, ssr: false },
+);
+
 // --- Loading Skeletons ---
 const UserInfoSkeleton = () => (
   <Card>
@@ -116,6 +125,30 @@ const TransactionsTableSkeleton = () => (
     </CardContent>
   </Card>
 );
+
+const AchievementsManagerSkeleton = () => (
+  <Card>
+    <CardHeader>
+      <Skeleton className="h-6 w-2/5" />
+      <Skeleton className="mt-1 h-4 w-3/5" />
+    </CardHeader>
+    <CardContent className="space-y-3 pt-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="space-y-2 rounded-lg border p-4">
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-5 w-3/4" />
+              <Skeleton className="h-5 w-10" />
+            </div>
+            <Skeleton className="h-3 w-full" />
+            <Skeleton className="h-3 w-1/2" />
+            <Skeleton className="h-3 w-1/4" />
+          </div>
+        ))}
+      </div>
+    </CardContent>
+  </Card>
+);
 // --- End Skeletons ---
 
 const UserWatchlistDetailPage = () => {
@@ -163,20 +196,21 @@ const UserWatchlistDetailPage = () => {
       <UserInfoCard userId={userId} />
       <UserWatchlistIssues
         userId={userId}
-        setRefetchWatchlist={setRefetchWatchlistCallback} 
+        setRefetchWatchlist={setRefetchWatchlistCallback}
       />
       <UserPositionsTable userId={userId} />
       <UserTransactionsTable userId={userId} />
+      <UserAchievementsManager userId={userId} />
 
       {userId && (
         <FlagUserDialog
           userId={userId}
           isOpen={isFlagDialogOpen}
-          onClose={() => setIsFlagDialogOpen(false)} 
+          onClose={() => setIsFlagDialogOpen(false)}
           onSuccess={() => {
-            setIsFlagDialogOpen(false); 
+            setIsFlagDialogOpen(false);
             watchlistRefetchRef.current?.();
-            console.log("Watchlist refetch triggered after flagging."); 
+            console.log("Watchlist refetch triggered after flagging.");
           }}
         />
       )}

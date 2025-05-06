@@ -2,7 +2,7 @@ import { deletePortfolioByUserId } from "@/data/portfolio";
 import { deletePriceHistoryByStockId } from "@/data/priceHistory";
 import { getStockByStockId, updateStockById } from "@/data/stocks";
 import { deleteAllTransactionsByUserId } from "@/data/transactions";
-import { getAllUsersWithAdminWatchlist } from "@/data/user";
+import { getAllUsersWithAdminWatchlist, updateUserById } from "@/data/user"; // MODIFIED: Added updateUserById
 import { generatePriceHistoryData } from "@/lib/price-simulation";
 import { IssueSeverity, IssueType } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
@@ -148,13 +148,15 @@ export const adminRouter = createTRPCRouter({
         const result = await deleteAllTransactionsByUserId(userId);
 
         await deletePortfolioByUserId(userId);
+        // Reset user's balance to 0
+        await updateUserById(userId, { balance: new Decimal(10000) }); // ADDED: Update user balance
 
         return { count: result?.count };
       } catch (error) {
-        console.error("Failed to delete all transactions:", error);
+        console.error("Failed to delete all transactions and update balance:", error); // MODIFIED: Updated log message
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Could not delete transactions.",
+          message: "Could not delete transactions or update balance.", // MODIFIED: Updated error message
         });
       }
     }),

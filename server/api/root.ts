@@ -4,6 +4,7 @@ import { tradeRouter } from "server/api/routers/trade";
 import { userRouter } from "server/api/routers/user";
 import { billingRouter } from "./routers/billing"; // Import the new billing router
 import { createCallerFactory, createTRPCRouter } from "server/api/trpc";
+import { achievementsRouter } from "./routers/achievements";
 
 /**
  * This is the primary router for your server.
@@ -12,6 +13,7 @@ import { createCallerFactory, createTRPCRouter } from "server/api/trpc";
  */
 export const appRouter = createTRPCRouter({
   admin: adminRouter,
+  achievements: achievementsRouter,
   stocks: stockRouter,
   trade: tradeRouter,
   user: userRouter,
