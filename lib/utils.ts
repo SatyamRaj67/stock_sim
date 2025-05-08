@@ -1,6 +1,7 @@
 import { clsx, type ClassValue } from "clsx";
 import Decimal from "decimal.js";
 import { twMerge } from "tailwind-merge";
+import { AchievementType } from "@prisma/client"; // Ensure this import is added
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -123,3 +124,19 @@ export function formatPercentage(
     maximumFractionDigits,
   })}%`;
 }
+
+export const formatProgressValue = (value: number, type: AchievementType) => {
+  switch (type) {
+    case AchievementType.TOTAL_PROFIT:
+      return formatCurrency(value);
+    case AchievementType.TOTAL_STOCKS_OWNED:
+    case AchievementType.TOTAL_TRADES:
+    case AchievementType.SPECIFIC_STOCK_OWNED:
+      // Assuming you want to format these as plain numbers, potentially large ones
+      return formatNumber(value);
+    // Add other cases if needed for different AchievementTypes
+    default:
+      // Fallback for any other achievement types not explicitly handled
+      return value.toString();
+  }
+};

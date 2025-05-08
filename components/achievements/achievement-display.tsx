@@ -25,7 +25,7 @@ import {
   Trophy,
   X,
 } from "lucide-react";
-import { cn, formatCurrency, formatNumber } from "@/lib/utils";
+import { cn, formatCurrency, formatNumber, formatProgressValue } from "@/lib/utils";
 import type { Achievement as PrismaAchievement } from "@prisma/client";
 import { AchievementType } from "@prisma/client";
 import { Button } from "@/components/ui/button";
@@ -74,19 +74,6 @@ const getAchievementIcon = (
       return <Star className={size} />;
     default:
       return <Trophy className={size} />;
-  }
-};
-
-const formatProgressValue = (value: number, type: AchievementType) => {
-  switch (type) {
-    case AchievementType.TOTAL_PROFIT:
-      return formatCurrency(value);
-    case AchievementType.TOTAL_STOCKS_OWNED:
-    case AchievementType.TOTAL_TRADES:
-    case AchievementType.SPECIFIC_STOCK_OWNED:
-      return formatNumber(value);
-    default:
-      return value.toString();
   }
 };
 

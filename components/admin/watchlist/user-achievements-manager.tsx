@@ -21,8 +21,8 @@ import {
   ShieldOff,
 } from "lucide-react";
 import { toast } from "sonner";
-import { type Achievement, AchievementType } from "@prisma/client"; 
-import { formatNumber, formatCurrency } from "@/lib/utils";
+import { type Achievement } from "@prisma/client";
+import { formatProgressValue } from "@/lib/utils";
 
 // Define the expected shape of an achievement with status
 interface AchievementWithStatus extends Omit<Achievement, "targetValue"> {
@@ -33,19 +33,6 @@ interface AchievementWithStatus extends Omit<Achievement, "targetValue"> {
 interface UserAchievementsManagerProps {
   userId: string;
 }
-
-const formatProgressValue = (value: number, type: AchievementType) => {
-  switch (type) {
-    case AchievementType.TOTAL_PROFIT:
-      return formatCurrency(value);
-    case AchievementType.TOTAL_STOCKS_OWNED:
-    case AchievementType.TOTAL_TRADES:
-    case AchievementType.SPECIFIC_STOCK_OWNED:
-      return formatNumber(value);
-    default:
-      return value.toString();
-  }
-};
 
 export const UserAchievementsManager: React.FC<
   UserAchievementsManagerProps
@@ -59,7 +46,7 @@ export const UserAchievementsManager: React.FC<
     refetch,
   } = api.achievements.getUserAchievementsWithStatus.useQuery(
     { userId },
-    { staleTime: 5 * 60 * 1000 }, 
+    { staleTime: 5 * 60 * 1000 },
   );
 
   const toggleAchievementMutation =

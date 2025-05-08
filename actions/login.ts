@@ -32,14 +32,14 @@ export const login = async (
 
   const { email, password, code } = validatedFields.data;
 
-  const exisitingUser = await getUserByEmail(email);
-  if (!exisitingUser || !exisitingUser.email || !exisitingUser.password) {
+  const existingUser = await getUserByEmail(email);
+  if (!existingUser || !existingUser.email || !existingUser.password) {
     return { error: "User does not exist!" };
   }
 
-  if (!exisitingUser.emailVerified) {
+  if (!existingUser.emailVerified) {
     const verificationToken = await generateVerificationToken(
-      exisitingUser.email,
+      existingUser.email,
     );
 
     await sendVerificationEmail(
@@ -50,11 +50,9 @@ export const login = async (
     return { success: "Confirmation Email Sent!" };
   }
 
-  if (exisitingUser.isTwoFactorEnabled && exisitingUser.email) {
+  if (existingUser.isTwoFactorEnabled && existingUser.email) {
     if (code) {
-      const twoFactorToken = await getTwoFactorTokenByEmail(
-        exisitingUser.email,
-      );
+      const twoFactorToken = await getTwoFactorTokenByEmail(existingUser.email);
 
       if (!twoFactorToken) {
         return { error: "Invalid Code!" };
@@ -75,7 +73,7 @@ export const login = async (
       });
 
       const existingConfirmation = await getTwoFactorConfirmationByUserId(
-        exisitingUser.id,
+        existingUser.id,
       );
 
       if (existingConfirmation) {
@@ -86,11 +84,11 @@ export const login = async (
 
       await db.twoFactorConfirmation.create({
         data: {
-          userId: exisitingUser.id,
+          userId: existingUser.id,
         },
       });
     } else {
-      const twoFactorToken = await generateTwoFactorToken(exisitingUser.email);
+      const twoFactorToken = await generateTwoFactorToken(existingUser.email);
       await sendTwoFactorEmail(twoFactorToken.email, twoFactorToken.token);
 
       return { twoFactor: true };
