@@ -2,9 +2,10 @@ import { adminRouter } from "server/api/routers/admin";
 import { stockRouter } from "server/api/routers/stocks";
 import { tradeRouter } from "server/api/routers/trade";
 import { userRouter } from "server/api/routers/user";
-import { billingRouter } from "./routers/billing"; // Import the new billing router
+import { billingRouter } from "./routers/billing";
 import { createCallerFactory, createTRPCRouter } from "server/api/trpc";
 import { achievementsRouter } from "./routers/achievements";
+import { announcementRouter } from "./routers/announcements";
 
 /**
  * This is the primary router for your server.
@@ -12,12 +13,13 @@ import { achievementsRouter } from "./routers/achievements";
  * All routers added in /api/routers should be manually added here.
  */
 export const appRouter = createTRPCRouter({
-  admin: adminRouter,
   achievements: achievementsRouter,
+  admin: adminRouter,
+  announcements: announcementRouter,
+  billing: billingRouter,
   stocks: stockRouter,
   trade: tradeRouter,
   user: userRouter,
-  billing: billingRouter,
 });
 
 // export type definition of API

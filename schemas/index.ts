@@ -1,4 +1,9 @@
-import { IssueSeverity, IssueType} from "@prisma/client";
+import {
+  AnnouncementStatus,
+  IssueSeverity,
+  IssueType,
+  NotificationType,
+} from "@prisma/client";
 import Decimal from "decimal.js";
 import * as z from "zod";
 
@@ -172,7 +177,10 @@ export const StockSchema = z.object({
     .string()
     .min(1, "Symbol is required")
     .max(10, "Symbol must be 10 characters or less")
-    .regex(/^[A-Z0-9.-]+$/, "Symbol can only contain uppercase letters, numbers, dots, and hyphens")
+    .regex(
+      /^[A-Z0-9.-]+$/,
+      "Symbol can only contain uppercase letters, numbers, dots, and hyphens",
+    )
     .transform((val) => val.toUpperCase()),
   name: z.string().min(1, "Name is required").max(100),
   description: z.string().max(500).optional().nullable(),
@@ -234,7 +242,10 @@ export const StockSimulationSettingsSchema = z.object({
     .safe("Jump probability value is too large"),
   maxJumpMultiplier: z.coerce
     .number({ invalid_type_error: "Max jump multiplier must be a number" })
-    .min(1.0001, "Max jump multiplier must be greater than 1 (e.g., 1.10 for +/- 10%)")
+    .min(
+      1.0001,
+      "Max jump multiplier must be greater than 1 (e.g., 1.10 for +/- 10%)",
+    )
     .max(2.0, "Max jump multiplier cannot exceed 2.0")
     .finite("Max jump multiplier must be finite")
     .safe("Max jump multiplier value is too large"),
@@ -245,13 +256,18 @@ export const StockSimulationSettingsSchema = z.object({
     .safe("Price cap value is too large")
     .optional()
     .nullable()
-    .transform(val => val === null ? null : val),
+    .transform((val) => (val === null ? null : val)),
   priceChangeDisabled: z.boolean(),
 });
 
 export const GenerateHistorySchema = z.object({
   stockId: z.string().cuid(),
-  days: z.coerce.number().int().positive("Days must be a positive integer").min(1).max(365 * 5), // Limit to 5 years
+  days: z.coerce
+    .number()
+    .int()
+    .positive("Days must be a positive integer")
+    .min(1)
+    .max(365 * 5), // Limit to 5 years
 });
 
 export type FlagUserInput = z.infer<typeof flagUserSchema>;
