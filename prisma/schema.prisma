@@ -61,13 +61,13 @@ enum AnnouncementStatus {
 
 // Enum for different types of notifications
 enum NotificationType {
-    ANNOUNCEMENT      
+    ANNOUNCEMENT
     TRANSACTION_SUCCESS
     TRANSACTION_FAILED
     LOGIN_ALERT
     ACHIEVEMENT_UNLOCKED
-    PRICE_ALERT           
-    SYSTEM_MESSAGE        
+    PRICE_ALERT
+    SYSTEM_MESSAGE
 }
 
 // Enum for the read status of a user's notification
@@ -90,18 +90,20 @@ model User {
     isTwoFactorEnabled    Boolean                @default(false)
     TwoFactorConfirmation TwoFactorConfirmation?
 
-    balance Decimal @default(10000.00) @db.Decimal(12, 2)
+    balance        Decimal @default(10000.00) @db.Decimal(12, 2)
+    portfolioValue Decimal @default(0.00) @db.Decimal(12, 2)
+    totalProfit    Decimal @default(0.00) @db.Decimal(12, 2)
 
     // Relations
     portfolio             Portfolio?
     transactions          Transaction[]
     watchlist             Watchlist?
-    createdStocks         Stock[]                @relation("Stock_createdBy")
+    createdStocks         Stock[]           @relation("Stock_createdBy")
     adminWatchlistEntries AdminWatchlist[]
     sessions              Session[]
     userAchievements      UserAchievement[]
-    authoredNotifications Notification[]         @relation("AuthoredNotifications") // Notifications/Announcements authored by this user (if admin)
-    receivedNotifications Notification[]         @relation("ReceivedNotifications") // Notifications received by this user
+    authoredNotifications Notification[]    @relation("AuthoredNotifications") // Notifications/Announcements authored by this user (if admin)
+    receivedNotifications Notification[]    @relation("ReceivedNotifications") // Notifications received by this user
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -126,6 +128,8 @@ model Position {
     stockId         String
     quantity        Int
     averageBuyPrice Decimal @db.Decimal(12, 2)
+    currentValue    Decimal @db.Decimal(12, 2)
+    profitLoss      Decimal @db.Decimal(12, 2)
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -157,7 +161,7 @@ model Stock {
     isFrozen            Boolean  @default(false) // Trading temporarily halted
     priceChangeDisabled Boolean  @default(false)
     priceCap            Decimal? @db.Decimal(12, 2)
-    createdById         String?
+    createdById         String
     createdAt           DateTime @default(now())
     updatedAt           DateTime @updatedAt
 
@@ -167,7 +171,7 @@ model Stock {
     maxJumpMultiplier Decimal @default(1.10) @db.Decimal(5, 4) // 1.0001 to 2.0000
 
     // Relations
-    createdBy      User?           @relation("Stock_createdBy", fields: [createdById], references: [id]) // Relation is now optional
+    createdBy      User            @relation("Stock_createdBy", fields: [createdById], references: [id]) // Relation is now optional
     positions      Position[]
     transactions   Transaction[]
     priceHistory   PriceHistory[]
@@ -351,12 +355,12 @@ model Achievement {
     type          AchievementType
     level         Int             @default(1) // Level of the achievement (e.g., Profit Level 1, Profit Level 2)
     targetValue   Decimal         @db.Decimal(16, 2) // The value needed to unlock (e.g., 1000 profit, 100 shares)
-    targetStockId String?         // Optional: Link to a specific stock for SPECIFIC_STOCK_OWNED type
-    icon          String?         // Optional: Icon identifier
+    targetStockId String? // Optional: Link to a specific stock for SPECIFIC_STOCK_OWNED type
+    icon          String? // Optional: Icon identifier
     createdAt     DateTime        @default(now())
     updatedAt     DateTime        @updatedAt
 
-    targetStock   Stock?          @relation(fields: [targetStockId], references: [id])
+    targetStock      Stock?            @relation(fields: [targetStockId], references: [id])
     userAchievements UserAchievement[]
 
     @@unique([type, level]) // Ensure only one achievement of a type exists per level
@@ -365,13 +369,13 @@ model Achievement {
 }
 
 model UserAchievement {
-    id            String      @id @default(cuid())
+    id            String   @id @default(cuid())
     userId        String
     achievementId String
-    achievedAt    DateTime    @default(now())
+    achievedAt    DateTime @default(now())
 
-    user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-    achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+    user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+    achievement Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
 
     @@unique([userId, achievementId])
     @@index([userId])
@@ -382,23 +386,23 @@ model UserAchievement {
 
 model Notification {
     id                 String                 @id @default(cuid())
-    title              String?                // For announcements
-    content            String                 // Main message content
-    type               NotificationType       // To distinguish ANNOUNCEMENT from others
-    announcementStatus AnnouncementStatus?    // DRAFT, PUBLISHED, ARCHIVED (only for type ANNOUNCEMENT)
+    title              String? // For announcements
+    content            String // Main message content
+    type               NotificationType // To distinguish ANNOUNCEMENT from others
+    announcementStatus AnnouncementStatus? // DRAFT, PUBLISHED, ARCHIVED (only for type ANNOUNCEMENT)
     readStatus         NotificationReadStatus @default(UNREAD) // For user-specific read status of any notification
 
-    userId             String?                // Recipient user (if not a general announcement, or for read status tracking)
-    authorId           String?                // Admin user who created the announcement
+    userId   String? // Recipient user (if not a general announcement, or for read status tracking)
+    authorId String? // Admin user who created the announcement
 
-    publishedAt        DateTime?              // When an announcement was published
+    publishedAt DateTime? // When an announcement was published
 
-    createdAt          DateTime               @default(now())
-    updatedAt          DateTime               @updatedAt
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 
     // Relations
-    user               User?                  @relation("ReceivedNotifications", fields: [userId], references: [id], onDelete: Cascade)
-    author             User?                  @relation("AuthoredNotifications", fields: [authorId], references: [id], onDelete: SetNull) // Admin who authored it
+    user   User? @relation("ReceivedNotifications", fields: [userId], references: [id], onDelete: Cascade)
+    author User? @relation("AuthoredNotifications", fields: [authorId], references: [id], onDelete: SetNull) // Admin who authored it
 
     @@index([userId])
     @@index([authorId])

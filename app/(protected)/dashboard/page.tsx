@@ -112,17 +112,6 @@ export default function DashboardPage() {
     let totalCostBasis = new Decimal(0);
     let totalCurrentValue = new Decimal(0);
 
-    userWithData.portfolio.positions.forEach((position) => {
-      if (position.stock?.currentPrice) {
-        const quantity = new Decimal(position.quantity);
-        const avgBuyPrice = new Decimal(position.averageBuyPrice);
-        const currentPrice = new Decimal(position.stock.currentPrice);
-
-        totalCostBasis = totalCostBasis.add(quantity.mul(avgBuyPrice));
-        totalCurrentValue = totalCurrentValue.add(quantity.mul(currentPrice));
-      }
-    });
-
     if (totalCostBasis.gt(0)) {
       const totalGainLoss = totalCurrentValue.sub(totalCostBasis);
       const percentageGainLoss = totalGainLoss.div(totalCostBasis);

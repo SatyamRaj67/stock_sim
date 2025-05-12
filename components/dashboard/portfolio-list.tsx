@@ -53,7 +53,7 @@ export function PortfolioList() {
             <TableBody>
               {positions.map((position) => {
                 return (
-                  <TableRow key={position.id}>
+                  <TableRow key={position.stock.id}>
                     <TableCell className="font-medium">
                       <Link
                         href={`/market/${position.stock.symbol}`}
@@ -66,7 +66,7 @@ export function PortfolioList() {
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      {formatNumber(position.quantity)}
+                      {formatNumber(position.stock.currentPrice)}
                     </TableCell>
                     <TableCell className="text-right">
                       {/* {formatNumber()} */}
