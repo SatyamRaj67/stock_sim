@@ -1,15 +1,14 @@
 import { NextResponse } from "next/server";
 import { db } from "@/server/db";
-import { getAllActiveStocks, updateStockById } from "@/data/stocks"; // Corrected import
+import { getAllStocks, updateStockById } from "@/data/stocks"; // Corrected import
 import { simulateNextDayPrice } from "@/lib/price-simulation";
 
 // Function to handle GET requests for the cron job
 export async function GET() {
   console.log("Cron job started: Updating stock prices...");
-
   try {
     // 2. Fetch all active stocks
-    const activeStocks = await getAllActiveStocks(); // Use the correct function
+    const activeStocks = await getAllStocks({active: true});
 
     if (!activeStocks || activeStocks.length === 0) {
       console.log("No active stocks found to update.");

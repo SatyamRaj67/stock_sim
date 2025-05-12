@@ -22,17 +22,6 @@ export const getUserById = async (id: string) => {
   }
 };
 
-export const getUserByIdWithPortfolio = async (userId: string) => {
-  try {
-    const user = await db.portfolio.findUnique({
-      where: { userId },
-    });
-    return user;
-  } catch {
-    return null;
-  }
-};
-
 export const getUserByIdWithPortfolioAndPositions = async (id: string) => {
   try {
     const user = await db.user.findUnique({
@@ -42,13 +31,6 @@ export const getUserByIdWithPortfolioAndPositions = async (id: string) => {
           include: {
             positions: {
               select: {
-                id: true,
-                portfolioId: true,
-                stockId: true,
-                quantity: true,
-                averageBuyPrice: true,
-                createdAt: true,
-                updatedAt: true,
                 stock: {
                   select: {
                     id: true,

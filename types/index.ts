@@ -1,4 +1,4 @@
-import { Decimal } from "@prisma/client/runtime/library"; 
+import { Decimal } from "@prisma/client/runtime/library";
 
 // Enums
 enum UserRole {
@@ -34,12 +34,6 @@ export interface User {
   createdStocks?: Stock[];
 }
 
-export interface ExtendedUser extends User {
-  role: UserRole;
-  isTwoFactorEnabled: boolean;
-  isOAuth: boolean;
-}
-
 export interface Portfolio {
   id: string;
   userId: string;
@@ -52,7 +46,7 @@ export interface Portfolio {
 export interface PortfolioHistory {
   id: string;
   portfolioId: string;
-  date: string; // ISO Date string
+  date: string;
   value: number;
   createdAt: Date;
   updatedAt: Date;
@@ -106,11 +100,11 @@ export interface Stock {
 export interface PriceHistory {
   id: string;
   stockId: string;
-  price: Decimal; // or string
+  price: Decimal;
   volume: number;
   timestamp: Date;
   wasJump: boolean;
-  jumpPercentage: Decimal | null; // or string | null
+  jumpPercentage: Decimal | null;
   stock?: Stock;
 }
 
@@ -164,54 +158,18 @@ export interface Account {
   user?: User;
 }
 
-export interface VerificationToken {
-  id: string;
-  email: string;
-  token: string;
-  expires: Date;
-}
-
-export interface PasswordResetToken {
-  id: string;
-  email: string;
-  token: string;
-  expires: Date;
-}
-
-export interface TwoFactorToken {
-  id: string;
-  email: string;
-  token: string;
-  expires: Date;
-}
-
 export interface TwoFactorConfirmation {
   id: string;
   userId: string;
   user?: User;
 }
 
-export interface UserSettings {
-  id: string;
-  name: string | null;
-  email: string;
-  role: string;
-  image: string | null;
-  emailVerified: Date | null;
-  balance: string;
-  totalProfit: string;
-  portfolioValue: string;
-  isTwoFactorEnabled: boolean;
-  createdAt: Date;
-}
-
-// Add Billing Plan Types
 export interface Plan {
   id: string;
-  priceId: string; // Stripe Price ID (Server-side)
+  priceId: string;
   title: string;
   description: string;
-  price: string; // Display price
+  price: string;
   features: string[];
   cta: string;
   period?: string;

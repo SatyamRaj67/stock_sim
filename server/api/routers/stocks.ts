@@ -9,14 +9,13 @@ import { stockCreateSchema, stockUpdateSchema } from "@/schemas";
 import {
   createStock,
   deleteStockById,
-  getAllPriceHistoryOfStock,
   getAllStocks,
-  getStockByIdHasTransactions,
   getStockByStockId,
   getStockBySymbol,
   updateStockById,
 } from "@/data/stocks";
 import { formatISO } from "date-fns";
+import { getPriceHistoryByStockId } from "@/data/priceHistory";
 
 const idSchema = z.object({ id: z.string().cuid() });
 
@@ -91,7 +90,9 @@ export const stockRouter = createTRPCRouter({
         throw new TRPCError({ code: "NOT_FOUND", message: "Stock not found" });
       }
 
-      const stockExists = await getStockByIdHasTransactions(stockId);
+      const stockExists = await getStockByStockId(stockId, {
+        transaction: true,
+      });
 
       if (
         stockExists?.transactions.length === undefined ||
@@ -116,7 +117,7 @@ export const stockRouter = createTRPCRouter({
       }),
     )
     .query(async ({ input }) => {
-      const priceHistory = await getAllPriceHistoryOfStock(
+      const priceHistory = await getPriceHistoryByStockId(
         input.stockId,
         input.range ?? undefined,
       );

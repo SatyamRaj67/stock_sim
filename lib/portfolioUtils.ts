@@ -1,7 +1,6 @@
 import Decimal from "decimal.js";
-import { startOfDay, addDays, isSameDay } from "date-fns";
+import { startOfDay, addDays } from "date-fns";
 import type { Position } from "@prisma/client"; // Keep Position type
-import type { Stock } from "@/types";
 
 // Define a type for the selected price history data
 export type SelectedPriceHistory = {

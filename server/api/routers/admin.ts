@@ -2,14 +2,14 @@ import { deletePortfolioByUserId } from "@/data/portfolio";
 import { deletePriceHistoryByStockId } from "@/data/priceHistory";
 import { getStockByStockId, updateStockById } from "@/data/stocks";
 import { deleteAllTransactionsByUserId } from "@/data/transactions";
-import { getAllUsersWithAdminWatchlist, updateUserById } from "@/data/user"; // MODIFIED: Added updateUserById
+import { getAllUsersWithAdminWatchlist, updateUserById } from "@/data/user";
 import { generatePriceHistoryData } from "@/lib/price-simulation";
 import { IssueSeverity, IssueType } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { adminProtectedProcedure, createTRPCRouter } from "server/api/trpc";
 import { z } from "zod";
 import { StockSimulationSettingsSchema } from "@/schemas";
-import Decimal from "decimal.js"; // Import Decimal
+import Decimal from "decimal.js";
 
 export const adminRouter = createTRPCRouter({
   adminTest: adminProtectedProcedure.query(() => {
@@ -56,7 +56,7 @@ export const adminRouter = createTRPCRouter({
       const adminUserId = ctx.session.user.id!;
 
       try {
-        const newEntry = await ctx.db.adminWatchlist.create({
+        return await ctx.db.adminWatchlist.create({
           data: {
             userId: userId,
             createdBy: adminUserId,
@@ -68,15 +68,16 @@ export const adminRouter = createTRPCRouter({
             resolved: false,
           },
         });
-        return newEntry; // Return the created entry
+        
       } catch (error) {
         console.error("Failed to create admin watchlist entry:", error);
-        // Throw a TRPC error for the client
+
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Could not create watchlist entry. Please try again later.",
-          cause: error, // Optional: include original error for server logs
+          cause: error,
         });
+
       }
     }),
 
@@ -103,7 +104,7 @@ export const adminRouter = createTRPCRouter({
         const updatedIssue = await ctx.db.adminWatchlist.update({
           where: { id: issueId },
           data: {
-            resolved: !issue.resolved, // Toggle the value
+            resolved: !issue.resolved,
           },
         });
         return updatedIssue;

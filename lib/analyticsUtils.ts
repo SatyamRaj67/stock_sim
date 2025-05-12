@@ -126,8 +126,8 @@ export const calculatePnlByStock = (
       const pnlDirection = totalPnl.gt(0)
         ? "up"
         : totalPnl.lt(0)
-        ? "down"
-        : "neutral";
+          ? "down"
+          : "neutral";
 
       let formattedPercentage: string;
       if (!totalPnlPercentage.isFinite()) {
@@ -207,8 +207,8 @@ export const calculatePnlSummary = (
   const pnlDirection = totalPortfolioPnl.gt(0)
     ? "up"
     : totalPortfolioPnl.lt(0)
-    ? "down"
-    : "neutral";
+      ? "down"
+      : "neutral";
 
   const sortedByPnlValue = [...pnlData].sort((a, b) => b.totalPnl - a.totalPnl);
   const bestPerformer = sortedByPnlValue[0] || null;
@@ -335,8 +335,10 @@ export async function calculateTotalProfit(userId: string): Promise<number> {
     return 0;
   }
 
-  const transactionsByStock: Record<string, Prisma.TransactionGetPayload<{}>[]> =
-    {};
+  const transactionsByStock: Record<
+    string,
+    Prisma.TransactionGetPayload<{}>[]
+  > = {};
   for (const tx of allTransactions) {
     if (tx.type === TransactionType.BUY || tx.type === TransactionType.SELL) {
       if (!transactionsByStock[tx.stockId]) {
@@ -350,7 +352,9 @@ export async function calculateTotalProfit(userId: string): Promise<number> {
 
   for (const stockId in transactionsByStock) {
     const stockTransactions = transactionsByStock[stockId]!;
-    stockTransactions.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+    stockTransactions.sort(
+      (a, b) => a.timestamp.getTime() - b.timestamp.getTime(),
+    );
 
     const pnlSummary = calculateRealizedPnlFifo(stockTransactions);
     overallRealizedPnl = overallRealizedPnl.add(pnlSummary.totalRealizedPnl);
@@ -362,7 +366,9 @@ export async function calculateTotalProfit(userId: string): Promise<number> {
   return overallRealizedPnl.toNumber();
 }
 
-export async function calculateTotalStocksOwned(userId: string): Promise<number> {
+export async function calculateTotalStocksOwned(
+  userId: string,
+): Promise<number> {
   const userWithPortfolio = await getUserByIdWithPortfolioAndPositions(userId);
   if (!userWithPortfolio?.portfolio?.positions) {
     return 0;
@@ -399,6 +405,8 @@ export async function countTotalTrades(userId: string): Promise<number> {
       status: TransactionStatus.COMPLETED,
     },
   });
-  console.log(`[AnalyticsUtils] Calculated total trades for ${userId}: ${count}`);
+  console.log(
+    `[AnalyticsUtils] Calculated total trades for ${userId}: ${count}`,
+  );
   return count;
 }

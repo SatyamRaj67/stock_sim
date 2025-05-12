@@ -11,7 +11,6 @@ import type { TransactionType } from "@/types";
 import {
   getUserById,
   getUserByIdWithAdminWatchlist,
-  getUserByIdWithPortfolio,
   getUserByIdWithPortfolioAndPositions,
   updateUserById,
 } from "@/data/user";
@@ -26,8 +25,9 @@ import {
   type PositionWithSelectedStock,
   type SelectedPriceHistory,
 } from "@/lib/portfolioUtils";
-import { getMultipleStockPriceHistories } from "@/data/stocks";
 import Decimal from "decimal.js";
+import { getMultipleStockPriceHistories } from "@/data/priceHistory";
+import { getPortfolioByUserId } from "@/data/portfolio";
 
 export const userRouter = createTRPCRouter({
   getUserById: publicProcedure.input(z.string()).query(async ({ input }) => {
@@ -43,7 +43,7 @@ export const userRouter = createTRPCRouter({
   getUserByIdWithPortfolio: protectedProcedure
     .input(z.string())
     .query(async ({ input }) => {
-      const portfolio = await getUserByIdWithPortfolio(input);
+      const portfolio = await getPortfolioByUserId(input);
 
       return portfolio;
     }),
@@ -158,7 +158,8 @@ export const userRouter = createTRPCRouter({
         // Handle case where user or portfolio/positions don't exist
         return []; // Return empty array if no positions
       }
-      const positions = userWithPositions.portfolio.positions as PositionWithSelectedStock[];
+      const positions = userWithPositions.portfolio
+        .positions as PositionWithSelectedStock[];
       if (positions.length === 0) {
         return []; // Return empty array if no positions
       }
@@ -211,7 +212,7 @@ export const userRouter = createTRPCRouter({
 
       let newBalance: Decimal;
       const currentBalance = new Decimal(user!.balance);
-      const transactionAmount = transaction.totalAmount; 
+      const transactionAmount = transaction.totalAmount;
 
       if (transaction.type === "BUY") {
         newBalance = currentBalance.add(transactionAmount);
@@ -229,7 +230,7 @@ export const userRouter = createTRPCRouter({
       }
 
       await updateUserById(transaction.userId, {
-        balance: newBalance, 
+        balance: newBalance,
       });
 
       await deleteTransactionById(transactionId);
