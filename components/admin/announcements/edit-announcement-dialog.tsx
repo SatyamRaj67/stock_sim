@@ -36,7 +36,10 @@ import { AnnouncementStatus, type Notification } from "@prisma/client";
 import { Loader2 } from "lucide-react";
 
 const announcementFormSchema = z.object({
-  title: z.string().min(1, "Title is required").max(255, "Title must be 255 characters or less"),
+  title: z
+    .string()
+    .min(1, "Title is required")
+    .max(255, "Title must be 255 characters or less"),
   content: z.string().min(1, "Content is required"),
   status: z.nativeEnum(AnnouncementStatus),
 });
@@ -62,7 +65,7 @@ const EditAnnouncementDialog: React.FC<EditAnnouncementDialogProps> = ({
     resolver: zodResolver(announcementFormSchema),
     defaultValues: {
       title: announcement.title || "",
-      content: announcement.message || "",
+      content: announcement.content || "",
       status: announcement.announcementStatus || AnnouncementStatus.DRAFT,
     },
   });
@@ -71,25 +74,26 @@ const EditAnnouncementDialog: React.FC<EditAnnouncementDialogProps> = ({
     if (announcement) {
       form.reset({
         title: announcement.title || "",
-        content: announcement.message || "",
+        content: announcement.content || "",
         status: announcement.announcementStatus || AnnouncementStatus.DRAFT,
       });
     }
   }, [announcement, form]);
 
-  const updateAnnouncementMutation = api.announcements.updateAnnouncement.useMutation({
-    onSuccess: () => {
-      toast.success("Announcement updated successfully.");
-      onSuccess?.();
-      onClose();
-    },
-    onError: (error) => {
-      toast.error(error.message || "Failed to update announcement.");
-    },
-    onSettled: () => {
-      setIsLoading(false);
-    }
-  });
+  const updateAnnouncementMutation =
+    api.announcements.updateAnnouncement.useMutation({
+      onSuccess: () => {
+        toast.success("Announcement updated successfully.");
+        onSuccess?.();
+        onClose();
+      },
+      onError: (error) => {
+        toast.error(error.message || "Failed to update announcement.");
+      },
+      onSettled: () => {
+        setIsLoading(false);
+      },
+    });
 
   const onSubmit = (values: AnnouncementFormValues) => {
     setIsLoading(true);
@@ -106,7 +110,10 @@ const EditAnnouncementDialog: React.FC<EditAnnouncementDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-2">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-4 py-2"
+          >
             <FormField
               control={form.control}
               name="title"
@@ -143,7 +150,10 @@ const EditAnnouncementDialog: React.FC<EditAnnouncementDialogProps> = ({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Status</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select status" />
@@ -152,7 +162,8 @@ const EditAnnouncementDialog: React.FC<EditAnnouncementDialogProps> = ({
                     <SelectContent>
                       {Object.values(AnnouncementStatus).map((status) => (
                         <SelectItem key={status} value={status}>
-                          {status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()}
+                          {status.charAt(0).toUpperCase() +
+                            status.slice(1).toLowerCase()}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -162,7 +173,12 @@ const EditAnnouncementDialog: React.FC<EditAnnouncementDialogProps> = ({
               )}
             />
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                disabled={isLoading}
+              >
                 Cancel
               </Button>
               <Button type="submit" disabled={isLoading}>

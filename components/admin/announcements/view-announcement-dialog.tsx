@@ -77,7 +77,7 @@ const ViewAnnouncementDialog: React.FC<ViewAnnouncementDialogProps> = ({
               Content
             </h4>
             <div className="mt-1 rounded-md border p-3 text-sm whitespace-pre-wrap">
-              {announcement.message}
+              {announcement.content}
             </div>
           </div>
 
