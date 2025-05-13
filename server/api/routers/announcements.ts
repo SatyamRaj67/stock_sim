@@ -29,7 +29,7 @@ export const announcementRouter = createTRPCRouter({
       const announcement = await ctx.db.notification.create({
         data: {
           title: input.title,
-          message: input.content, // Changed 'content' to 'message' to match the Prisma schema
+          content: input.content,
           type: NotificationType.ANNOUNCEMENT,
           announcementStatus: input.status,
           authorId: authorId,

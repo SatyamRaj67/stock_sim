@@ -45,11 +45,11 @@ export const getPortfolioByUserIdAndStockId = async (
 
 export const deletePortfolioByUserId = async (userId: string) => {
   try {
-    const portfolio = await db.portfolio.delete({
+    const portfolio = await db.portfolio.deleteMany({
       where: { userId },
     });
     return portfolio;
   } catch (error) {
     return null;
   }
-}
+};

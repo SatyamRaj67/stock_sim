@@ -29,11 +29,8 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
-// Define expected data structure from API
-interface PortfolioHistoryPoint {
-  date: string;
-  value: number;
-}
+// Import the type from your types file
+import type { PortfolioHistoryPoint } from "@/types";
 
 // Define Chart Configuration for styling
 const chartConfig = {

@@ -14,6 +14,7 @@ import {
 } from "@/lib/tradeUtils";
 import Decimal from "decimal.js";
 import { checkAndAwardAchievements } from "@/actions/achievements";
+import { updateUserById } from "@/data/user";
 
 export const tradeRouter = createTRPCRouter({
   buyStocks: protectedProcedure

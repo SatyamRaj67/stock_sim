@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { UserRole } from "@prisma/client";
+import { TransactionType, UserRole } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import {
   createTRPCRouter,
@@ -7,7 +7,6 @@ import {
   protectedProcedure,
   adminProtectedProcedure,
 } from "../trpc";
-import type { TransactionType } from "@/types";
 import {
   getUserById,
   getUserByIdWithAdminWatchlist,
@@ -28,6 +27,9 @@ import {
 import Decimal from "decimal.js";
 import { getMultipleStockPriceHistories } from "@/data/priceHistory";
 import { getPortfolioByUserId } from "@/data/portfolio";
+import {
+  updatePositionByPortfolioIdandStockId,
+} from "@/data/positions";
 
 export const userRouter = createTRPCRouter({
   getUserById: publicProcedure.input(z.string()).query(async ({ input }) => {
@@ -142,7 +144,7 @@ export const userRouter = createTRPCRouter({
   getPortfolioHistory: protectedProcedure
     .input(
       z.object({
-        range: z.number().int().positive().default(30), // Range in days (e.g., 7, 30, 90)
+        range: z.number().int().positive().default(30),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -179,9 +181,7 @@ export const userRouter = createTRPCRouter({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to fetch stock price history.",
         });
-      }
-
-      // 4. Calculate daily values using the helper function
+      } // 4. Calculate daily values using the helper function
       const dailyValues = calculateDailyPortfolioValue(
         positions,
         priceHistories as SelectedPriceHistory[],
@@ -208,16 +208,30 @@ export const userRouter = createTRPCRouter({
 
       // --- Start Balance Adjustment Logic ---
       // Fetch the user to get their current Decimal balance
-      const user = await getUserById(transaction.userId);
+      const user = await getUserByIdWithPortfolioAndPositions(
+        transaction.userId,
+      );
 
       let newBalance: Decimal;
       const currentBalance = new Decimal(user!.balance);
       const transactionAmount = transaction.totalAmount;
+      let portfolioValue = user!.portfolioValue;
+      let portfolioQuantity = user!.portfolio?.positions.find(
+        (position) => position.stockId === transaction.stockId,
+      )?.quantity;
 
       if (transaction.type === "BUY") {
         newBalance = currentBalance.add(transactionAmount);
+        portfolioValue = portfolioValue.sub(transactionAmount);
+        portfolioQuantity = portfolioQuantity
+          ? portfolioQuantity - transaction.quantity
+          : 0;
       } else if (transaction.type === "SELL") {
         newBalance = currentBalance.sub(transactionAmount);
+        portfolioValue = portfolioValue.add(transactionAmount);
+        portfolioQuantity = portfolioQuantity
+          ? portfolioQuantity + transaction.quantity
+          : 0;
       } else {
         await deleteTransactionById(transactionId);
         console.warn(
@@ -231,7 +245,16 @@ export const userRouter = createTRPCRouter({
 
       await updateUserById(transaction.userId, {
         balance: newBalance,
+        portfolioValue: portfolioValue,
       });
+
+      await updatePositionByPortfolioIdandStockId(
+        user!.portfolio!.id,
+        transaction.stockId,
+        {
+          quantity: portfolioQuantity,
+        },
+      );
 
       await deleteTransactionById(transactionId);
 

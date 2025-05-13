@@ -13,7 +13,6 @@ import {
   Wallet,
 } from "lucide-react";
 import { formatCurrency, formatPercentage } from "@/lib/utils";
-import { parseISO } from "date-fns";
 import Decimal from "decimal.js";
 
 const PortfolioChart = dynamic(
@@ -58,84 +57,32 @@ export default function DashboardPage() {
   const { data: session } = useSession();
   const userId = session?.user?.id;
 
-  const { data: userWithData, isLoading: isLoadingUser } =
+  const { data: user, isLoading: isLoading } =
     api.user.getUserByIdWithPortfolioAndPositions.useQuery(userId!, {
       enabled: !!userId,
     });
 
-  const { data: portfolioHistory, isLoading: isLoadingHistory } =
-    api.user.getPortfolioHistory.useQuery(
-      { range: 3 },
-      {
-        enabled: !!userId,
-        select: (data) =>
-          data?.sort(
-            (a, b) => parseISO(a.date).getTime() - parseISO(b.date).getTime(),
-          ),
-      },
-    );
-
-  let currentPortfolioValue = 0;
-  const portfolioTrend: TrendData = { value: "N/A", direction: "neutral" };
-
-  if (!isLoadingHistory && portfolioHistory && portfolioHistory.length > 0) {
-    currentPortfolioValue =
-      portfolioHistory[portfolioHistory.length - 1]!.value;
-
-    if (portfolioHistory.length > 1) {
-      const previousValue =
-        portfolioHistory[portfolioHistory.length - 2]!.value;
-      const change = currentPortfolioValue - previousValue;
-
-      if (previousValue !== 0) {
-        const percentageChange = change / previousValue;
-        portfolioTrend.value = formatPercentage(percentageChange, {
-          addPrefix: true,
-        });
-      } else if (currentPortfolioValue > 0) {
-        portfolioTrend.value = "+∞%";
-      } else {
-        portfolioTrend.value = "0.00%";
-      }
-      portfolioTrend.direction =
-        change > 0 ? "up" : change < 0 ? "down" : "neutral";
-    }
-  }
-
-  const totalGainData: TrendData & { absoluteValue: string } = {
-    absoluteValue: "N/A",
-    value: "N/A",
-    direction: "neutral",
+  const portfolioTrend: TrendData = {
+    value: isLoading
+      ? ""
+      : user?.portfolioValue
+        ? formatPercentage(
+            new Decimal(user.totalProfit || 0)
+              .div(user.portfolioValue || 1)
+              .times(100)
+              .toNumber(),
+          )
+        : "",
+    direction: isLoading
+      ? "neutral"
+      : user?.totalProfit
+        ? new Decimal(user.totalProfit).gt(0)
+          ? "up"
+          : new Decimal(user.totalProfit).lt(0)
+            ? "down"
+            : "neutral"
+        : "neutral",
   };
-
-  if (!isLoadingUser && userWithData?.portfolio?.positions) {
-    let totalCostBasis = new Decimal(0);
-    let totalCurrentValue = new Decimal(0);
-
-    if (totalCostBasis.gt(0)) {
-      const totalGainLoss = totalCurrentValue.sub(totalCostBasis);
-      const percentageGainLoss = totalGainLoss.div(totalCostBasis);
-
-      totalGainData.absoluteValue = formatCurrency(totalGainLoss.toNumber());
-      totalGainData.value = formatPercentage(percentageGainLoss.toNumber(), {
-        addPrefix: true,
-      });
-      totalGainData.direction = totalGainLoss.gt(0)
-        ? "up"
-        : totalGainLoss.lt(0)
-          ? "down"
-          : "neutral";
-    } else if (totalCurrentValue.gt(0)) {
-      totalGainData.absoluteValue = formatCurrency(
-        totalCurrentValue.toNumber(),
-      );
-      totalGainData.value = "+∞%";
-      totalGainData.direction = "up";
-    } else {
-      totalGainData.absoluteValue = formatCurrency(0);
-      totalGainData.value = "0.00%";
-    }
-  }
 
   return (
     <div className="flex-1 space-y-4 p-2 pt-6 md:p-8">
@@ -145,17 +92,15 @@ export default function DashboardPage() {
         <InfoCard
           title="Portfolio Value"
           value={
-            isLoadingHistory ? (
+            isLoading ? (
               <Skeleton className="h-6 w-28" />
             ) : (
-              formatCurrency(currentPortfolioValue)
+              formatCurrency(user?.portfolioValue)
             )
           }
           icon={<Wallet className="text-muted-foreground h-4 w-4" />}
           trend={
-            isLoadingHistory
-              ? { value: "", direction: "neutral" }
-              : portfolioTrend
+            isLoading ? { value: "", direction: "neutral" } : portfolioTrend
           }
           footer="Based on latest calculated value"
         />
@@ -163,10 +108,10 @@ export default function DashboardPage() {
         <InfoCard
           title="Available Balance"
           value={
-            isLoadingUser ? (
+            isLoading ? (
               <Skeleton className="h-6 w-24" />
-            ) : userWithData?.balance ? (
-              formatCurrency(userWithData.balance)
+            ) : user?.balance ? (
+              formatCurrency(user.balance)
             ) : (
               "N/A"
             )
@@ -177,14 +122,10 @@ export default function DashboardPage() {
         <InfoCard
           title="Daily Change"
           value={
-            isLoadingHistory ? (
-              <Skeleton className="h-6 w-20" />
-            ) : (
-              portfolioTrend.value
-            )
+            isLoading ? <Skeleton className="h-6 w-20" /> : portfolioTrend.value
           }
           icon={
-            isLoadingHistory ? null : portfolioTrend.direction === "up" ? (
+            isLoading ? null : portfolioTrend.direction === "up" ? (
               <TrendingUp className="text-muted-foreground h-4 w-4" />
             ) : portfolioTrend.direction === "down" ? (
               <TrendingDown className="text-muted-foreground h-4 w-4" />
@@ -192,7 +133,7 @@ export default function DashboardPage() {
           }
           trend={{
             value: "",
-            direction: isLoadingHistory ? "neutral" : portfolioTrend.direction,
+            direction: isLoading ? "neutral" : portfolioTrend.direction,
           }}
           footer="Change since previous day"
         />
@@ -200,16 +141,20 @@ export default function DashboardPage() {
         <InfoCard
           title="Total Gain/Loss"
           value={
-            isLoadingUser ? (
+            isLoading ? (
               <Skeleton className="h-6 w-24" />
             ) : (
-              totalGainData.absoluteValue
+              user?.totalProfit && formatCurrency(user.totalProfit)
             )
           }
           icon={<Activity className="text-muted-foreground h-4 w-4" />}
           trend={{
-            value: isLoadingUser ? "" : totalGainData.value,
-            direction: isLoadingUser ? "neutral" : totalGainData.direction,
+            value: isLoading
+              ? ""
+              : user?.totalProfit !== undefined
+                ? user?.totalProfit.toString()
+                : "0",
+            direction: isLoading ? "neutral" : portfolioTrend.direction,
           }}
           badge={{ text: "All Time", variant: "secondary" }}
         />

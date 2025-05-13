@@ -1,5 +1,5 @@
 import { db } from "@/server/db";
-import type Decimal from "decimal.js";
+import Decimal from "decimal.js";
 
 export const getPositionById = async (id: string) => {
   try {
@@ -31,6 +31,8 @@ export const createPosition = async (data: {
   stockId: string;
   quantity: number;
   averageBuyPrice: Decimal;
+  currentValue: Decimal;
+  profitLoss: Decimal;
 }) => {
   try {
     const position = await db.position.create({
@@ -60,34 +62,21 @@ export const updatePositionById = async (
   }
 };
 
-export const upsertPosition = async (
+export const updatePositionByPortfolioIdandStockId = async (
   portfolioId: string,
   stockId: string,
-  quantity: number,
-  averageBuyPrice: Decimal,
+  data: {
+    quantity?: number;
+    averageBuyPrice?: Decimal;
+  },
 ) => {
   try {
-    const position = await db.position.upsert({
-      where: {
-        portfolioId_stockId: {
-          portfolioId,
-          stockId,
-        },
-      },
-      update: {
-        quantity,
-        averageBuyPrice,
-      },
-      create: {
-        portfolioId,
-        stockId,
-        quantity,
-        averageBuyPrice,
-      },
+    const position = await db.position.update({
+      where: { portfolioId_stockId: { portfolioId, stockId } },
+      data,
     });
     return position;
-  } catch (error) {
-    console.error("Error upserting position:", error);
+  } catch {
     return null;
   }
 };

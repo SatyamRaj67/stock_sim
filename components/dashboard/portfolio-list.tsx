@@ -19,19 +19,20 @@ import {
 } from "../ui/table";
 import Link from "next/link";
 import { formatNumber } from "@/lib/utils";
+import Decimal from "decimal.js";
 
 export function PortfolioList() {
   const { data: session } = useSession();
 
   const { data: userData, isLoading } =
-    api.user.getUserByIdWithPortfolioAndPositions.useQuery(session!.user.id!, {
-      enabled: !!session!.user.id,
+    api.user.getUserByIdWithPortfolioAndPositions.useQuery(session?.user?.id!, {
+      enabled: !!session?.user?.id,
     });
 
-  const positions = userData?.portfolio?.positions ?? [];
+  const positions = userData?.portfolio?.positions || [];
 
   return (
-    <Card className="w-full">
+    <Card>
       <CardHeader>
         <CardTitle>My Holdings</CardTitle>
         <CardDescription>Overview of your holdings</CardDescription>
@@ -53,7 +54,7 @@ export function PortfolioList() {
             <TableBody>
               {positions.map((position) => {
                 return (
-                  <TableRow key={position.stock.id}>
+                  <TableRow key={position.id}>
                     <TableCell className="font-medium">
                       <Link
                         href={`/market/${position.stock.symbol}`}
@@ -66,10 +67,14 @@ export function PortfolioList() {
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      {formatNumber(position.stock.currentPrice)}
+                      {formatNumber(position.quantity)}
                     </TableCell>
                     <TableCell className="text-right">
-                      {/* {formatNumber()} */}
+                      {formatNumber(
+                        new Decimal(position.quantity).times(
+                          position.stock.currentPrice,
+                        ),
+                      )}
                     </TableCell>
                     <TableCell className={`text-right font-medium`}></TableCell>
                     <TableCell>

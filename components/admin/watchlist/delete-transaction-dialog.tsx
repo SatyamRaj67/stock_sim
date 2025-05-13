@@ -10,8 +10,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, Trash2 } from "lucide-react";
-import { api } from "@/trpc/react"; // Import api
-import { toast } from "sonner"; // Import toast
+import { api } from "@/trpc/react";
+import { toast } from "sonner";
 
 interface DeleteTransactionDialogProps {
   isOpen: boolean;
@@ -24,7 +24,7 @@ interface DeleteTransactionDialogProps {
 export const DeleteTransactionDialog: React.FC<
   DeleteTransactionDialogProps
 > = ({ isOpen, onOpenChange, transactionId, userId, onSuccess }) => {
-  const utils = api.useUtils(); // Get tRPC utils
+  const utils = api.useUtils();
 
   // --- Delete Mutation ---
   const deleteMutation = api.user.deleteTransaction.useMutation({

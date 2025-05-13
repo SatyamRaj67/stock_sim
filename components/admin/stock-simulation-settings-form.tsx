@@ -21,8 +21,8 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
-import type { Stock } from "@/types";
 import Decimal from "decimal.js";
+import type { Stock } from "@prisma/client";
 
 type SimulationSettingsFormValues = z.infer<
   typeof StockSimulationSettingsSchema

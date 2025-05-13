@@ -5,7 +5,7 @@ import { adminProtectedProcedure, createTRPCRouter } from "../trpc";
 export const achievementsRouter = createTRPCRouter({
   getUserAchievementsWithStatus: adminProtectedProcedure
     .input(z.object({ userId: z.string() }))
-    .query(async ({ ctx, input }) => {
+    .query(async ({ input }) => {
       const { userId } = input;
 
       const allAchievements = await db.achievement.findMany({

@@ -30,7 +30,7 @@ export const getUserByIdWithPortfolioAndPositions = async (id: string) => {
         portfolio: {
           include: {
             positions: {
-              select: {
+              include: {
                 stock: {
                   select: {
                     id: true,

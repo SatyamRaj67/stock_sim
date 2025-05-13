@@ -2,7 +2,11 @@ import { deletePortfolioByUserId } from "@/data/portfolio";
 import { deletePriceHistoryByStockId } from "@/data/priceHistory";
 import { getStockByStockId, updateStockById } from "@/data/stocks";
 import { deleteAllTransactionsByUserId } from "@/data/transactions";
-import { getAllUsersWithAdminWatchlist, updateUserById } from "@/data/user";
+import {
+  getAllUsersWithAdminWatchlist,
+  getUserById,
+  updateUserById,
+} from "@/data/user";
 import { generatePriceHistoryData } from "@/lib/price-simulation";
 import { IssueSeverity, IssueType } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
@@ -68,7 +72,6 @@ export const adminRouter = createTRPCRouter({
             resolved: false,
           },
         });
-        
       } catch (error) {
         console.error("Failed to create admin watchlist entry:", error);
 
@@ -77,7 +80,6 @@ export const adminRouter = createTRPCRouter({
           message: "Could not create watchlist entry. Please try again later.",
           cause: error,
         });
-
       }
     }),
 
@@ -142,19 +144,24 @@ export const adminRouter = createTRPCRouter({
 
   deleteAllUserTransactions: adminProtectedProcedure
     .input(z.object({ userId: z.string() }))
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ input }) => {
       const { userId } = input;
       try {
-        // Delete all transactions for the user
+        const user = await getUserById(userId!);
         const result = await deleteAllTransactionsByUserId(userId);
 
         await deletePortfolioByUserId(userId);
-        // Reset user's balance to 0
-        await updateUserById(userId, { balance: new Decimal(10000) }); // ADDED: Update user balance
+
+        await updateUserById(userId, {
+          balance: new Decimal(user!.balance).add(user!.portfolioValue),
+        });
 
         return { count: result?.count };
       } catch (error) {
-        console.error("Failed to delete all transactions and update balance:", error); // MODIFIED: Updated log message
+        console.error(
+          "Failed to delete all transactions and update balance:",
+          error,
+        ); // MODIFIED: Updated log message
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Could not delete transactions or update balance.", // MODIFIED: Updated error message
