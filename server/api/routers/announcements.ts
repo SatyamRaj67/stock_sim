@@ -44,31 +44,19 @@ export const announcementRouter = createTRPCRouter({
     .input(
       z.object({
         status: z.nativeEnum(AnnouncementStatus).optional(),
-        page: z.number().min(1).default(1),
-        pageSize: z.number().min(1).max(100).default(10),
-        searchTerm: z.string().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
-      const { status, page, pageSize, searchTerm } = input;
+      const { status } = input;
       const whereClause: any = {
         type: NotificationType.ANNOUNCEMENT,
       };
       if (status) {
         whereClause.announcementStatus = status;
       }
-      if (searchTerm) {
-        whereClause.OR = [
-          { title: { contains: searchTerm, mode: "insensitive" } },
-          { message: { contains: searchTerm, mode: "insensitive" } },
-        ];
-      }
-
       const announcements = await ctx.db.notification.findMany({
         where: whereClause,
         orderBy: { createdAt: "desc" },
-        skip: (page - 1) * pageSize,
-        take: pageSize,
         include: { author: { select: { name: true, image: true } } },
       });
       const totalAnnouncements = await ctx.db.notification.count({
@@ -76,8 +64,6 @@ export const announcementRouter = createTRPCRouter({
       });
       return {
         announcements,
-        totalPages: Math.ceil(totalAnnouncements / pageSize),
-        currentPage: page,
         totalCount: totalAnnouncements,
       };
     }),

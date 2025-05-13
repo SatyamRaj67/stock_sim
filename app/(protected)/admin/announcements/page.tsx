@@ -74,9 +74,6 @@ const AnnouncementsPage = () => {
 
   const { data, isLoading, error } =
     api.announcements.getAnnouncements.useQuery({
-      page,
-      pageSize: ITEMS_PER_PAGE,
-      searchTerm: searchTerm || undefined,
       status: statusFilter === "ALL" ? undefined : statusFilter,
     });
 
@@ -292,30 +289,6 @@ const AnnouncementsPage = () => {
             </div>
           )}
         </CardContent>
-        {data && data.totalPages > 1 && (
-          <CardFooter className="flex items-center justify-between pt-4">
-            <span className="text-muted-foreground text-sm">
-              Page {data.currentPage} of {data.totalPages}. Total:{" "}
-              {data.totalCount} announcements.
-            </span>
-            <div className="flex gap-2">
-              <Button
-                onClick={() => setPage(page - 1)}
-                disabled={page === 1}
-                variant="outline"
-              >
-                Previous
-              </Button>
-              <Button
-                onClick={() => setPage(page + 1)}
-                disabled={page === data.totalPages}
-                variant="outline"
-              >
-                Next
-              </Button>
-            </div>
-          </CardFooter>
-        )}
       </Card>
 
       {isCreateDialogOpen && (

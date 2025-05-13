@@ -79,9 +79,6 @@ const CreateAnnouncementDialog: React.FC<CreateAnnouncementDialogProps> = ({
       onError: (error) => {
         toast("Failed to create announcement. ");
       },
-      onSettled: () => {
-        setIsLoading(false);
-      },
     });
 
   const onSubmit = (values: AnnouncementFormValues) => {
