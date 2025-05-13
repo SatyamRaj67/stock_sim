@@ -1,13 +1,12 @@
-"use client";
 
 import React from "react";
-import { SectorAllocationChart } from "@/components/analytics/sector-allocation-chart";
 import {
   calculateSectorAllocation,
   calculatePnlByStock,
   calculatePnlSummary,
   getTopMovers,
-} from "@/lib/analyticsUtils";
+} from "@/lib/clientAnalyticsUtils";
+import { SectorAllocationChart } from "@/components/analytics/sector-allocation-chart";
 import { PnlSummaryCard } from "@/components/analytics/pnl-summary-card";
 import { TopMoversCard } from "@/components/analytics/top-movers-card";
 import type { PositionWithSelectedStock } from "@/lib/portfolioUtils";
@@ -22,7 +21,6 @@ export const AnalyticsOverviewTab: React.FC<AnalyticsOverviewTabProps> = ({
   isLoading,
 }) => {
   const validPositions = positions ?? [];
-
   const sectorData = React.useMemo(() => {
     return calculateSectorAllocation(validPositions);
   }, [validPositions]);
@@ -38,7 +36,6 @@ export const AnalyticsOverviewTab: React.FC<AnalyticsOverviewTabProps> = ({
   const topMoversData = React.useMemo(() => {
     return getTopMovers(pnlData);
   }, [pnlData]);
-
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
       {/* Sector Allocation Card */}
