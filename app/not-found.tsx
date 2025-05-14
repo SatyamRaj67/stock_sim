@@ -1,8 +1,5 @@
-// app/not-found.tsx
-// This file defines the component rendered when a route is not found in the Next.js App Router.
-
 import Link from "next/link";
-import { Button } from "@/components/ui/button"; // Assuming shadcn components are in components/ui
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -11,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { TrendingDown } from "lucide-react"; // Using lucide-react icon
+import { TrendingDown } from "lucide-react"; 
 
 // Define the NotFound component
 export default function NotFound() {
@@ -67,7 +64,7 @@ export default function NotFound() {
         <CardContent>
           <p className="text-background-muted">
             Looks like the asset you were searching for is off the charts... or
-            maybe it just doesn't exist. Don't worry, your portfolio is safe (we
+            maybe it just doesn&apos;t exist. Don&apos;t worry, your portfolio is safe (we
             hope!).
           </p>
         </CardContent>

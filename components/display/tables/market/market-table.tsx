@@ -96,10 +96,10 @@ export function MarketTable() {
     () =>
       activeStocks.filter(
         (stock) =>
-          stock.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          stock.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (stock.sector &&
-            stock.sector.toLowerCase().includes(searchQuery.toLowerCase())),
+          stock.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ??
+          stock.name.toLowerCase().includes(searchQuery.toLowerCase()) ??
+          stock.sector?.toLowerCase().includes(searchQuery.toLowerCase()) ??
+          false,
       ),
     [activeStocks, searchQuery],
   );

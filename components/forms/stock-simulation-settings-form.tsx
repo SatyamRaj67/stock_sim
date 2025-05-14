@@ -3,7 +3,7 @@
 import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import type * as z from "zod";
 import { api } from "@/trpc/react";
 import { toast } from "sonner";
 import { StockSimulationSettingsSchema } from "@/schemas";
@@ -49,30 +49,40 @@ export function StockSimulationSettingsForm({
     },
   });
 
-  const updateSettingsMutation = api.admin.updateStockSimulationSettings.useMutation({
-    onSuccess: (updatedStock) => {
-      toast.success(`Simulation settings for ${updatedStock.symbol} updated.`);
-      // Reset form with new default values from the updated stock
-      form.reset({
-        id: updatedStock.id,
-        volatility: new Decimal(updatedStock.volatility).toNumber(),
-        jumpProbability: new Decimal(updatedStock.jumpProbability).toNumber(),
-        maxJumpMultiplier: new Decimal(updatedStock.maxJumpMultiplier).toNumber(),
-        priceCap: updatedStock.priceCap ? new Decimal(updatedStock.priceCap).toNumber() : null,
-        priceChangeDisabled: updatedStock.priceChangeDisabled,
-      });
-      onSuccess?.(); // Call the optional success callback
-    },
-    onError: (error) => {
-      toast.error(`Failed to update settings: ${error.message}`);
-    },
-  });
+  const updateSettingsMutation =
+    api.admin.updateStockSimulationSettings.useMutation({
+      onSuccess: (updatedStock) => {
+        toast.success(
+          `Simulation settings for ${updatedStock.symbol} updated.`,
+        );
+        // Reset form with new default values from the updated stock
+        form.reset({
+          id: updatedStock.id,
+          volatility: new Decimal(updatedStock.volatility).toNumber(),
+          jumpProbability: new Decimal(updatedStock.jumpProbability).toNumber(),
+          maxJumpMultiplier: new Decimal(
+            updatedStock.maxJumpMultiplier,
+          ).toNumber(),
+          priceCap: updatedStock.priceCap
+            ? new Decimal(updatedStock.priceCap).toNumber()
+            : null,
+          priceChangeDisabled: updatedStock.priceChangeDisabled,
+        });
+        onSuccess?.(); // Call the optional success callback
+      },
+      onError: (error) => {
+        toast.error(`Failed to update settings: ${error.message}`);
+      },
+    });
 
   function onSubmit(values: SimulationSettingsFormValues) {
     // Ensure priceCap is sent as null if empty string or 0 (adjust if 0 is valid)
     const dataToSend = {
       ...values,
-      priceCap: values.priceCap === null || values.priceCap === 0 ? null : values.priceCap,
+      priceCap:
+        values.priceCap === null || values.priceCap === 0
+          ? null
+          : values.priceCap,
     };
     updateSettingsMutation.mutate(dataToSend);
   }
@@ -96,7 +106,8 @@ export function StockSimulationSettingsForm({
                       <Input type="number" step="0.001" {...field} />
                     </FormControl>
                     <FormDescription>
-                      Daily volatility (e.g., 0.02 for 2%). Range: 0.0001 - 0.9999.
+                      Daily volatility (e.g., 0.02 for 2%). Range: 0.0001 -
+                      0.9999.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -128,7 +139,8 @@ export function StockSimulationSettingsForm({
                       <Input type="number" step="0.01" {...field} />
                     </FormControl>
                     <FormDescription>
-                      Max jump size (e.g., 1.10 for +/- 10%). Range: 1.0001 - 2.0.
+                      Max jump size (e.g., 1.10 for +/- 10%). Range: 1.0001 -
+                      2.0.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -146,10 +158,12 @@ export function StockSimulationSettingsForm({
                         type="number"
                         step="0.01"
                         {...field}
-                        value={field.value ?? ""} 
+                        value={field.value ?? ""}
                         onChange={(e) => {
                           const value = e.target.value;
-                          field.onChange(value === "" ? null : parseFloat(value));
+                          field.onChange(
+                            value === "" ? null : parseFloat(value),
+                          );
                         }}
                       />
                     </FormControl>
@@ -167,9 +181,12 @@ export function StockSimulationSettingsForm({
               render={({ field }) => (
                 <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                   <div className="space-y-0.5">
-                    <FormLabel className="text-base">Disable Price Changes</FormLabel>
+                    <FormLabel className="text-base">
+                      Disable Price Changes
+                    </FormLabel>
                     <FormDescription>
-                      Prevent the simulation from changing this stock's price.
+                      Prevent the simulation from changing this stock&apos;s
+                      price.
                     </FormDescription>
                   </div>
                   <FormControl>

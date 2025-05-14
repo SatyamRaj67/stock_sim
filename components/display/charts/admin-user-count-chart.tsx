@@ -16,13 +16,19 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Cell
+  Cell,
 } from "recharts";
 import { formatNumber } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { CustomTooltipProps } from "@/types";
 
 interface AdminUserCountChartProps {
-  data: { name: string; newUsers: number; activeUsers: number; inactiveUsers?: number }[];
+  data: {
+    name: string;
+    newUsers: number;
+    activeUsers: number;
+    inactiveUsers?: number;
+  }[];
   isLoading?: boolean;
   title?: string;
   description?: string;
@@ -38,17 +44,22 @@ export const AdminUserCountChart = ({
   const colors = {
     newUsers: "#3b82f6", // blue
     activeUsers: "#10b981", // green
-    inactiveUsers: "#ef4444" // red
+    inactiveUsers: "#ef4444", // red
   };
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
+  const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
+    if (active && payload!.length) {
       return (
-        <div className="rounded-md border bg-background p-2 text-sm shadow-sm">
+        <div className="bg-background rounded-md border p-2 text-sm shadow-sm">
           <p className="font-medium">{label}</p>
-          {payload.map((entry: any, index: number) => (
-            <p key={`item-${index}`} style={{ color: entry.color }} className="flex items-center justify-between gap-2">
-              <span>{entry.name}:</span> 
+          {payload!.map((entry, index: number) => (
+            <p
+              key={`item-${index}`}
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+              style={{ color: entry.color }}
+              className="flex items-center justify-between gap-2"
+            >
+              <span>{entry.name}:</span>
               <span className="font-medium">{formatNumber(entry.value)}</span>
             </p>
           ))}
@@ -69,21 +80,28 @@ export const AdminUserCountChart = ({
           <Skeleton className="h-full w-full" />
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(142,142,160,0.2)" />
-              <XAxis 
-                dataKey="name" 
+            <BarChart
+              data={data}
+              margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                vertical={false}
+                stroke="rgba(142,142,160,0.2)"
+              />
+              <XAxis
+                dataKey="name"
                 axisLine={false}
                 tickLine={false}
                 tick={{ fontSize: 12 }}
                 dy={10}
               />
-              <YAxis 
+              <YAxis
                 axisLine={false}
                 tickLine={false}
                 tick={{ fontSize: 12 }}
                 width={40}
-                tickFormatter={(value) => formatNumber(value)}
+                tickFormatter={(value: number) => formatNumber(value)}
               />
               <Tooltip content={<CustomTooltip />} />
               <Bar dataKey="newUsers" name="New Users" radius={[4, 4, 0, 0]}>
@@ -91,13 +109,21 @@ export const AdminUserCountChart = ({
                   <Cell key={`cell-${index}`} fill={colors.newUsers} />
                 ))}
               </Bar>
-              <Bar dataKey="activeUsers" name="Active Users" radius={[4, 4, 0, 0]}>
+              <Bar
+                dataKey="activeUsers"
+                name="Active Users"
+                radius={[4, 4, 0, 0]}
+              >
                 {data.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={colors.activeUsers} />
                 ))}
               </Bar>
               {data[0]?.inactiveUsers !== undefined && (
-                <Bar dataKey="inactiveUsers" name="Inactive Users" radius={[4, 4, 0, 0]}>
+                <Bar
+                  dataKey="inactiveUsers"
+                  name="Inactive Users"
+                  radius={[4, 4, 0, 0]}
+                >
                   {data.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={colors.inactiveUsers} />
                   ))}

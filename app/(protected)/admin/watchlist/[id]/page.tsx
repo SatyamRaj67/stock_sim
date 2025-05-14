@@ -117,7 +117,7 @@ const TransactionsTableSkeleton = () => (
     <CardContent>
       <div className="space-y-2">
         <Skeleton className="h-8 w-full" />
-        {[...Array(5)].map((_, i: number) => (
+        {Array.from({ length: 5 }).map((_, i: number) => (
           <Skeleton key={i} className="h-10 w-full" />
         ))}
         <Skeleton className="mt-4 h-8 w-1/2 self-end" />
@@ -134,7 +134,7 @@ const AchievementsManagerSkeleton = () => (
     </CardHeader>
     <CardContent className="space-y-3 pt-4">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {[...Array(3)].map((_, i) => (
+        {Array.from({ length: 3 }).map((_, i) => (
           <div key={i} className="space-y-2 rounded-lg border p-4">
             <div className="flex items-center justify-between">
               <Skeleton className="h-5 w-3/4" />
@@ -156,7 +156,12 @@ const UserWatchlistDetailPage = () => {
   const userId = params.id as string;
 
   const [isFlagDialogOpen, setIsFlagDialogOpen] = useState(false);
-  const watchlistRefetchRef = useRef<() => void>(() => {});
+  const watchlistRefetchRef = useRef<(() => void) | null>(null);
+
+  // --- Callback to receive refetch function from UserWatchlistIssues ---
+  const setRefetchWatchlistCallback = useCallback((refetchFn: () => void) => {
+    watchlistRefetchRef.current = refetchFn;
+  }, []);
 
   // --- Missing User ID Handling ---
   if (!userId) {
@@ -170,11 +175,6 @@ const UserWatchlistDetailPage = () => {
       </div>
     );
   }
-
-  // --- Callback to receive refetch function from UserWatchlistIssues ---
-  const setRefetchWatchlistCallback = useCallback((refetchFn: () => void) => {
-    watchlistRefetchRef.current = refetchFn;
-  }, []);
 
   // --- Render Page ---
   return (
@@ -209,7 +209,7 @@ const UserWatchlistDetailPage = () => {
           onClose={() => setIsFlagDialogOpen(false)}
           onSuccess={() => {
             setIsFlagDialogOpen(false);
-            watchlistRefetchRef.current?.();
+            if (watchlistRefetchRef.current) watchlistRefetchRef.current();
             console.log("Watchlist refetch triggered after flagging.");
           }}
         />

@@ -15,21 +15,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format, parseISO } from "date-fns";
 import { formatCurrency } from "@/lib/utils";
-import type { PortfolioHistory } from "@/types";
+import type { CustomTooltipProps, PortfolioHistory } from "@/types";
 
 interface PortfolioPerformanceChartProps {
   data: PortfolioHistory[] | undefined | null;
   isLoading: boolean;
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    const date = parseISO(label);
+const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
+  if (active && payload!.length) {
+    const date = parseISO(label!);
     return (
       <div className="bg-background rounded-md border p-2 shadow-sm">
         <p className="text-sm font-medium">{format(date, "PPP")}</p>
         <p className="text-muted-foreground text-xs">
-          Value: {formatCurrency(payload[0].value)}
+          Value: {formatCurrency(payload![0]!.value)}
         </p>
       </div>
     );
@@ -81,7 +81,7 @@ export const PortfolioPerformanceChart: React.FC<
                 axisLine={false}
                 tickMargin={8}
                 fontSize={12}
-                tickFormatter={(value) => formatCurrency(value)} // Use compact currency format
+                tickFormatter={(value: number) => formatCurrency(value)} // Use compact currency format
                 domain={["auto", "auto"]}
               />
               <Tooltip content={<CustomTooltip />} />

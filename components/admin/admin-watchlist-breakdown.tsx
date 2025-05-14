@@ -41,14 +41,24 @@ export const AdminWatchlistBreakdown = ({
   title = "Watchlist Breakdown",
   description = "Distribution of user watchlist issues",
 }: AdminWatchlistBreakdownProps) => {
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const entry = payload[0].payload;
+  type CustomTooltipProps = {
+    active?: boolean;
+    payload?: Array<{
+      payload: WatchlistBreakdownData & {
+        percent: number;
+        color?: string;
+      };
+    }>;
+  };
+
+  const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
+    if (active && payload?.length) {
+      const entry = payload[0]?.payload;
       return (
-        <div className="rounded-md border bg-background p-2 shadow-sm">
-          <p className="text-sm font-medium">{entry.name}</p>
-          <p className="text-xs text-muted-foreground">
-            {formatPercentage(entry.percent)} ({entry.value})
+        <div className="bg-background rounded-md border p-2 shadow-sm">
+          <p className="text-sm font-medium">{entry?.name}</p>
+          <p className="text-muted-foreground text-xs">
+            {formatPercentage(entry?.percent)} ({entry?.value})
           </p>
         </div>
       );
@@ -58,27 +68,42 @@ export const AdminWatchlistBreakdown = ({
 
   const processedData = data.map((item, index) => ({
     ...item,
-    color: item.color || COLORS[index % COLORS.length],
-    percent: data.reduce((acc, curr) => acc + curr.value, 0) > 0
-      ? item.value / data.reduce((acc, curr) => acc + curr.value, 0)
-      : 0
+    color: item.color ?? COLORS[index % COLORS.length],
+    percent:
+      data.reduce((acc, curr) => acc + curr.value, 0) > 0
+        ? item.value / data.reduce((acc, curr) => acc + curr.value, 0)
+        : 0,
   }));
 
-  const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }: any) => {
+  const renderCustomizedLabel = ({
+    cx,
+    cy,
+    midAngle,
+    innerRadius,
+    outerRadius,
+    percent,
+  }: {
+    cx: number;
+    cy: number;
+    midAngle: number;
+    innerRadius: number;
+    outerRadius: number;
+    percent: number;
+  }) => {
     const RADIAN = Math.PI / 180;
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
     const x = cx + radius * Math.cos(-midAngle * RADIAN);
     const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
     // Only show label if percentage is significant
-    if ((percent * 100) < 5) return null;
+    if (percent * 100 < 5) return null;
 
     return (
       <text
         x={x}
         y={y}
         fill="white"
-        textAnchor={x > cx ? 'start' : 'end'}
+        textAnchor={x > cx ? "start" : "end"}
         dominantBaseline="central"
         className="text-xs font-medium"
       >
@@ -120,7 +145,7 @@ export const AdminWatchlistBreakdown = ({
                 align="right"
                 iconSize={10}
                 iconType="circle"
-                wrapperStyle={{ fontSize: '12px', lineHeight: '1.5' }}
+                wrapperStyle={{ fontSize: "12px", lineHeight: "1.5" }}
               />
             </PieChart>
           </ResponsiveContainer>

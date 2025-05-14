@@ -75,7 +75,7 @@ export const FooterSkeleton = () => (
   <footer className="py-12">
     <div className="container mx-auto">
       <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
-        {[...Array(4)].map((i: number) => (
+        {Array(4).map((i: number) => (
           <div key={i}>
             <Skeleton className="mb-4 h-6 w-24" />
             <ul className="space-y-2">

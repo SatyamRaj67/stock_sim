@@ -11,7 +11,6 @@ import {
   CardTitle,
   CardDescription,
   CardContent,
-  CardFooter,
 } from "@/components/ui/card";
 import {
   Table,
@@ -37,8 +36,6 @@ import CreateAnnouncementDialog from "@/components/dialogs/announcements/create-
 import EditAnnouncementDialog from "@/components/dialogs/announcements/edit-announcement-dialog";
 import DeleteAnnouncementDialog from "@/components/dialogs/announcements/delete-announcement-dialog";
 import ViewAnnouncementDialog from "@/components/dialogs/announcements/view-announcement-dialog";
-
-const ITEMS_PER_PAGE = 10;
 
 // Helper to get badge variant based on status
 const getStatusBadgeVariant = (
@@ -77,20 +74,20 @@ const AnnouncementsPage = () => {
       status: statusFilter === "ALL" ? undefined : statusFilter,
     });
 
-  const handleCreateSuccess = () => {
-    utils.announcements.getAnnouncements.invalidate();
-  };
+  async function handleCreateSuccess() {
+    await utils.announcements.getAnnouncements.invalidate();
+  }
 
-  const handleUpdateSuccess = () => {
-    utils.announcements.getAnnouncements.invalidate();
-  };
+  async function handleUpdateSuccess() {
+    await utils.announcements.getAnnouncements.invalidate();
+  }
 
-  const handleDeleteSuccess = () => {
-    utils.announcements.getAnnouncements.invalidate();
+  async function handleDeleteSuccess() {
+    await utils.announcements.getAnnouncements.invalidate();
     if (data?.announcements.length === 1 && page > 1) {
       setPage(page - 1);
     }
-  };
+  }
 
   const openEditDialog = (announcement: Notification) => {
     setSelectedAnnouncement(announcement);
@@ -187,7 +184,7 @@ const AnnouncementsPage = () => {
 
           {isLoading ? (
             <div className="grid grid-cols-1 gap-4">
-              {[...Array(5)].map((_, i) => (
+              {Array.from({ length: 5 }).map((_, i) => (
                 <Card key={i} className="bg-muted/50 h-[120px] animate-pulse" />
               ))}
             </div>
@@ -217,12 +214,12 @@ const AnnouncementsPage = () => {
                         {announcement.title}
                       </TableCell>
                       <TableCell className="hidden md:table-cell">
-                        {announcement.author?.name || "N/A"}
+                        {announcement.author?.name ?? "N/A"}
                       </TableCell>
                       <TableCell>
                         <Badge
                           variant={getStatusBadgeVariant(
-                            announcement.announcementStatus as AnnouncementStatus,
+                            announcement.announcementStatus,
                           )}
                         >
                           {announcement.announcementStatus
@@ -248,9 +245,7 @@ const AnnouncementsPage = () => {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() =>
-                              openViewDialog(announcement as Notification)
-                            }
+                            onClick={() => openViewDialog(announcement)}
                           >
                             <Eye className="h-4 w-4" />
                             <span className="sr-only">View</span>
@@ -258,9 +253,7 @@ const AnnouncementsPage = () => {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() =>
-                              openEditDialog(announcement as Notification)
-                            }
+                            onClick={() => openEditDialog(announcement)}
                           >
                             <Edit className="h-4 w-4" />
                             <span className="sr-only">Edit</span>
@@ -319,7 +312,7 @@ const AnnouncementsPage = () => {
             setSelectedAnnouncement(null);
           }}
           announcementId={selectedAnnouncement.id}
-          announcementTitle={selectedAnnouncement.title || "this announcement"}
+          announcementTitle={selectedAnnouncement.title ?? "this announcement"}
           onSuccess={handleDeleteSuccess}
         />
       )}

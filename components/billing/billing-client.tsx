@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle2, Loader2 } from "lucide-react";
-import { loadStripe } from "@stripe/stripe-js";
 import { api } from "@/trpc/react";
 import { toast } from "sonner";
 import type { Plan, PlansData } from "@/types";
@@ -25,10 +24,9 @@ interface PlanCardProps {
 }
 
 // Helper component to render a single plan card with typed props
-function PlanCard({ plan, popular, stripePublicKey }: PlanCardProps) {
+function PlanCard({ plan, popular }: PlanCardProps) {
   const [isLoading, setIsLoading] = useState(false);
   const createCheckoutSession = api.billing.createCheckoutSession.useMutation();
-  const stripePromise = loadStripe(stripePublicKey);
 
   const handleCheckout = async () => {
     setIsLoading(true);
@@ -44,10 +42,12 @@ function PlanCard({ plan, popular, stripePublicKey }: PlanCardProps) {
         toast.error("Could not initiate checkout. Please try again.");
         setIsLoading(false);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Checkout Error:", error);
       toast.error(
-        error.message || "An error occurred during checkout. Please try again.",
+        error instanceof Error
+          ? error.message
+          : "An error occurred during checkout. Please try again.",
       );
       setIsLoading(false);
     }

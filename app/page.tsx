@@ -1,12 +1,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { ArrowRight, BarChart, CheckCircle, TrendingUp } from "lucide-react"; // Example icons
 
@@ -90,8 +84,8 @@ const HomePage = () => {
               <CardTitle>Track Progress</CardTitle>
             </CardHeader>
             <CardContent className="text-muted-foreground text-center">
-              Monitor your virtual portfolio's performance, view transaction
-              history, and gain insights.
+              Monitor your virtual portfolio&apos;s performance, view
+              transaction history, and gain insights.
             </CardContent>
           </Card>
         </div>

@@ -19,6 +19,7 @@ import {
 } from "recharts";
 import { formatNumber } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { CustomTooltipProps } from "@/types";
 
 interface AdminUserActivityChartProps {
   data: { name: string; value: number }[];
@@ -33,13 +34,13 @@ export const AdminUserActivityChart = ({
   title = "User Activity",
   description = "Daily active users over time",
 }: AdminUserActivityChartProps) => {
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload.length) {
+  const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
+    if (active && payload!.length) {
       return (
         <div className="bg-background rounded-md border p-2 text-sm shadow-sm">
           <p className="font-medium">{label}</p>
           <p className="text-muted-foreground">
-            Users: {formatNumber(payload[0].value)}
+            Users: {formatNumber(payload![0]!.value)}
           </p>
         </div>
       );
@@ -91,7 +92,7 @@ export const AdminUserActivityChart = ({
                 tickLine={false}
                 tick={{ fontSize: 12 }}
                 width={30}
-                tickFormatter={(value) => formatNumber(value)}
+                tickFormatter={(value: number) => formatNumber(value)}
               />
               <Tooltip content={<CustomTooltip />} />
               <Area

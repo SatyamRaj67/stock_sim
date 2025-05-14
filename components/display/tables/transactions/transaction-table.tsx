@@ -187,9 +187,9 @@ const TransactionTableSkeleton: React.FC<{
 }> = ({ columns, rows = 10 }) => {
   return (
     <>
-      {[...Array(rows)].map((_, i) => (
+      {Array.from({ length: rows }).map((_, i) => (
         <TableRow key={`skel-${i}`}>
-          {[...Array(columns)].map((_, j) => (
+          {Array({ length: columns }).map((_, j) => (
             <TableCell key={`skel-cell-${i}-${j}`}>
               <Skeleton className="h-4 w-full" />
             </TableCell>

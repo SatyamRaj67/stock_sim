@@ -30,7 +30,7 @@ import {
 import { cn } from "@/lib/utils";
 
 // Import the type from your types file
-import type { PortfolioHistoryPoint } from "@/types";
+import type { DataPoint, PortfolioHistoryPoint } from "@/types";
 
 // Define Chart Configuration for styling
 const chartConfig = {
@@ -50,19 +50,36 @@ const rangeOptions = {
 type RangeKey = keyof typeof rangeOptions;
 
 // --- Custom Tooltip Content Component ---
-const CustomTooltipContent = ({ active, payload, data }: any) => {
-  if (active && payload && payload.length && data) {
-    const currentData = payload[0].payload as PortfolioHistoryPoint;
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    payload: DataPoint;
+    dataKey?: string;
+    value?: number;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    [key: string]: any;
+  }>;
+  data?: DataPoint[];
+}
+
+// --- Custom Tooltip Content Component ---
+const CustomTooltipContent = ({
+  active,
+  payload,
+  data,
+}: CustomTooltipProps) => {
+  if (active && payload!.length && data) {
+    const currentData = payload![0]!.payload;
     const currentIndex = data.findIndex(
       (d: PortfolioHistoryPoint) => d.date === currentData.date,
     );
     const currentValue = currentData.value;
-    let previousValue: number = 0;
-    let valueChange: number = 0;
-    let percentageChange: number = 0;
+    let previousValue = 0;
+    let valueChange = 0;
+    let percentageChange = 0;
 
     if (currentIndex > 0 && data[currentIndex - 1]) {
-      previousValue = data[currentIndex - 1].value;
+      previousValue = data[currentIndex - 1]!.value;
       valueChange = currentValue - previousValue;
       if (previousValue !== 0) {
         percentageChange = valueChange / previousValue;
@@ -203,7 +220,9 @@ export const PortfolioChart = () => {
                 tickLine={false}
                 axisLine={false}
                 tickMargin={8}
-                tickFormatter={(value) => format(parseISO(value), "MMM d")}
+                tickFormatter={(value: string) =>
+                  format(parseISO(value), "MMM d")
+                }
               />
               <YAxis
                 tickLine={false}

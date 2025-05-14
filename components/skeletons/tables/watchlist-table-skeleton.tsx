@@ -11,7 +11,7 @@ export const WatchlistTableSkeleton: React.FC<WatchlistTableSkeletonProps> = ({
 }) => {
   return (
     <>
-      {[...Array(columns)].map((_, i: number) => (
+      {Array(columns).map((_, i: number) => (
         <TableRow key={`skel-${i}`}>
           <TableCell>
             <Skeleton className="h-4 w-32" />

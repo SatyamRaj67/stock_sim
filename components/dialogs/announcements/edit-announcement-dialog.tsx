@@ -64,18 +64,18 @@ const EditAnnouncementDialog: React.FC<EditAnnouncementDialogProps> = ({
   const form = useForm<AnnouncementFormValues>({
     resolver: zodResolver(announcementFormSchema),
     defaultValues: {
-      title: announcement.title || "",
-      content: announcement.content || "",
-      status: announcement.announcementStatus || AnnouncementStatus.DRAFT,
+      title: announcement.title ?? "",
+      content: announcement.content ?? "",
+      status: announcement.announcementStatus ?? AnnouncementStatus.DRAFT,
     },
   });
 
   useEffect(() => {
     if (announcement) {
       form.reset({
-        title: announcement.title || "",
-        content: announcement.content || "",
-        status: announcement.announcementStatus || AnnouncementStatus.DRAFT,
+        title: announcement.title ?? "",
+        content: announcement.content ?? "",
+        status: announcement.announcementStatus ?? AnnouncementStatus.DRAFT,
       });
     }
   }, [announcement, form]);

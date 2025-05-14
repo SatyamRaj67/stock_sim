@@ -34,11 +34,13 @@ export const DeleteAllTransactionsDialog: React.FC<
   // TODO: Define and use the actual tRPC mutation
   const { mutate: deleteAllTransactions, isPending } =
     api.admin.deleteAllUserTransactions.useMutation({
-      onSuccess: () => {
+      onSuccess: async () => {
         setError(null);
         onSuccess?.();
-        utils.user.getTransactions.invalidate({ userId });
-        utils.user.getUserByIdWithPortfolioAndPositions.invalidate(userId);
+        await utils.user.getTransactions.invalidate({ userId });
+        await utils.user.getUserByIdWithPortfolioAndPositions.invalidate(
+          userId,
+        );
         onOpenChange(false);
       },
       onError: (err) => {
