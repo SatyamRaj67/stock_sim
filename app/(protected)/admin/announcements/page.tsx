@@ -33,10 +33,10 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import type { Notification } from "@prisma/client";
 import { AnnouncementStatus } from "@prisma/client";
-import CreateAnnouncementDialog from "@/components/admin/announcements/create-announcement-dialog";
-import EditAnnouncementDialog from "@/components/admin/announcements/edit-announcement-dialog";
-import DeleteAnnouncementDialog from "@/components/admin/announcements/delete-announcement-dialog";
-import ViewAnnouncementDialog from "@/components/admin/announcements/view-announcement-dialog";
+import CreateAnnouncementDialog from "@/components/dialogs/announcements/create-announcement-dialog";
+import EditAnnouncementDialog from "@/components/dialogs/announcements/edit-announcement-dialog";
+import DeleteAnnouncementDialog from "@/components/dialogs/announcements/delete-announcement-dialog";
+import ViewAnnouncementDialog from "@/components/dialogs/announcements/view-announcement-dialog";
 
 const ITEMS_PER_PAGE = 10;
 

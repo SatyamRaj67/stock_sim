@@ -29,7 +29,7 @@ const UserWatchlistIssues = dynamic(
 
 const UserPositionsTable = dynamic(
   () =>
-    import("@/components/admin/watchlist/user-positions-table").then(
+    import("@/components/display/tables/admin/user-positions-table").then(
       (mod) => mod.UserPositionsTable,
     ),
   { loading: () => <PositionsTableSkeleton />, ssr: false },
@@ -37,16 +37,16 @@ const UserPositionsTable = dynamic(
 
 const UserTransactionsTable = dynamic(
   () =>
-    import("@/components/admin/watchlist/user-transactions-table").then(
-      (mod) => mod.UserTransactionsTable,
-    ),
+    import(
+      "@/components/display/tables/transactions/user-transactions-table"
+    ).then((mod) => mod.UserTransactionsTable),
   { loading: () => <TransactionsTableSkeleton />, ssr: false },
 );
 
 // Dynamically import FlagUserDialog
 const FlagUserDialog = dynamic(
   () =>
-    import("@/components/admin/watchlist/flag-user-dialog").then(
+    import("@/components/dialogs/watchlist/flag-user-dialog").then(
       (mod) => mod.FlagUserDialog,
     ),
   { ssr: false },

@@ -5,9 +5,9 @@ import { toast } from "sonner";
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
-import { ReferralDialog } from "@/components/settings/referral-dialog";
-import { AdminDialog } from "@/components/settings/admin-dialog";
-import { SettingsForm } from "@/components/settings/settings-form";
+import { ReferralDialog } from "@/components/dialogs/settings/referral-dialog";
+import { AdminDialog } from "@/components/dialogs/settings/admin-dialog";
+import { SettingsForm } from "@/components/forms/settings/settings-form";
 import clsx from "clsx";
 
 const SettingsPage = () => {

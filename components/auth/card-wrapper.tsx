@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/card";
 
 import { Header } from "@/components/auth/header";
-import { Social } from "@/components/auth/social";
+import { Social } from "@/components/common/auth/social";
 import { BackButton } from "@/components/auth/back-button";
 
 interface CardWrapperProps {

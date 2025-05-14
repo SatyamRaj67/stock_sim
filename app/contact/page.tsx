@@ -19,8 +19,8 @@ import { ContactSchema } from "@/schemas";
 import { Mail, Send } from "lucide-react";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { FormError } from "@/components/layout/form-error";
-import { FormSuccess } from "@/components/layout/form-success";
+import { FormError } from "@/components/forms/form-error";
+import { FormSuccess } from "@/components/forms/form-success";
 // TODO: Implement server action for sending email
 // import { sendContactEmail } from "@/actions/contact";
 

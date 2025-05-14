@@ -16,7 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { EditUserDialog } from "./edit-user-dialog";
+import { EditUserDialog } from "../../dialogs/watchlist/edit-user-dialog";
 
 interface UserInfoCardProps {
   userId: string;

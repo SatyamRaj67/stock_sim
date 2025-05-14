@@ -36,9 +36,9 @@ const nextConfig: NextConfig = {
 
     reactCompiler: true,
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  // eslint: {
+  //   ignoreDuringBuilds: true,
+  // },
 };
 
 // Wrap the config with the analyzer

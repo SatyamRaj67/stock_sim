@@ -2,11 +2,13 @@
 
 import React from "react";
 import dynamic from "next/dynamic";
-import { AdminStockTableSkeleton } from "@/components/admin/stock-table-skeleton";
+import { AdminStockTableSkeleton } from "@/components/skeletons/tables/stock-table-skeleton";
 
 const AdminStockTable = dynamic(
   () =>
-    import("@/components/admin/stock-table").then((mod) => mod.AdminStockTable),
+    import("@/components/display/tables/admin/stock-table").then(
+      (mod) => mod.AdminStockTable,
+    ),
   {
     loading: () => <AdminStockTableSkeleton />,
   },

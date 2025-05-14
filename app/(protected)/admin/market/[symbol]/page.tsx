@@ -26,7 +26,7 @@ import {
 import { formatCurrency, formatNumber } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { PriceHistoryChart } from "@/components/charts/price-history-chart";
+import { PriceHistoryChart } from "@/components/charts/history/price-history-chart";
 import {
   Select,
   SelectContent,
@@ -35,7 +35,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { StockSimulationSettingsForm } from "@/components/admin/stock-simulation-settings-form";
+import { StockSimulationSettingsForm } from "@/components/forms/stock-simulation-settings-form";
 
 const historyGenerationDaysOptions = {
   "1": "1 Day",

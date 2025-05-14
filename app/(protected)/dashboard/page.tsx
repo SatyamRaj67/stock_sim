@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { InfoCard } from "@/components/dashboard/info-card";
+import { InfoCard } from "@/components/common/card/info-card";
 import { api } from "@/trpc/react";
 import dynamic from "next/dynamic";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,7 +17,7 @@ import Decimal from "decimal.js";
 
 const PortfolioChart = dynamic(
   () =>
-    import("@/components/dashboard/portfolio-chart").then(
+    import("@/components/charts/portfolio/portfolio-chart").then(
       (mod) => mod.PortfolioChart,
     ),
   {
@@ -28,7 +28,7 @@ const PortfolioChart = dynamic(
 
 const PortfolioList = dynamic(
   () =>
-    import("@/components/dashboard/portfolio-list").then(
+    import("@/components/display/lists/portfolio-list").then(
       (mod) => mod.PortfolioList,
     ),
   {
@@ -39,7 +39,7 @@ const PortfolioList = dynamic(
 
 const RecentTransactions = dynamic(
   () =>
-    import("@/components/dashboard/recent-transactions").then(
+    import("@/components/display/tables/transactions/recent-transactions").then(
       (mod) => mod.RecentTransactions,
     ),
   {

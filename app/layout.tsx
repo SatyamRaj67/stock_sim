@@ -7,7 +7,7 @@ import { cookies } from "next/headers";
 
 import { TRPCReactProvider } from "trpc/react";
 import { SessionProvider } from "next-auth/react";
-import { ThemeProvider } from "@/providers/theme-provider";
+import { ThemeProvider } from "@/components/layout/providers/theme-provider";
 // import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 import { Analytics } from "@vercel/analytics/next";
@@ -16,8 +16,8 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Toaster } from "sonner";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
-import { AppSidebar } from "@/components/layout/app-sidebar";
-import { SiteHeader } from "@/components/layout/site-header";
+import { AppSidebar } from "@/components/layout/sidebar/app-sidebar";
+import { Header } from "@/components/layout/header";
 import { auth } from "@/server/auth";
 
 export const metadata: Metadata = {
@@ -62,7 +62,7 @@ export default async function RootLayout({
               <SidebarProvider defaultOpen={defaultOpen}>
                 <AppSidebar variant="inset" />
                 <SidebarInset>
-                  <SiteHeader />
+                  <Header />
                   <main>
                     <Toaster />
                     {children}
