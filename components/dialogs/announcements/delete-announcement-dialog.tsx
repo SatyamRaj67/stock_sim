@@ -62,7 +62,7 @@ const DeleteAnnouncementDialog: React.FC<DeleteAnnouncementDialogProps> = ({
           <AlertDialogDescription>
             This action cannot be undone. This will permanently delete the
             announcement titled
-            <span className="font-semibold"> "{announcementTitle}"</span>.
+            <span className="font-semibold"> {announcementTitle}</span>.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

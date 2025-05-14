@@ -20,6 +20,7 @@ import {
 } from "recharts";
 import { formatCurrency } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { CustomTooltipProps } from "@/types";
 
 interface StockComparisonData {
   name: string;
@@ -52,20 +53,23 @@ export const AdminStockComparisonChart = ({
     "#8b5cf6", // purple
   ];
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
+  const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
+    if (active && payload!.length) {
       return (
-        <div className="rounded-md border bg-background p-2 shadow-sm">
+        <div className="bg-background rounded-md border p-2 shadow-sm">
           <p className="text-sm font-medium">{label}</p>
           <div className="mt-1 space-y-1">
-            {payload.map((entry: any, index: number) => (
+            {payload!.map((entry, index: number) => (
               <p key={`item-${index}`} className="text-xs">
                 <span
                   className="mr-2 inline-block h-2 w-2 rounded-full"
+                  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                   style={{ backgroundColor: entry.color }}
                 ></span>
                 <span className="text-muted-foreground">{entry.name}: </span>
-                <span className="font-medium">{formatCurrency(entry.value)}</span>
+                <span className="font-medium">
+                  {formatCurrency(entry.value)}
+                </span>
               </p>
             ))}
           </div>
@@ -86,8 +90,15 @@ export const AdminStockComparisonChart = ({
           <Skeleton className="h-full w-full" />
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={data} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(142,142,160,0.2)" />
+            <LineChart
+              data={data}
+              margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                vertical={false}
+                stroke="rgba(142,142,160,0.2)"
+              />
               <XAxis
                 dataKey="name"
                 axisLine={false}
@@ -100,7 +111,7 @@ export const AdminStockComparisonChart = ({
                 tickLine={false}
                 tick={{ fontSize: 12 }}
                 width={60}
-                tickFormatter={(value) => formatCurrency(value)}
+                tickFormatter={(value: number) => formatCurrency(value)}
               />
               <Tooltip content={<CustomTooltip />} />
               <Legend
@@ -113,7 +124,9 @@ export const AdminStockComparisonChart = ({
                   key={key}
                   type="monotone"
                   dataKey={key}
-                  stroke={colors[key] || defaultColors[index % defaultColors.length]}
+                  stroke={
+                    colors[key] ?? defaultColors[index % defaultColors.length]
+                  }
                   activeDot={{ r: 5 }}
                   strokeWidth={2}
                   dot={{ r: 2 }}

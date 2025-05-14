@@ -65,7 +65,7 @@ export const DeleteTransactionDialog: React.FC<
           <DialogDescription>
             Are you sure you want to delete this transaction (ID:{" "}
             {transactionId})? This action cannot be undone and will adjust the
-            user's balance.
+            user&apos;s balance.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

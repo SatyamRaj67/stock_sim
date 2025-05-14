@@ -1,3 +1,22 @@
+// --- Custom Tooltip Content Component ---
+export interface DataPoint {
+  date: string;
+  value: number;
+}
+
+export interface CustomTooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    payload: DataPoint;
+    dataKey?: string;
+    value?: number;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    [key: string]: any;
+  }>;
+  data?: DataPoint[];
+  label?: string;
+}
+
 // This interface represents the return type from the portfolioHistory API
 export interface PortfolioHistoryPoint {
   date: string;

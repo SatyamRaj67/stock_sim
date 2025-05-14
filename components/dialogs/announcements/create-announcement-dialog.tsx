@@ -76,7 +76,7 @@ const CreateAnnouncementDialog: React.FC<CreateAnnouncementDialogProps> = ({
         onClose();
         form.reset();
       },
-      onError: (error) => {
+      onError: () => {
         toast("Failed to create announcement. ");
       },
     });

@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner"; 
+import { toast } from "sonner";
 
 const TestCronPage = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -14,16 +14,18 @@ const TestCronPage = () => {
     try {
       const response = await fetch("/api/cron/update-stock-prices", {
         method: "GET",
-        // No Authorization header needed as it was removed
       });
 
-      const data = await response.json();
+      const data = (await response.json()) as Promise<{
+        message?: string;
+        error?: string;
+      }>;
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to trigger cron job");
+        throw new Error((await data).error ?? "Failed to trigger cron job");
       }
 
-      toast.success(data.message || "Cron job triggered successfully!");
+      toast.success((await data).message ?? "Cron job triggered successfully!");
       console.log("Cron job response:", data);
     } catch (error) {
       console.error("Error triggering cron job:", error);

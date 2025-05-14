@@ -124,7 +124,7 @@ export const stockRouter = createTRPCRouter({
 
       return priceHistory?.map((item) => ({
         date: formatISO(item.timestamp),
-        price: item.price.toNumber(),
+        value: item.price.toNumber(),
       }));
     }),
 });

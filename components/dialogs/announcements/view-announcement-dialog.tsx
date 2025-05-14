@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import type { Notification, User } from "@prisma/client";
+import type { Notification } from "@prisma/client";
 import { AnnouncementStatus } from "@prisma/client";
 import { format } from "date-fns";
 
@@ -57,9 +57,7 @@ const ViewAnnouncementDialog: React.FC<ViewAnnouncementDialogProps> = ({
               Status
             </h4>
             <Badge
-              variant={getStatusBadgeVariant(
-                announcement.announcementStatus as AnnouncementStatus,
-              )}
+              variant={getStatusBadgeVariant(announcement.announcementStatus)}
             >
               {announcement.announcementStatus
                 ?.toString()
@@ -86,7 +84,7 @@ const ViewAnnouncementDialog: React.FC<ViewAnnouncementDialogProps> = ({
               <h4 className="text-muted-foreground text-sm font-semibold">
                 Author
               </h4>
-              <p className="text-sm">{announcement.authorId || "N/A"}</p>
+              <p className="text-sm">{announcement.authorId ?? "N/A"}</p>
             </div>
           </div>
 

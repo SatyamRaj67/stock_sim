@@ -51,9 +51,9 @@ export const UserAchievementsManager: React.FC<
 
   const toggleAchievementMutation =
     api.achievements.toggleAchievementStatus.useMutation({
-      onSuccess: (data) => {
+      onSuccess: async (data) => {
         toast.success(data.message);
-        refetch(); // Refetch achievements after toggling
+        await refetch();
       },
       onError: (error) => {
         toast.error(`Failed to update achievement: ${error.message}`);
@@ -62,10 +62,10 @@ export const UserAchievementsManager: React.FC<
 
   const removeAllAchievementsMutation =
     api.achievements.removeAllUserAchievements.useMutation({
-      onSuccess: (data) => {
+      onSuccess: async (data) => {
         toast.success(data.message);
         setShowConfirmRemoveAll(false);
-        refetch(); // Refetch achievements after removing all
+        await refetch();
       },
       onError: (error) => {
         toast.error(`Failed to remove achievements: ${error.message}`);

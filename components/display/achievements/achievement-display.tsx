@@ -13,7 +13,6 @@ import { Progress } from "@/components/ui/progress";
 import {
   CheckCircle,
   Lock,
-  Award,
   Coins,
   TrendingUp,
   DollarSign,
@@ -25,9 +24,9 @@ import {
   Trophy,
   X,
 } from "lucide-react";
-import { cn, formatCurrency, formatNumber, formatProgressValue } from "@/lib/utils";
+import { cn, formatProgressValue } from "@/lib/utils";
 import type { Achievement as PrismaAchievement } from "@prisma/client";
-import { AchievementType } from "@prisma/client";
+import { type AchievementType } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 
 // --- Interfaces ---
@@ -107,7 +106,7 @@ export const AchievementDisplay: React.FC<AchievementDisplayProps> = ({
           const isSingleLevelAchieved =
             isSingleLevel && group.highestAchievedLevel === 1;
 
-          const displayAchievement = highestAchieved || group.achievements[0];
+          const displayAchievement = highestAchieved ?? group.achievements[0];
           const Icon = getAchievementIcon(displayAchievement);
 
           let progressPercentage = 0;

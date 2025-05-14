@@ -7,8 +7,17 @@ import {
   calculateTotalStocksOwned,
   countTotalTrades,
 } from "@/lib/analyticsUtils";
-import { AchievementDisplay } from "@/components/display/achievements/achievement-display"; 
-import { Card, CardContent } from "@/components/ui/card"; 
+import { AchievementDisplay } from "@/components/display/achievements/achievement-display";
+import { Card, CardContent } from "@/components/ui/card";
+
+// Add this interface below the ProcessedGroupedAchievement interface
+interface RawGroupedAchievement {
+  type: AchievementType;
+  achievements: Achievement[];
+  highestAchievedLevel: number;
+  nextLevel: Achievement | null;
+  currentProgress: number;
+}
 
 // Define GroupedAchievement structure here for processing
 interface ProcessedGroupedAchievement {
@@ -57,38 +66,34 @@ const AchievementsPage = async () => {
   const achievedIds = new Set(userAchievements.map((ua) => ua.achievementId));
 
   // --- Grouping ---
-  const groupedAchievementsRaw = allAchievements.reduce<Record<string, any>>(
-    (acc, ach) => {
-      if (!acc[ach.type]) {
-        acc[ach.type] = {
-          type: ach.type,
-          achievements: [],
-          highestAchievedLevel: 0,
-          nextLevel: null,
-          currentProgress: 0,
-        };
-      }
-      acc[ach.type]!.achievements.push(ach);
-      if (achievedIds.has(ach.id)) {
-        acc[ach.type]!.highestAchievedLevel = Math.max(
-          acc[ach.type]!.highestAchievedLevel,
-          ach.level,
-        );
-      }
-      return acc;
-    },
-    {},
-  );
+  const groupedAchievementsRaw = allAchievements.reduce<
+    Record<string, RawGroupedAchievement>
+  >((acc, ach) => {
+    acc[ach.type] ??= {
+      type: ach.type,
+      achievements: [],
+      highestAchievedLevel: 0,
+      nextLevel: null,
+      currentProgress: 0,
+    };
+    acc[ach.type]!.achievements.push(ach);
+    if (achievedIds.has(ach.id)) {
+      acc[ach.type]!.highestAchievedLevel = Math.max(
+        acc[ach.type]!.highestAchievedLevel,
+        ach.level,
+      );
+    }
+    return acc;
+  }, {});
 
   // --- Processing for Client Component (Convert Decimals) ---
   const achievementGroups: ProcessedGroupedAchievement[] = Object.values(
     groupedAchievementsRaw,
-  ).map((group: any) => {
-    // Find next level before converting
+  ).map((group: RawGroupedAchievement) => {
     const nextLevelRaw =
       group.achievements.find(
-        (ach: Achievement) => ach.level > group.highestAchievedLevel,
-      ) || null;
+        (ach) => ach.level > group.highestAchievedLevel,
+      ) ?? null;
 
     // Assign progress
     let currentProgress = 0;
@@ -143,7 +148,7 @@ const AchievementsPage = async () => {
         </Card>
       ) : (
         <AchievementDisplay
-          achievementGroups={achievementGroups as any}
+          achievementGroups={achievementGroups}
           achievedIds={achievedIds}
         />
       )}

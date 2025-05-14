@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   Table,
   TableBody,
@@ -193,17 +193,20 @@ export const UserTransactionsTable: React.FC<UserTransactionsTableProps> = ({
   );
 
   // Function to open the single delete dialog
-  const handleDeleteClick = (transactionId: string) => {
-    setTransactionToDelete(transactionId);
-    setIsDeleteDialogOpen(true);
-    refetch();
-  };
+  const handleDeleteClick = useCallback(
+    async (transactionId: string) => {
+      setTransactionToDelete(transactionId);
+      setIsDeleteDialogOpen(true);
+      await refetch();
+    },
+    [refetch],
+  );
 
   // Function to open the delete all dialog
-  const handleDeleteAllClick = () => {
+  async function handleDeleteAllClick() {
     setIsDeleteAllDialogOpen(true);
-    refetch();
-  };
+    await refetch();
+  }
 
   const columns = React.useMemo(
     () => [
@@ -229,7 +232,7 @@ export const UserTransactionsTable: React.FC<UserTransactionsTableProps> = ({
         },
       }),
     ],
-    [],
+    [handleDeleteClick],
   );
 
   const transactions = transactionsData ?? [];
@@ -254,7 +257,7 @@ export const UserTransactionsTable: React.FC<UserTransactionsTableProps> = ({
         <CardContent>
           <div className="space-y-2">
             <Skeleton className="h-8 w-full" />
-            {[...Array(5)].map((_, i: number) => (
+            {Array.from({ length: 5 }).map((_, i: number) => (
               <Skeleton key={i} className="h-10 w-full" />
             ))}
             <Skeleton className="mt-4 h-8 w-1/2 self-end" />

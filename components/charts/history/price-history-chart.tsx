@@ -29,6 +29,7 @@ import {
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { formatCurrency, formatPercentage } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import type { CustomTooltipProps, DataPoint } from "@/types";
 
 const timeRangeOptions = {
   "1": "1 Day",
@@ -52,11 +53,6 @@ interface PriceHistoryChartProps {
   initialTimeRange?: TimeRangeKey;
 }
 
-interface ChartDataPoint {
-  date: string;
-  price: number;
-}
-
 const chartConfig = {
   price: {
     label: "Price",
@@ -64,20 +60,23 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-// --- Custom Tooltip Content Component ---
-const CustomTooltipContent = ({ active, payload, data }: any) => {
-  if (active && payload && payload.length && data) {
-    const currentData = payload[0].payload as ChartDataPoint;
+const CustomTooltipContent = ({
+  active,
+  payload,
+  data,
+}: CustomTooltipProps) => {
+  if (active && payload!.length && data) {
+    const currentData = payload![0]!.payload;
     const currentIndex = data.findIndex(
-      (d: ChartDataPoint) => d.date === currentData.date,
+      (d: DataPoint) => d.date === currentData.date,
     );
-    const currentPrice = currentData.price;
+    const currentPrice = currentData.value;
     let previousPrice = 0;
     let priceChange = 0;
     let percentageChange = 0;
 
     if (currentIndex > 0 && data[currentIndex - 1]) {
-      previousPrice = data[currentIndex - 1].price;
+      previousPrice = data[currentIndex - 1]!.value;
       priceChange = currentPrice - previousPrice;
       if (previousPrice !== 0) {
         percentageChange = priceChange / previousPrice;
@@ -201,7 +200,7 @@ export function PriceHistoryChart({
                 </ToggleGroupItem>
               ))}
             <ToggleGroupItem key="all" value="all">
-              {timeRangeOptions["all"]}
+              {timeRangeOptions.all}
             </ToggleGroupItem>
           </ToggleGroup>
 
@@ -265,11 +264,9 @@ export function PriceHistoryChart({
                 tickMargin={8}
                 minTickGap={isMobile ? 40 : 32}
                 tickFormatter={(value: string) => {
-                  try {
+                  {
                     const date = new Date(value);
                     return !isNaN(date.getTime()) ? format(date, "MMM d") : "";
-                  } catch (e) {
-                    return "";
                   }
                 }}
               />

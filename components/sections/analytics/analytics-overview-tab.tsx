@@ -19,7 +19,10 @@ export const AnalyticsOverviewTab: React.FC<AnalyticsOverviewTabProps> = ({
   positions,
   isLoading,
 }) => {
-  const validPositions = positions ?? [];
+  const validPositions = React.useMemo(() => {
+    return positions ?? [];
+  }, [positions]);
+  
   const sectorData = React.useMemo(() => {
     return calculateSectorAllocation(validPositions);
   }, [validPositions]);
