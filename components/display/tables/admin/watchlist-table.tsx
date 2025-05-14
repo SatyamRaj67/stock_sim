@@ -358,6 +358,7 @@ export const AdminWatchlistTable = ({}) => {
                       width:
                         header.getSize() !== 150 ? header.getSize() : undefined,
                     }}
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
                     className={(header.column.columnDef.meta as any)?.className}
                   >
                     {header.isPlaceholder
@@ -391,6 +392,7 @@ export const AdminWatchlistTable = ({}) => {
                             ? cell.column.getSize()
                             : undefined,
                       }}
+                      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
                       className={(cell.column.columnDef.meta as any)?.className}
                     >
                       {flexRender(

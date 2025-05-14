@@ -109,9 +109,7 @@ export async function findOrCreatePortfolio(
   userId: string,
 ): Promise<Portfolio> {
   let portfolio = await getPortfolioByUserId(userId);
-  if (!portfolio) {
-    portfolio = await createPortfolioByUserId(userId);
-  }
+  portfolio ??= await createPortfolioByUserId(userId);
   if (!portfolio) {
     throw new TRPCError({
       code: "INTERNAL_SERVER_ERROR",

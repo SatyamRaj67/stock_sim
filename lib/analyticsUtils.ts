@@ -1,6 +1,6 @@
 import Decimal from "decimal.js";
 import type { PositionWithSelectedStock } from "./portfolioUtils";
-import { formatCurrency, formatPercentage, formatNumber } from "./utils";
+import { formatCurrency, formatPercentage } from "./utils";
 import type { Transaction, Prisma } from "@prisma/client";
 import { TransactionType, TransactionStatus } from "@prisma/client";
 import { db } from "@/server/db";
@@ -73,7 +73,7 @@ export const calculateSectorAllocation = (
       const positionValue = quantity.mul(currentPrice);
       const sector = position.stock.sector;
 
-      sectorValues[sector] = (sectorValues[sector] || new Decimal(0)).add(
+      sectorValues[sector] = (sectorValues[sector] ?? new Decimal(0)).add(
         positionValue,
       );
       totalPortfolioValue = totalPortfolioValue.add(positionValue);
@@ -211,8 +211,8 @@ export const calculatePnlSummary = (
       : "neutral";
 
   const sortedByPnlValue = [...pnlData].sort((a, b) => b.totalPnl - a.totalPnl);
-  const bestPerformer = sortedByPnlValue[0] || null;
-  const worstPerformer = sortedByPnlValue[sortedByPnlValue.length - 1] || null;
+  const bestPerformer = sortedByPnlValue[0] ?? null;
+  const worstPerformer = sortedByPnlValue[sortedByPnlValue.length - 1] ?? null;
 
   let formattedPercentage: string;
   if (!totalPortfolioPnlPercentage.isFinite()) {
@@ -337,13 +337,11 @@ export async function calculateTotalProfit(userId: string): Promise<number> {
 
   const transactionsByStock: Record<
     string,
-    Prisma.TransactionGetPayload<{}>[]
+    Prisma.TransactionGetPayload<object>[]
   > = {};
   for (const tx of allTransactions) {
     if (tx.type === TransactionType.BUY || tx.type === TransactionType.SELL) {
-      if (!transactionsByStock[tx.stockId]) {
-        transactionsByStock[tx.stockId] = [];
-      }
+      transactionsByStock[tx.stockId] ??= [];
       transactionsByStock[tx.stockId]!.push(tx);
     }
   }
