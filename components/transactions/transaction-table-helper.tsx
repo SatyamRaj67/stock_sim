@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { api } from "@/trpc/react";
-import { TransactionTable } from "./transaction-table";
+import { TransactionTable } from "../display/tables/transactions/transaction-table";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import type Decimal from "decimal.js";
 import type { TransactionStatus, TransactionType } from "@prisma/client";

@@ -7,8 +7,8 @@ import {
   calculateTotalStocksOwned,
   countTotalTrades,
 } from "@/lib/analyticsUtils";
-import { AchievementDisplay } from "@/components/achievements/achievement-display"; // Import the new client component
-import { Card, CardContent } from "@/components/ui/card"; // Keep Card for empty state
+import { AchievementDisplay } from "@/components/display/achievements/achievement-display"; 
+import { Card, CardContent } from "@/components/ui/card"; 
 
 // Define GroupedAchievement structure here for processing
 interface ProcessedGroupedAchievement {

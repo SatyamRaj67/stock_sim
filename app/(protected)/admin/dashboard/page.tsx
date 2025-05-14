@@ -18,10 +18,10 @@ import { formatNumber, formatCurrency } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { UserRole } from "@prisma/client";
 import { api } from "@/trpc/react";
-import { AdminUserActivityChart } from "@/components/admin/dashboard/admin-user-activity-chart";
-import { AdminWatchlistBreakdown } from "@/components/admin/dashboard/admin-watchlist-breakdown";
-import { AdminUserCountChart } from "@/components/admin/dashboard/admin-user-count-chart";
-import { AdminStockComparisonChart } from "@/components/admin/dashboard/admin-stock-comparison-chart";
+import { AdminUserActivityChart } from "@/components/display/charts/admin-user-activity-chart";
+import { AdminWatchlistBreakdown } from "@/components/admin/admin-watchlist-breakdown";
+import { AdminUserCountChart } from "@/components/display/charts/admin-user-count-chart";
+import { AdminStockComparisonChart } from "@/components/display/charts/admin-stock-comparison-chart";
 
 const AdminDashboardPage = () => {
   const { data: session } = useSession();

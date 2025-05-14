@@ -3,8 +3,8 @@
 import React from "react";
 import { useParams, useRouter } from "next/navigation";
 import { api } from "@/trpc/react";
-import { PriceHistoryChart } from "@/components/charts/price-history-chart";
-import { StockTradeForm } from "@/components/market/stock/stock-trade-form";
+import { PriceHistoryChart } from "@/components/charts/history/price-history-chart";
+import { StockTradeForm } from "@/components/forms/stock/stock-trade-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { calculateChange, formatCurrency, formatNumber } from "@/lib/utils";
@@ -15,7 +15,7 @@ import {
   ArrowUpIcon,
 } from "lucide-react";
 import Decimal from "decimal.js";
-import StockDetailSkeleton from "@/components/market/stock/stock-detail-skeleton";
+import StockDetailSkeleton from "@/components/skeletons/stocks/stock-detail-skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 

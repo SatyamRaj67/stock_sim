@@ -1,8 +1,8 @@
 "use client";
 
 import { admin } from "@/actions/admin";
-import { RoleGate } from "@/components/auth/role-gate";
-import { FormSuccess } from "@/components/layout/form-success";
+import { RoleGate } from "@/components/common/role-gate";
+import { FormSuccess } from "@/components/forms/form-success";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { api } from "@/trpc/react";

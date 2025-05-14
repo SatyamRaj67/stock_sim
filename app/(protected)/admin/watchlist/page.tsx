@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { AdminWatchlistTable } from "@/components/admin/watchlist/watchlist-table";
+import { AdminWatchlistTable } from "@/components/display/tables/admin/watchlist-table";
 
 const AdminWatchlistPage = () => {
   return (

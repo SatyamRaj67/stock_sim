@@ -3,7 +3,7 @@
 import { useSession } from "next-auth/react";
 import { api } from "@/trpc/react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AnalyticsOverviewTab } from "@/components/analytics/analytics-overview-tab";
+import { AnalyticsOverviewTab } from "@/components/sections/analytics/analytics-overview-tab";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
