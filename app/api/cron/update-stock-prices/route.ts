@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/server/db";
-import { getAllStocks, updateStockById } from "@/data/stocks"; // Corrected import
+import { getAllStocks, updateStockById } from "@/data/stocks";
 import { simulateNextDayPrice } from "@/lib/price-simulation";
 
 // Function to handle GET requests for the cron job
@@ -17,7 +17,7 @@ export async function GET() {
 
     const updates = [];
     const historyEntries = [];
-    const now = new Date(); // Use a consistent timestamp for all updates in this run
+    const now = new Date();
 
     // 3. Simulate and prepare updates for each stock
     for (const stock of activeStocks) {

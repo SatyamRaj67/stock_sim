@@ -20,6 +20,7 @@ import {
 import Link from "next/link";
 import { formatNumber } from "@/lib/utils";
 import Decimal from "decimal.js";
+import { PortfolioListSkeleton } from "@/components/skeletons/lists/portfolio-list-skeleton";
 
 export function PortfolioList() {
   const { data: session } = useSession();
@@ -31,6 +32,10 @@ export function PortfolioList() {
 
   const positions = userData?.portfolio?.positions ?? [];
 
+  if (isLoading) {
+    return <PortfolioListSkeleton />;
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -38,9 +43,7 @@ export function PortfolioList() {
         <CardDescription>Overview of your holdings</CardDescription>
       </CardHeader>
       <CardContent>
-        {isLoading ? (
-          <p>Loading portfolio...</p>
-        ) : positions && positions.length > 0 ? (
+        {positions && positions.length > 0 ? (
           <Table>
             <TableHeader>
               <TableRow>
@@ -77,10 +80,13 @@ export function PortfolioList() {
                       )}
                     </TableCell>
                     <TableCell className={`text-right font-medium`}></TableCell>
-                    <TableCell>
-                      {/* {(
-                        (position.quantity / userData.portfolio.totalValue) * 100,
-                      )}% */}
+                    <TableCell className="text-right">
+                      {new Decimal(position.quantity)
+                        .times(position.stock.currentPrice)
+                        .div(userData!.portfolioValue)
+                        .times(100)
+                        .toFixed(2)}
+                      %
                     </TableCell>
                   </TableRow>
                 );

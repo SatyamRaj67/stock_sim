@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/update-stock-prices",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/update-portfolio-values",
+      "schedule": "5 0 * * *"
     }
   ]
 }
