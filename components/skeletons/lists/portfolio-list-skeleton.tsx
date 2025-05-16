@@ -36,7 +36,7 @@ export function PortfolioListSkeleton() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {rows.map((index) => (
+            {rows.map((_, index) => (
               <TableRow key={index}>
                 <TableCell className="font-medium">
                   <div className="flex flex-col gap-1">

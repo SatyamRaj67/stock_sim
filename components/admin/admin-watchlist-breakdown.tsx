@@ -19,7 +19,6 @@ import {
 import { formatPercentage } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
-// Define a color palette for the chart segments
 const COLORS = ["#f97316", "#3b82f6", "#10b981", "#8b5cf6", "#ef4444"];
 
 interface WatchlistBreakdownData {

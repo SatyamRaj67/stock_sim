@@ -55,7 +55,7 @@ interface PriceHistoryChartProps {
 
 const chartConfig = {
   price: {
-    label: "Price",
+    label: "price",
     color: "var(--chart-2)",
   },
 } satisfies ChartConfig;
@@ -264,10 +264,8 @@ export function PriceHistoryChart({
                 tickMargin={8}
                 minTickGap={isMobile ? 40 : 32}
                 tickFormatter={(value: string) => {
-                  {
-                    const date = new Date(value);
-                    return !isNaN(date.getTime()) ? format(date, "MMM d") : "";
-                  }
+                  const date = new Date(value);
+                  return !isNaN(date.getTime()) ? format(date, "MMM d") : "";
                 }}
               />
               <ChartTooltip
@@ -275,7 +273,7 @@ export function PriceHistoryChart({
                 content={<CustomTooltipContent data={chartData} />}
               />
               <Area
-                dataKey="price"
+                dataKey="value"
                 type="natural"
                 fill="url(#fillPrice)"
                 stroke="var(--color-price)"

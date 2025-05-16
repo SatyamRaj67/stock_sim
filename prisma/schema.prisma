@@ -407,5 +407,5 @@ model Notification {
     @@index([userId])
     @@index([authorId])
     @@index([type])
-    @@index([announcementStatus]) // Index for announcement status
+    @@index([announcementStatus])
 }

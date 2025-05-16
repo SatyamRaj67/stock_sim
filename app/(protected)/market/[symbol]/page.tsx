@@ -118,8 +118,8 @@ const StockDetailPage = () => {
             <CardContent>
               <PriceHistoryChart
                 stockId={stockDetails!.id}
-                title=""
-                description=""
+                title={stockDetails!.name}
+                description={stockDetails!.symbol}
               />
             </CardContent>
           </Card>
